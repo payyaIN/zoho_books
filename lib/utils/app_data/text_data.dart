@@ -1,0 +1,92 @@
+class AppText {
+  static const String loginText = 'Login to your account';
+  static const String loginTextDisc =
+      'Please fill up the username and password to login';
+  static const String login = 'Login';
+  static const String rememberMe = 'Remember me';
+  static const String forgtPaswrd = 'Forget password ?';
+  static const String noAccountText = 'Don’t have an account ?';
+  static const String signUp = 'Signup';
+  static const String email = 'Email';
+  static const String password = 'Password';
+  static const String notifications = 'Notifications';
+  static const String notificationTitle = 'Thursday\'s Feast Awaits!';
+  static const String notificationSubTitle =
+      'Your Exotic Veggie Platter is on the menu. Get excited!';
+  static const String trailing = '2 days ago';
+  static const String active = 'Active';
+  static const String unpaid = 'Unpaid';
+  static const String all = 'All';
+  static const String customers = 'My Customers';
+  static const String vendors = 'My Vendors';
+  static const String filterBy = 'Filtered By';
+  static const String bills = 'Bills';
+  static const String select = 'Select';
+  static const String cancel = 'Cancel';
+  static const String approve = 'Approve';
+  static const String clear = 'Clear';
+  static const String save = 'Save';
+  static const String ok = 'Ok';
+  static const String call = 'Call';
+  static const String mail = 'Mail';
+  static const String msg = 'Message';
+  static const String more = 'More';
+  static const String recrngInvc = 'Recurring Invoice';
+  static const String noInternetAvl = 'No internet available';
+  static const String vendorName = 'ARABIAN PALACE';
+  static const String vendorMail = 'arabianpalace123@gmail.com';
+  static const String customerName = 'Ashiq PH';
+  static const String customerMail = 'ashiqph@interlandtech.com';
+  static const String cstmrOutstandingPayables = '3572.35';
+  static const String vndrOutstandingPayables = '0.00';
+  static const String cstmrUnusedCredits = '32212.25';
+  static const String vndorUnusedCredits = '0.00';
+  static const String billingAdrs = 'Billing Address';
+  static const String billingAddress =
+      '7th Floor, Infopark Phase 2\nTrans Asia, Kakkanad\nKerala';
+  static const String shippingAdrs = 'Shipping Address';
+  static const String primaryContct = 'Primary Contact';
+  static const String vendorContact = '8086678592';
+  static const String bnkAcnts = 'Bank Accounts';
+  static const String bankAccount = 'Account ending with 9854';
+  static const String otherDetails = 'Other Details';
+  static const String currencyCode = 'Currency Code';
+  static const String sar = 'SAR';
+  static const String portalStatus = 'Portal Status';
+  static const String portalStatusVal = 'Disabled';
+  static const String portalLanguage = 'Portal Language';
+  static const String portalLanguageVal = 'English';
+  static const String taxPreference = 'Tax Preference';
+  static const String gstTreatment = 'Gst Treatment';
+  static const String remarks = 'Remarks / Notes';
+  static const String gstIN = 'GSTIN';
+  static const String gstINVal = '21CF5TGS432FT78';
+  static const String gstTreatmentVal = 'Registered Business Regular';
+  static const String gstTreatmentVal2 = 'Overseas';
+  static const String taxPreferenceVal = 'Taxable';
+  static const String portalLang = 'Portal Language';
+  static const String onlinePaymnts = 'Online Payments';
+  static const String razrpayCntnt = 'Razorpay Transaction Fees';
+  static const String setup = 'Set up';
+  static const String razorpayDisc =
+      'Razorpay is an Indian payment gateway which\nallows your customer to pay via cards, netbanking\nand wallets.';
+  static const String invoices = 'Invoices';
+  static const String edit = 'Edit';
+  static const String payments = 'Payments';
+  static const String printpdf = 'Print PDF';
+  static const String product = 'Product';
+  static const String paid = 'PAID';
+  static const String pending = 'PENDING';
+  static const String open = 'OPEN';
+  static const String state = 'State';
+  static const String city = 'City';
+  static const String regionDetails = 'Region Details';
+  static const String partyId = 'Party ID';
+  static const String partyType = 'Party Type';
+  static const String transactionId = 'Transaction ID';
+  static const String bulkApprvConfrmtn = 'Conform Bulk Approval';
+  static const String bulkApprvalBillsSubTitle =
+      'Out of the selected items, you can approve only 5 Bill(s)';
+  static const String bulkApprvalBillscontent =
+      'Are you sure want to approve the Bill(s)?';
+}

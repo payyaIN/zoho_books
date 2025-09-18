@@ -1,0 +1,79 @@
+import 'package:payzo_books/import_data.dart';
+import 'package:payzo_books/view/product_page/components/product_empty_view.dart';
+import 'package:payzo_books/view/product_page/components/product_error_view.dart';
+import 'package:payzo_books/view/product_page/components/product_list_view_body.dart';
+import 'package:payzo_books/view/product_page/provider/product_pagination_provider.dart';
+import 'package:payzo_books/view/product_page/provider/product_selection.dart';
+
+class ProductMainBody extends ConsumerStatefulWidget {
+  const ProductMainBody({super.key});
+
+  @override
+  ConsumerState<ConsumerStatefulWidget> createState() =>
+      _ProductMainBodyState();
+}
+
+class _ProductMainBodyState extends ConsumerState<ProductMainBody> {
+  final scrollController = ScrollController();
+
+  @override
+  Widget build(BuildContext context) {
+    final paginationState = ref.watch(productPaginationStateProvider);
+    final paginationNotifier =
+        ref.read(productPaginationStateProvider.notifier);
+    final productSelectionState = ref.watch(productSelectionProvider);
+    final productSelectionNotifier =
+        ref.read(productSelectionProvider.notifier);
+    ref.listen<ProductPaginationState>(productPaginationStateProvider,
+        (previous, current) {
+      if (previous?.products.length != current.products.length) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (current.products.isNotEmpty) {
+            productSelectionNotifier
+                .updateSelectionSize(current.products.length);
+          }
+        });
+      }
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (scrollController.hasClients) {
+        scrollController.removeListener(() {});
+        scrollController.addListener(() {
+          if (scrollController.position.pixels >=
+                  scrollController.position.maxScrollExtent * 0.8 &&
+              !paginationState.isLoading &&
+              paginationState.hasNextPage &&
+              paginationState.searchQuery.isEmpty) {
+            paginationNotifier.loadMoreProducts();
+          }
+        });
+      }
+    });
+    return Expanded(
+      child: RefreshIndicator(
+        onRefresh: () async {
+          paginationNotifier.refresh();
+        },
+        child: paginationState.isLoading && paginationState.products.isEmpty
+            ? const Center(
+                child: CircularProgressIndicator(
+                  color: AppColors.appMainColor,
+                ),
+              )
+            : paginationState.errorMessage != null &&
+                    paginationState.products.isEmpty
+                ? productErrorView(
+                    paginationState.errorMessage!, paginationNotifier)
+                : paginationState.products.isEmpty
+                    ? productEmptyView()
+                    : ProductListViewBody(
+                        paginationState: paginationState,
+                        selectionState: productSelectionState,
+                        selectionNotifier: productSelectionNotifier,
+                        scrollController: scrollController,
+                      ),
+      ),
+    );
+  }
+}

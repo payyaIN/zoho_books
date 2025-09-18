@@ -1,0 +1,218 @@
+String getInvoiceStatusText(int? isVerified, int? status) {
+  if (status == 2) return "REJECTED";
+  if (isVerified == 1) return "APPROVED";
+  return "PENDING";
+}
+
+String getInvoiceStatusImage(int? isVerified, int? status) {
+  if (status == 2) return AppImages.rejectedBox;
+  if (isVerified == 1) return AppImages.approvedBox;
+  return AppImages.pendingBox;
+}
+
+//inv-detil
+billData(
+  context: context,
+  isBill: false,
+  isVerified: invoiceDetail.isInvoiceverified,
+  invoiceStatus: invoiceDetail.invoiceStatus,
+  rightText1: invoiceDetail.invoiceNumber,
+  rightText2: formatDateFn(invoiceDetail.invoiceDate),
+  rightText3: formatDateFn(invoiceDetail.invoiceDueDate),
+  rightText4: invoiceDetail.invoiceCurrency
+);
+
+
+Stack billData({
+  required BuildContext context,
+  required bool isBill,
+  required int? isVerified,
+  required int? invoiceStatus,
+  required String rightText1,
+  required String rightText2,
+  required String rightText3,
+  required String rightText4,
+}) {
+  var width = MediaQuery.of(context).size.width;
+  
+  // Get the status text and image
+  final statusText = getInvoiceStatusText(isVerified, invoiceStatus);
+  final statusImage = getInvoiceStatusImage(isVerified, invoiceStatus);
+  
+  return Stack(
+    children: [
+      ReusableContainer(
+        color: AppColors.appFullWhite,
+        width: 344,
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(
+                  left: 14, top: 24, right: 107, bottom: 24),
+              child: ReusableContainer(
+                width: width,
+                child: Transform.translate(
+                  offset: const Offset(0, 0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      rowText2(
+                          leftText: isBill ? "Bill#" : "Invoice#",
+                          rightText: rightText1,
+                          is60015: false,
+                          is70016: false,
+                          isQuantity: false,
+                          is70020: false),
+                      GapSpace.height15,
+                      rowText2(
+                        leftText: "Date",
+                        rightText: rightText2,
+                        is60015: false,
+                        is70016: false,
+                        is70020: false,
+                        isQuantity: false,
+                      ),
+                      GapSpace.height15,
+                      rowText2(
+                        leftText: "Due Date",
+                        rightText: rightText3,
+                        is60015: false,
+                        is70016: false,
+                        is70020: false,
+                        isQuantity: false,
+                      ),
+                      GapSpace.height15,
+                      rowText2(
+                        leftText: isBill ? "Branch" : "Currency",
+                        rightText: rightText4,
+                        is60015: false,
+                        is70016: false,
+                        is70020: false,
+                        isQuantity: false,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+                right: -20,
+                child: Stack(
+                  children: [
+                    SvgPictureWidget(image: statusImage, height: 21, width: 128),
+                    Transform.translate(
+                      offset: Offset(40, 2),
+                      child: ReusableText(
+                        text: statusText,
+                        color: AppColors.appWhiteColor,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    )
+                  ],
+                )),
+          ],
+        ),
+      ),
+    ],
+  );
+}
+
+//invoice_item_widget
+Container(
+  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+  decoration: BoxDecoration(
+    image: DecorationImage(
+      image: AssetImage(getInvoiceStatusImage(isInvoiceverified, invoiceStatus)),
+      fit: BoxFit.cover,
+    ),
+  ),
+  child: Text(
+    getInvoiceStatusText(isInvoiceverified, invoiceStatus),
+    style: TextStyle(
+      color: Colors.white,
+      fontSize: 11,
+      fontWeight: FontWeight.w500,
+    ),
+  ),
+),
+
+
+//ntfn detil
+billDataNotification(
+  context: context,
+  status: getInvoiceStatusText(billDetail.isBillVerified, billDetail.billStatus), 
+  image: getInvoiceStatusImage(billDetail.isBillVerified, billDetail.billStatus),
+  leftText1: "Bill#",
+  leftText2: "Date",
+  leftText3: "Due Date",
+  leftText4: "Branch",
+  rightText1: billDetail.billInvoiceNumber,
+  rightText2: formatDateFn(billDetail.billDate),
+  rightText3: formatDateFn(billDetail.billDueDate),
+  rightText4: 'Main Branch'
+),
+billDataNotification(
+  context: context,
+  status: getInvoiceStatusText(invoiceDetail.isInvoiceverified, invoiceDetail.invoiceStatus),
+  image: getInvoiceStatusImage(invoiceDetail.isInvoiceverified, invoiceDetail.invoiceStatus),
+  leftText1: "Invoice#",
+  leftText2: "Date",
+  leftText3: "Due Date",
+  leftText4: "Currency",
+  rightText1: invoiceDetail.invoiceNumber,
+  rightText2: formatDateFn(invoiceDetail.invoiceDate),
+  rightText3: formatDateFn(invoiceDetail.invoiceDueDate),
+  rightText4: invoiceDetail.invoiceCurrency
+),
+
+
+Stack billDataNotification({
+  required BuildContext context,
+  required String status,  
+  required String image,  
+  required String leftText1,
+  required String leftText2,
+  required String leftText3,
+  required String leftText4,
+  required String rightText1,
+  required String rightText2,
+  required String rightText3,
+  required String rightText4,
+}) {
+  // ........
+}
+
+
+
+state 
+
+// Original code
+final customersProvider = FutureProvider<List<Customer>>((ref) async {
+  final api = ref.read(apiServiceProvider);
+  return api.getListApi(url: 'api/customers', fromJson: Customer.fromJson);
+});
+
+
+
+// New code using the utility
+final customersProvider = createUserSensitiveFutureProvider<List<Customer>>(
+  name: 'customers',
+  fetch: (ref) async {
+    final api = ref.read(apiServiceProvider);
+    return api.getListApi(url: 'api/customers', fromJson: Customer.fromJson);
+  },
+);
+
+
+
+// In your logout function
+void logout() async {
+  // Existing logout code...
+  
+  // Manually invalidate all providers
+  ref.invalidate(customerProvider);
+  ref.invalidate(invoiceProvider);
+  // ... add all your data providers
+}

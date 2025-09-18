@@ -1,0 +1,85 @@
+import 'package:payzo_books/import_data.dart';
+
+Widget noVendorDetailFoundPage({required BuildContext context}) {
+  return SingleChildScrollView(
+    child: Padding(
+      padding: const EdgeInsets.only(left: 24, right: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          headerTextAndWidgets(
+              headerText1: '',
+              headerText2: '',
+              imgName1: AppText.call,
+              imgName2: AppText.mail,
+              imgName3: AppText.msg,
+              imgName4: AppText.more,
+              img1: AppImages.call,
+              img2: AppImages.mail,
+              img3: AppImages.msg,
+              img4: AppImages.more,
+              isMailNeeded: true,
+              isCallNeeded: true,
+              msgOnTap: () {},
+              callOnTap: () {},
+              mailOnTap: () {},
+              moreOnTap: () {},
+              isMoreNeeded: false),
+          GapSpace.height35,
+          financialCard(
+            state: '',
+            city: '',
+            companyName: '',
+            primaryContactName: '',
+            mobileCode: '',
+            phoneNumber: '',
+            emailAddress: '',
+          ),
+          GapSpace.height20,
+          customExpandableSection(context,
+              isContentTypeString: false,
+              title: AppText.billingAdrs,
+              contentWidget: null,
+              isPrefixIconNeeded: true,
+              prefixImg: AppImages.locationPin),
+          GapSpace.height20,
+          customExpandableSection(context,
+              isContentTypeString: false,
+              title: AppText.shippingAdrs,
+              contentWidget: null,
+              isPrefixIconNeeded: true,
+              prefixImg: AppImages.locationPin),
+          GapSpace.height20,
+          customExpandableSection(
+            context,
+            isContentTypeString: false,
+            title: AppText.primaryContct,
+            contentWidget: null,
+            isPrefixIconNeeded: false,
+          ),
+          GapSpace.height20,
+          customExpandableSection(
+            context,
+            isContentTypeString: true,
+            title: AppText.regionDetails,
+            content: '',
+            isPrefixIconNeeded: false,
+          ),
+          GapSpace.height20,
+          customExpandableSection(
+            context,
+            title: AppText.otherDetails,
+            isContentTypeString: false,
+            contentWidget: vendorDetailsContent(
+                // partyId: vendor.partyId,
+                partyType: '',
+                // transactionId: ''
+                ),
+            isPrefixIconNeeded: false,
+          ),
+          GapSpace.height40,
+        ],
+      ),
+    ),
+  );
+}

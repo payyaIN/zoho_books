@@ -1,0 +1,1082 @@
+1.unit list
+
+final unitListAsync = ref.watch(getUnitListData);
+ data: (unitData) => _buildUnitDropdown(context, ref, unitData),
+ Widget _buildUnitDropdown(BuildContext context, WidgetRef ref, UnitListModel unitData) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Select Unit:', style: TextStyle(fontSize: 16)),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(4.0),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<UnitItem>(
+                isExpanded: true,
+                hint: const Text('Select a unit'),
+                value: ref.watch(selectedUnitProvider),
+                onChanged: (UnitItem? newValue) {
+                  if (newValue != null) {
+                    setSelectedUnit(ref, newValue);
+                  }
+                },
+                items: unitData.units.map<DropdownMenuItem<UnitItem>>((UnitItem unit) {
+                  return DropdownMenuItem<UnitItem>(
+                    value: unit,
+                    child: Text(unit.displayUnit),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          if (ref.watch(selectedUnitProvider) != null) ...[
+            Text('Selected Unit: ${ref.watch(selectedUnitProvider)!.displayUnit}'),
+            Text('Unit ID: ${ref.watch(selectedUnitProvider)!.unitId}'),
+            if (ref.watch(selectedUnitProvider)!.groupName != null)
+              Text('Group: ${ref.watch(selectedUnitProvider)!.groupName}'),
+          ],
+        ],
+      ),
+    );
+  }
+
+  2. Customer List Display
+
+   final customerListAsync = ref.watch(getCustomerListData);
+    data: (customerData) => _buildCustomerList(customerData),
+
+     Widget _buildCustomerList(GetCustomerListModel customerData) {
+    final customers = customerData.response.response;
+    
+    if (customers.isEmpty) {
+      return const Center(child: Text('No customers found'));
+    }
+    
+    return ListView.separated(
+      itemCount: customers.length,
+      separatorBuilder: (context, index) => const Divider(),
+      itemBuilder: (context, index) {
+        final customer = customers[index];
+        return ListTile(
+          title: Text(customer.displayName),
+          subtitle: Text(customer.emailAddress),
+          leading: CircleAvatar(
+            child: Text(customer.primaryContact.firstName.isNotEmpty 
+                ? customer.primaryContact.firstName[0] 
+                : '?'),
+          ),
+          trailing: Text('${customer.mobileCode} ${customer.phone ?? "N/A"}'),
+          onTap: () {
+            // Handle customer selection
+          },
+        );
+      },
+    );
+  }
+
+  3. Tax List Display
+
+  final taxListAsync = ref.watch(getTaxListData);
+
+    data: (taxData) => _buildTaxList(taxData),
+
+      Widget _buildTaxList(GetTaxListModel taxData) {
+    if (taxData.response.igstTax.isEmpty) {
+      return const Center(child: Text('No taxes found'));
+    }
+    
+    return ListView.builder(
+      itemCount: taxData.response.igstTax.length,
+      itemBuilder: (context, index) {
+        final tax = taxData.response.igstTax[index];
+        return Card(
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  tax.tcdTaxName,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                Text('Tax Rate: ${tax.tcdTaxRate.toStringAsFixed(2)}%'),
+                Text('Tax ID: ${tax.tcdTaxId}'),
+                Text('Active: ${tax.tcdAtive == 1 ? "Yes" : "No"}'),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  4. Branch List Display
+
+   final branchListAsync = ref.watch(getAllBranchListData);
+   data: (branchData) => _buildBranchList(branchData),
+
+    Widget _buildBranchList(GetAllBranchListModel branchData) {
+    if (branchData.data.isEmpty) {
+      return const Center(child: Text('No branches found'));
+    }
+    
+    return ListView.builder(
+      itemCount: branchData.data.length,
+      itemBuilder: (context, index) {
+        final branch = branchData.data[index];
+        return ExpansionTile(
+          title: Text(branch.namePrimary),
+          subtitle: Text(branch.branchId.toString()),
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Secondary Name: ${branch.nameSecondary}'),
+                  Text('Address: ${branch.addressDetails}'),
+                  Text('Created Date: ${branch.createdAt.toString().substring(0, 10)}'),
+                  Text('Contact: ${branch.primaryContact.emailId}'),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  5. Bank Accounts List
+
+   final bankAccountsAsync = ref.watch(bankAccountsListData);
+     data: (accountsData) => _buildAccountsList(accountsData),
+
+      Widget _buildAccountsList(BankAccountsListModel accountsData) {
+    if (accountsData.response.isEmpty) {
+      return const Center(child: Text('No bank accounts found'));
+    }
+    
+    return ListView.builder(
+      itemCount: accountsData.response.length,
+      itemBuilder: (context, index) {
+        final account = accountsData.response[index];
+        return ListTile(
+          title: Text(account.accountName),
+          subtitle: Text('Account Code: ${account.accountCode}'),
+          trailing: Text('ID: ${account.accountId}'),
+          onTap: () {
+            // Handle account selection
+          },
+        );
+      },
+    );
+  }
+
+  6. Journal Entries Display
+
+    final int transactionId;
+    final journalEntriesAsync = ref.watch(journalEntriesProvider(transactionId));
+     data: (entriesData) => _buildEntriesList(entriesData),
+     Widget _buildEntriesList(GetJournalEntriesModel entriesData) {
+    if (entriesData.response.isEmpty) {
+      return const Center(child: Text('No journal entries found'));
+    }
+    
+    double totalDebit = 0;
+    double totalCredit = 0;
+    
+    for (var entry in entriesData.response) {
+      totalDebit += entry.debitAmount;
+      totalCredit += entry.creditAmount;
+    }
+    
+    return Column(
+      children: [
+        // Totals at the top
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Total Debit: ${totalDebit.toStringAsFixed(2)}'),
+              Text('Total Credit: ${totalCredit.toStringAsFixed(2)}'),
+            ],
+          ),
+        ),
+        const Divider(thickness: 2),
+        
+        // Table headers
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: Row(
+            children: [
+              Expanded(
+                flex: 3,
+                child: Text('Account', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+              Expanded(
+                flex: 2,
+                child: Text('Branch', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+              Expanded(
+                flex: 2,
+                child: Text('Debit', style: TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.end),
+              ),
+              Expanded(
+                flex: 2,
+                child: Text('Credit', style: TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.end),
+              ),
+            ],
+          ),
+        ),
+        const Divider(),
+        
+        // Entries list
+        Expanded(
+          child: ListView.separated(
+            itemCount: entriesData.response.length,
+            separatorBuilder: (context, index) => const Divider(),
+            itemBuilder: (context, index) {
+              final entry = entriesData.response[index];
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: Text(entry.accountName),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: Text(entry.branchName),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        entry.debitAmount > 0 ? entry.debitAmount.toStringAsFixed(2) : '',
+                        textAlign: TextAlign.end,
+                      ),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        entry.creditAmount > 0 ? entry.creditAmount.toStringAsFixed(2) : '',
+                        textAlign: TextAlign.end,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  7. Payment Due Options
+   final paymentDueAsync = ref.watch(paymentDueData);
+     data: (dueData) => _buildDueOptions(context, ref, dueData),
+
+      Widget _buildDueOptions(BuildContext context, WidgetRef ref, PaymentDueModel dueData) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text('Select Payment Due Term:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        ),
+        
+        // Dropdown for payment due
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(4.0),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<PaymentDueItem>(
+                isExpanded: true,
+                hint: const Text('Select a payment term'),
+                value: ref.watch(selectedPaymentDueProvider),
+                onChanged: (PaymentDueItem? newValue) {
+                  if (newValue != null) {
+                    setSelectedPaymentDue(ref, newValue);
+                  }
+                },
+                items: dueData.items.map<DropdownMenuItem<PaymentDueItem>>((PaymentDueItem item) {
+                  return DropdownMenuItem<PaymentDueItem>(
+                    value: item,
+                    child: Text(item.label),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+        ),
+        
+        const SizedBox(height: 20),
+        
+        // Display selected value
+        if (ref.watch(selectedPaymentDueProvider) != null) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Selected Payment Term:', style: TextStyle(fontWeight: FontWeight.bold)),
+                    SizedBox(height: 8),
+                    Text('Label: ${ref.watch(selectedPaymentDueProvider)!.label}'),
+                    Text('Days: ${ref.watch(selectedPaymentDueProvider)!.days}'),
+                    Text('Value: ${ref.watch(selectedPaymentDueProvider)!.value}'),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  8. Recurring Invoice List with Pagination
+
+  final recurringInvoiceAsync = ref.watch(getAllRecurringInvoiceData);
+   data: (invoiceData) => _buildInvoiceList(context, ref, invoiceData),
+     Widget _buildInvoiceList(BuildContext context, WidgetRef ref, GetAllRecurringInvoiceModel invoiceData) {
+    if (invoiceData.recInvoiceData.isEmpty) {
+      return const Center(child: Text('No recurring invoices found'));
+    }
+    
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Total Invoices: ${invoiceData.totalCount}'),
+              Text('Current Page: ${ref.watch(recurringInvoicePaginationProvider).pageNo + 1}'),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            itemCount: invoiceData.recInvoiceData.length + 1, // +1 for the load more button
+            itemBuilder: (context, index) {
+              if (index == invoiceData.recInvoiceData.length) {
+                // This is the last item - show load more button if there are more items
+                final hasMore = ref.watch(hasMoreRecurringInvoicesProvider);
+                if (!hasMore) return const SizedBox.shrink();
+                
+                return Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: ElevatedButton(
+                    onPressed: () => loadMoreRecurringInvoices(ref),
+                    child: const Text('Load More'),
+                  ),
+                );
+              }
+              
+              // Once you have actual recurring invoice data, replace this with the real fields
+              final invoice = invoiceData.recInvoiceData[index];
+              return Card(
+                margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: ListTile(
+                  title: Text('Invoice #${index + 1}'),
+                  subtitle: Text('Details will be shown here once data is available'),
+                  // Add more fields as they become available
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  9. Repeat Type Options
+   final repeatTypeAsync = ref.watch(repeatTypeData);
+     data: (typeData) => _buildRepeatTypeOptions(context, ref, typeData),
+
+      Widget _buildRepeatTypeOptions(BuildContext context, WidgetRef ref, GetAllRptEveryTypeModel typeData) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text('Select Repeat Type:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        ),
+        
+        // Dropdown for repeat type
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(4.0),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<RepeatTypeItem>(
+                isExpanded: true,
+                hint: const Text('Select a repeat type'),
+                value: ref.watch(selectedRepeatTypeProvider),
+                onChanged: (RepeatTypeItem? newValue) {
+                  if (newValue != null) {
+                    setSelectedRepeatType(ref, newValue);
+                  }
+                },
+                items: typeData.items.map<DropdownMenuItem<RepeatTypeItem>>((RepeatTypeItem item) {
+                  return DropdownMenuItem<RepeatTypeItem>(
+                    value: item,
+                    child: Text(item.label),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+        ),
+        
+        const SizedBox(height: 20),
+        
+        // Display selected value
+        if (ref.watch(selectedRepeatTypeProvider) != null) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Selected Repeat Type:', style: TextStyle(fontWeight: FontWeight.bold)),
+                    SizedBox(height: 8),
+                    Text('Label: ${ref.watch(selectedRepeatTypeProvider)!.label}'),
+                    Text('Value: ${ref.watch(selectedRepeatTypeProvider)!.value}'),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+        
+        // Show all available options in a list
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('All Available Options:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                SizedBox(height: 8),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: typeData.items.length,
+                    itemBuilder: (context, index) {
+                      final item = typeData.items[index];
+                      return ListTile(
+                        title: Text(item.label),
+                        trailing: Text('Value: ${item.value}'),
+                        onTap: () => setSelectedRepeatType(ref, item),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+  10. Current Country Display
+
+   final countryAsync = ref.watch(getCurrentCountryData);
+     data: (countryData) => _buildCountryInfo(countryData),
+
+      Widget _buildCountryInfo(GetCurrentCountryModel countryData) {
+    return Center(
+      child: Card(
+        margin: const EdgeInsets.all(16.0),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Current Country Information',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              Text('Country Code: ${countryData.countryCode}'),
+              // More country information can be added here when available
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  11. Item List with Filtering
+   String searchQuery = '';
+
+    final itemsAsync = ref.watch(getItemsData);
+     onPressed: () {
+              _showFilterDialog(context);
+            },
+             TextField(
+              decoration: const InputDecoration(
+                labelText: 'Search Items',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  searchQuery = value;
+                });
+              },
+            ),
+     Expanded(
+            child: itemsAsync.when(
+              data: (itemsData) => _buildItemsList(itemsData),
+              loading: () => const Center(
+                child: CircularProgressIndicator(),
+              ),
+              error: (error, stack) => Center(
+                child: Text('Error: ${error.toString()}'),
+              ),
+            ),
+          ),
+  Widget _buildItemsList(GetItemModel itemsData) {
+    // Filter items based on search query
+    final filteredItems = searchQuery.isEmpty
+        ? itemsData.data
+        : itemsData.data.where((item) =>
+            item.itemName.toLowerCase().contains(searchQuery.toLowerCase()) ||
+            (item.description != null && item.description.toString().toLowerCase().contains(searchQuery.toLowerCase()))
+          ).toList();
+    
+    if (filteredItems.isEmpty) {
+      return const Center(child: Text('No items found'));
+    }
+    
+    return ListView.builder(
+      itemCount: filteredItems.length,
+      itemBuilder: (context, index) {
+        final item = filteredItems[index];
+        return Card(
+          margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.itemName,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('HSN/SAC: ${item.hsnOrSac}'),
+                    Text('ID: ${item.itemId}'),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                if (item.salesRate != null)
+                  Text('Sales Rate: ${item.salesRate?.toStringAsFixed(2)}'),
+                if (item.costRate != null)
+                  Text('Cost Rate: ${item.costRate?.toStringAsFixed(2)}'),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(
+                      item.stockable ? Icons.check_circle : Icons.cancel,
+                      size: 16,
+                      color: item.stockable ? Colors.green : Colors.red,
+                    ),
+                    const SizedBox(width: 4),
+                    Text('Stockable: ${item.stockable ? "Yes" : "No"}'),
+                    const SizedBox(width: 16),
+                    Icon(
+                      item.fixedAsset ? Icons.check_circle : Icons.cancel,
+                      size: 16,
+                      color: item.fixedAsset ? Colors.green : Colors.red,
+                    ),
+                    const SizedBox(width: 4),
+                    Text('Fixed Asset: ${item.fixedAsset ? "Yes" : "No"}'),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+  
+  void _showFilterDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Filter Items'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: const Text('Show Stockable Items Only'),
+              onTap: () {
+                // Implement filtering logic
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              title: const Text('Show Fixed Assets Only'),
+              onTap: () {
+                // Implement filtering logic
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              title: const Text('Show All Items'),
+              onTap: () {
+                // Reset filters
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  12. Shipping Method Selection
+
+   final shippingMethodAsync = ref.watch(getShippingMethodData);
+      data: (methodData) => _buildShippingMethodList(context, ref, methodData),
+
+       Widget _buildShippingMethodList(BuildContext context, WidgetRef ref, ShippingMethodModel methodData) {
+    // Filter for active methods
+    final activeMethods = methodData.methods.where((method) => method.shpmIsActive == 't').toList();
+    
+    if (activeMethods.isEmpty) {
+      return const Center(child: Text('No active shipping methods found'));
+    }
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text('Select Shipping Method:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        ),
+        
+        // Radio buttons for shipping methods
+        Expanded(
+          child: ListView.builder(
+            itemCount: activeMethods.length,
+            itemBuilder: (context, index) {
+              final method = activeMethods[index];
+              final isSelected = ref.watch(selectedShippingMethodProvider) == method;
+              
+              return RadioListTile<ShippingMethod>(
+                title: Text(method.shpmName),
+                subtitle: Text(method.shpmDescription),
+                value: method,
+                groupValue: ref.watch(selectedShippingMethodProvider),
+                onChanged: (ShippingMethod? value) {
+                  if (value != null) {
+                    setSelectedShippingMethod(ref, value);
+                  }
+                },
+                activeColor: Theme.of(context).primaryColor,
+                selected: isSelected,
+              );
+            },
+          ),
+        ),
+        
+        // Display selected method details
+        if (ref.watch(selectedShippingMethodProvider) != null) ...[
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Selected Shipping Method:', style: TextStyle(fontWeight: FontWeight.bold)),
+                    SizedBox(height: 8),
+                    Text('Name: ${ref.watch(selectedShippingMethodProvider)!.shpmName}'),
+                    Text('ID: ${ref.watch(selectedShippingMethodProvider)!.shpmId}'),
+                    Text('Created Date: ${ref.watch(selectedShippingMethodProvider)!.shpmCreatedDate.toString().substring(0, 10)}'),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  13. Associate Tax List
+
+   final associateTaxAsync = ref.watch(getAssociateTaxData);
+    data: (taxData) => _buildTaxList(taxData),
+
+                     Widget _buildTaxList(GetAssociateTaxModel taxData) {
+    if (taxData.response.taxes.isEmpty) {
+      return const Center(child: Text('No associate taxes found'));
+    }
+    
+    return ListView.builder(
+      itemCount: taxData.response.taxes.length,
+      itemBuilder: (context, index) {
+        final tax = taxData.response.taxes[index];
+        return Card(
+          margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: ListTile(
+            title: Text(tax.tcdTaxName),
+            subtitle: Text('Tax Rate: ${tax.tcdTaxRate.toStringAsFixed(2)}%'),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: tax.tcdAtive == 1 ? Colors.green.shade100 : Colors.red.shade100,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    tax.tcdAtive == 1 ? 'Active' : 'Inactive',
+                    style: TextStyle(
+                      color: tax.tcdAtive == 1 ? Colors.green.shade800 : Colors.red.shade800,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text('ID: ${tax.tcdTaxId}'),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  14. Price Currency List Screen
+
+    final currencyAsync = ref.watch(getPriceCurrencyData);
+     data: (currencyData) => _buildCurrencyList(context, ref, currencyData),
+
+     Widget _buildCurrencyList(BuildContext context, WidgetRef ref, PriceCurrencyModel currencyData) {
+    if (currencyData.currencies.isEmpty) {
+      return const Center(child: Text('No currencies found'));
+    }
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Dropdown for currency selection
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Select Currency:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(4.0),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<CurrencyItem>(
+                    isExpanded: true,
+                    hint: const Text('Select a currency'),
+                    value: ref.watch(selectedCurrencyProvider),
+                    onChanged: (CurrencyItem? newValue) {
+                      if (newValue != null) {
+                        setSelectedCurrency(ref, newValue);
+                      }
+                    },
+                    items: currencyData.currencies.map<DropdownMenuItem<CurrencyItem>>((CurrencyItem currency) {
+                      return DropdownMenuItem<CurrencyItem>(
+                        value: currency,
+                        child: Text('${currency.currencyValue} (${_getCurrencySymbol(currency.currencyValue)})'),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        
+        // Display selected currency details
+        if (ref.watch(selectedCurrencyProvider) != null) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Selected Currency:', style: TextStyle(fontWeight: FontWeight.bold)),
+                    SizedBox(height: 8),
+                    Text('Currency: ${ref.watch(selectedCurrencyProvider)!.currencyValue}'),
+                    Text('Symbol: ${_getCurrencySymbol(ref.watch(selectedCurrencyProvider)!.currencyValue)}'),
+                    Text('Currency ID: ${ref.watch(selectedCurrencyProvider)!.currencyId}'),
+                    Text('Country ID: ${ref.watch(selectedCurrencyProvider)!.countryId}'),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+        
+        // List of all currencies
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('All Available Currencies:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                SizedBox(height: 8),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: currencyData.currencies.length,
+                    itemBuilder: (context, index) {
+                      final currency = currencyData.currencies[index];
+                      return Card(
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            child: Text(currency.currencyValue.substring(0, 1)),
+                          ),
+                          title: Text(currency.currencyValue),
+                          subtitle: Text('Country ID: ${currency.countryId}'),
+                          trailing: Text(_getCurrencySymbol(currency.currencyValue)),
+                          onTap: () => setSelectedCurrency(ref, currency),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+  
+  // Helper method to get currency symbol (simplified)
+  String _getCurrencySymbol(String currencyCode) {
+    final Map<String, String> symbols = {
+      'USD': '\$',
+      'EUR': '€',
+      'JPY': '¥',
+      'GBP': '£',
+      'CAD': 'C\$',
+      'AUD': 'A\$',
+      'CHF': 'Fr',
+      'CNY': '¥',
+      'HKD': 'HK\$',
+      'SAR': '﷼',
+    };
+    
+    return symbols[currencyCode] ?? currencyCode;
+  }
+
+  15. All Tax List Screen
+
+  final taxListAsync = ref.watch(getTaxListData);
+
+   data: (taxData) => _buildTaxCategories(taxData),
+    Widget _buildTaxCategories(GetAllTaxListModel taxData) {
+    // Check if any tax data is available
+    bool hasData = taxData.others.isNotEmpty || 
+                   taxData.defaultTax.isNotEmpty || 
+                   taxData.customTax.isNotEmpty ||
+                   taxData.taxGroup.isNotEmpty;
+    
+    if (!hasData) {
+      return const Center(child: Text('No tax data found'));
+    }
+    
+    return DefaultTabController(
+      length: 3, // We'll show 3 tabs: Default, Others, and Custom/Group
+      child: Column(
+        children: [
+          const TabBar(
+            labelColor: Colors.blue, // Adjust color to match your theme
+            unselectedLabelColor: Colors.grey,
+            tabs: [
+              Tab(text: 'Default Taxes'),
+              Tab(text: 'Other Taxes'),
+              Tab(text: 'Custom & Group'),
+            ],
+          ),
+          Expanded(
+            child: TabBarView(
+              children: [
+                // Default Taxes Tab
+                _buildDefaultTaxList(taxData),
+                
+                // Other Taxes Tab
+                _buildOtherTaxList(taxData),
+                
+                // Custom & Group Taxes Tab
+                _buildCustomAndGroupTaxList(taxData),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildDefaultTaxList(GetAllTaxListModel taxData) {
+    if (taxData.defaultTax.isEmpty) {
+      return const Center(child: Text('No default taxes found'));
+    }
+    
+    return ListView.builder(
+      itemCount: taxData.defaultTax.length,
+      padding: const EdgeInsets.all(8),
+      itemBuilder: (context, index) {
+        final tax = taxData.defaultTax[index];
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      tax.tcdTaxName,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: tax.tcdAtive == 1 ? Colors.green.shade100 : Colors.red.shade100,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        tax.tcdAtive == 1 ? 'Active' : 'Inactive',
+                        style: TextStyle(
+                          color: tax.tcdAtive == 1 ? Colors.green.shade800 : Colors.red.shade800,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text('Rate: ${tax.tcdTaxRate.toStringAsFixed(2)}%'),
+                Text('Tax ID: ${tax.tcdTaxId}'),
+                Text('Type: ${tax.taxType}'),
+                if (tax.tcdIsCountryDefault == 1)
+                  Text('Country Default: Yes', style: TextStyle(fontStyle: FontStyle.italic)),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+  
+  Widget _buildOtherTaxList(GetAllTaxListModel taxData) {
+    if (taxData.others.isEmpty) {
+      return const Center(child: Text('No other taxes found'));
+    }
+    
+    return ListView.builder(
+      itemCount: taxData.others.length,
+      padding: const EdgeInsets.all(8),
+      itemBuilder: (context, index) {
+        final tax = taxData.others[index];
+        return Card(
+          child: ListTile(
+            title: Text(tax.taxName),
+            subtitle: Text('Type: ${tax.taxType}'),
+            trailing: Text('ID: ${tax.taxId}'),
+          ),
+        );
+      },
+    );
+  }
+  
+  Widget _buildCustomAndGroupTaxList(GetAllTaxListModel taxData) {
+    bool hasCustom = taxData.customTax.isNotEmpty;
+    bool hasGroup = taxData.taxGroup.isNotEmpty;
+    
+    if (!hasCustom && !hasGroup) {
+      return const Center(child: Text('No custom or group taxes found'));
+    }
+    
+    return ListView(
+      padding: const EdgeInsets.all(8),
+      children: [
+        if (hasCustom) ...[
+          const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text(
+              'Custom Taxes',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ),
+          // Add custom tax list items here
+          // Since the example had an empty customTax array, we'll just show a placeholder
+          const Card(
+            child: ListTile(
+              title: Text('Custom taxes will be displayed here'),
+              subtitle: Text('When available in the API response'),
+            ),
+          ),
+        ],
+        
+        if (hasGroup) ...[
+          const SizedBox(height: 16),
+          const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text(
+              'Tax Groups',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ),
+          // Add tax group list items here
+          // Since the example had an empty taxGroup array, we'll just show a placeholder
+          const Card(
+            child: ListTile(
+              title: Text('Tax groups will be displayed here'),
+              subtitle: Text('When available in the API response'),
+            ),
+          ),
+        ],
+      ],
+    );
+  }

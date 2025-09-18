@@ -1,0 +1,38 @@
+class AppImages {
+  static const String userIcon = 'assets/user.svg';
+  static const String lockIcon = 'assets/lock.svg';
+  static const String eyeOffIcon = 'assets/eyeoff.svg';
+
+  static const String invoiceIcon1 = 'assets/invoice1.svg';
+  static const String invoiceIcon2 = 'assets/invoice2.svg';
+  static const String bellBlack = 'assets/bell black.svg';
+  static const String searchIcon = 'assets/search.svg';
+  static const String filterIcon = 'assets/filter.svg';
+  static const String arrowDown = 'assets/arrow_down.svg';
+  static const String dp1 = 'assets/dpimg1.png';
+  static const String dp2 = 'assets/dpimg2.png';
+  static const String dp3 = 'assets/dpimg3.png';
+  static const String dp4 = 'assets/dpimg4.png';
+  static const String dp5 = 'assets/dpimg5.png';
+  static const String crossSymbol = 'assets/cross.svg';
+  static const String indicator = 'assets/indicator.svg';
+  static const String editImg = 'assets/edit.svg';
+  static const String call = 'assets/phone.svg';
+  static const String mail = 'assets/mail.svg';
+  static const String msg = 'assets/msg.svg';
+  static const String more = 'assets/more.svg';
+  static const String locationPin = 'assets/location_pin.svg';
+  static const String paypal = 'assets/paypal.svg';
+  static const String razorpay = 'assets/razorpay.svg';
+  static const String verifone = 'assets/Verifone.svg';
+  static const String moneyBag = 'assets/money_bag.svg';
+  static const String printIcon = 'assets/print.svg';
+  static const String editWhite = 'assets/editwhite.svg';
+  static const String pendingBox = 'assets/pendingbox.svg';
+  static const String approvedBox = 'assets/approved_box.svg';
+  static const String rejectedBox = 'assets/rejectbox.svg';
+  static const String rightArrow = 'assets/rightarrow.svg';
+  static const String invoicewhte = 'assets/invoice_white.svg';
+  static const String logoutimg = 'assets/logout.png';
+  static const String statusBox = 'assets/status_box.png';
+}

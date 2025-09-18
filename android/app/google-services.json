@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "203720179569",
+    "project_id": "payzo-books",
+    "storage_bucket": "payzo-books.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:203720179569:android:c7f11c25f24e3c3d31c0d0",
+        "android_client_info": {
+          "package_name": "com.its.payzobooks.payzo_books"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB6WI2P7a5vNeuN-g47l9TfPI1apfPlPd4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
