@@ -14,7 +14,7 @@ class GetAllOrdersRepo {
   }) async {
     try {
       final result = await _apiService.postApi(
-        url: "http://158.101.247.195/pb-process-service/order/getAllOrders?pageNo=$pageNo&RowPerPage=$rowPerPage",
+        url: "http://81.208.173.149/pb-process-service/order/getAllOrders?pageNo=$pageNo&RowPerPage=$rowPerPage",
         body: {
           "requestCriteria": {},
           "sortingCriteria": {},

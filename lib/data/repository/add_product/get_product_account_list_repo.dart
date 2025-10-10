@@ -8,7 +8,7 @@ class ProductAccountListRepository {
 
   Future<ProductAccountResponse> fetchProductAccounts() {
     return apiService.getApi(
-      url: 'http://158.101.247.195/pb-accounting-service/api/chartOfAccounts/productAccounts',
+      url: 'http://81.208.173.149/pb-accounting-service/api/chartOfAccounts/productAccounts',
       fromJson: (json) => ProductAccountResponse.fromJson(json),
     );
   }

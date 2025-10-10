@@ -12,7 +12,7 @@ class DownloadBillRepository {
 
       final result = await _apiService.getApi(
         url:
-            "http://158.101.247.195/pb-process-service/bill/downloadBillPdf?billId=$billId",
+            "http://81.208.173.149/pb-process-service/bill/downloadBillPdf?billId=$billId",
         fromJson: (json) {
           print('Bill detail API response received for billId $billId');
           return BillDownloadModel.fromMap(json);

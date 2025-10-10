@@ -52,6 +52,7 @@ class CustomerDetailPage extends ConsumerWidget {
                   ),
                 );
               }
+
               final customer = customerDetails[0];
               String stateValue = customer.billingAddress.state;
               String cityValue = customer.billingAddress.city;

@@ -30,7 +30,7 @@ class LogoutRepository {
       print('Logout request body: $body');
 
       final result = await _apiService.postApi(
-        url: "http://158.101.247.195/pb-auth-service/oauth/token/logout",
+        url: "http://81.208.173.149/pb-auth-service/oauth/token/logout",
         body: body,
         fromJson: (json) {
           print('Logout API response received: $json');

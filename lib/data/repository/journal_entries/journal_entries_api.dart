@@ -11,7 +11,7 @@ class JournalEntriesRepository {
       print('Fetching journal entries for transaction ID: $transactionId');
       return await _apiService.getApi(
         url:
-            "http://158.101.247.195/pb-accounting-service/api/getDetail/getJournalEntries?transactionId=$transactionId",
+            "http://81.208.173.149/pb-accounting-service/api/getDetail/getJournalEntries?transactionId=$transactionId",
         fromJson: (json) {
           print('Journal entries API response received');
           return GetJournalEntriesModel.fromMap(json);

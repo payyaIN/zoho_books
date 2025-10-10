@@ -11,6 +11,8 @@ import 'package:payzo_books/utils/common_widgets/reusable_bottom_sheet.dart';
 import 'package:payzo_books/utils/common_widgets/sar_textfield.dart';
 import 'package:payzo_books/view/main_screen/notifiers/bottom_nav_bar_notifier.dart';
 
+import '../../../data/repository/add_vendor/get_country_list_repository.dart';
+
 final vendorBillingTileExpandedProvider = StateProvider<bool>((ref) => false);
 final vendorShippingTileExpandedProvider = StateProvider<bool>((ref) => false);
 final sameAsBillingToggleProvider = StateProvider<bool>((ref) => false);
@@ -52,7 +54,7 @@ class _AddVendorState extends ConsumerState<AddVendor> {
   };
   final billingAddressLabels = <String, String>{
     'building': 'Building Number',
-    'street': 'Street',
+    // 'street': 'Street',
     'streetArabic': 'Street',
     'streetAddress': 'Street Address',
     'city': 'City',
@@ -62,7 +64,7 @@ class _AddVendorState extends ConsumerState<AddVendor> {
   };
   final shippingAddressLabels = <String, String>{
     'building': 'Building Number',
-    'street': 'Street',
+    // 'street': 'Street',
     'streetArabic': 'Street',
     'streetAddress': 'Street Address',
     'city': 'City',
@@ -75,7 +77,7 @@ class _AddVendorState extends ConsumerState<AddVendor> {
     // 'country': TextEditingController(),
     // 'state': TextEditingController(),
     'building': TextEditingController(),
-    'street': TextEditingController(),
+    // 'street': TextEditingController(),
     'streetArabic': TextEditingController(),
     'streetAddress': TextEditingController(),
     'streetAddressArabic': TextEditingController(),
@@ -88,7 +90,7 @@ class _AddVendorState extends ConsumerState<AddVendor> {
     // 'country': TextEditingController(),
     // 'state': TextEditingController(),
     'building': TextEditingController(),
-    'street': TextEditingController(),
+    // 'street': TextEditingController(),
     'streetArabic': TextEditingController(),
     'streetAddress': TextEditingController(),
     'streetAddressArabic': TextEditingController(),

@@ -83,7 +83,7 @@ class RegisterCustomerRepository {
       "sameAddressFlag": true
     };
 
-    const url = 'http://158.101.247.195/pb-process-service/api/process/register';
+    const url = 'http://81.208.173.149/pb-process-service/api/process/register';
 
     return await ref.read(apiServiceProvider).postApi<AddCustomerApiModel>(
       url: url,

@@ -63,7 +63,7 @@ class GetAllBillRepository {
           name: 'BillsAPI');
 
       var result = await _apiService.postApi(
-        url: "http://158.101.247.195/pb-process-service/bill/getAllBill",
+        url: "http://81.208.173.149/pb-process-service/bill/getAllBill",
         body: requestBody,
         fromJson: (json) {
           developer.log(

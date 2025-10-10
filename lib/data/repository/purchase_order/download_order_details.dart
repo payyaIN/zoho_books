@@ -13,7 +13,7 @@ class DownloadOrderRepository {
 
       final result = await _apiService.getApi(
         url:
-        "http://158.101.247.195/pb-process-service/order/downloadPoPdf?poId=$poId",
+        "http://81.208.173.149/pb-process-service/order/downloadPoPdf?poId=$poId",
         fromJson: (json) {
           print('Order PDF API response received for poId $poId');
           return OrderDownloadModel.fromJson(json);

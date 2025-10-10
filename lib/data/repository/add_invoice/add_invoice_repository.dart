@@ -12,7 +12,7 @@ class InvoiceRepository {
     File? file, // ✅ Make this optional
   }) async {
     final uri = Uri.parse(
-      'http://158.101.247.195/pb-process-service/invoice/generateInvoiceWf',
+      'http://81.208.173.149/pb-process-service/invoice/generateInvoiceWf',
     );
 
     final request = http.MultipartRequest('POST', uri);

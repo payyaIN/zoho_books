@@ -8,7 +8,7 @@ class GetPendingRequestsCount {
 
   Future<PendingCounts> fetchData() {
     return _apiService.getApi(
-      url: 'http://158.101.247.195/pb-process-service/common/pendingCounts',
+      url: 'http://81.208.173.149/pb-process-service/common/pendingCounts',
       fromJson: (json) => PendingCounts.fromJson(json),
     );
   }

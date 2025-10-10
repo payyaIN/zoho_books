@@ -6,42 +6,49 @@ import '../../../../import_data.dart';
 class CustomerFormNotifier extends StateNotifier<AddCustomerModel> {
   CustomerFormNotifier()
       : super(AddCustomerModel(
-    customerType: 'Business',
-    salutation: '',
-    firstName: '',
-    secondName: '',
-    companyName: '',
-    email: '',
-    mobile: '',
-    workPhone: '',
-    phoneCode: '+966',
-    mobileCode: '+966',
-    cpPhnCode: '+966',
-    cpMobCode: '+966',
-    openingAmount: '',
-    currencyId: 1,
-    branchId: 1,
-    expiryDate: '2025-04-05',
-    documentType: '',
-    documentNumber: '',
-    remark: '',
-    billingAddress: {
-      'country': '',
-      'state': '',
-      'building': '',
-      'street': '',
-      'city': '',
-      'zip': ''
-    },
-    shippingAddress: {
-      'country': '',
-      'state': '',
-      'building': '',
-      'street': '',
-      'city': '',
-      'zip': ''
-    },
-  ));
+          customerType: 'Business',
+          salutation: '',
+          firstName: '',
+          firstNameArabic: '',
+          secondName: '',
+          secondNameArabic: '',
+          companyName: '',
+          companyNameArabic: '',
+          email: '',
+          mobile: '',
+          workPhone: '',
+          phoneCode: '+966',
+          mobileCode: '+966',
+          cpPhnCode: '+966',
+          cpMobCode: '+966',
+          openingAmount: '',
+          currencyId: 1,
+          branchId: 1,
+          expiryDate: '2025-04-05',
+          documentType: '',
+          documentNumber: '',
+          remark: '',
+          billingAddress: {
+            'country': '',
+            'state': '',
+            'building': '',
+            'street': '',
+            'streetArabic': '',
+            'city': '',
+            'cityArabic': '',
+            'zip': ''
+          },
+          shippingAddress: {
+            'country': '',
+            'state': '',
+            'building': '',
+            'street': '',
+            'streetArabic': '',
+            'city': '',
+            'cityArabic': '',
+            'zip': ''
+          },
+        ));
 
   void updateField(String key, String value) {
     switch (key) {
@@ -125,6 +132,9 @@ class CustomerFormNotifier extends StateNotifier<AddCustomerModel> {
       firstName: '',
       secondName: '',
       companyName: '',
+      firstNameArabic: '',
+      secondNameArabic: '',
+      companyNameArabic: '',
       email: '',
       mobile: '',
       workPhone: '',
@@ -174,16 +184,16 @@ class CustomerFormNotifier extends StateNotifier<AddCustomerModel> {
     if (state.companyName.trim().isEmpty) {
       errors['companyName'] = 'Company name is required';
     }
-   if (state.firstName.trim().isEmpty) {
-      errors['firstName'] = 'First name is required';
+    if (state.firstNameArabic.trim().isEmpty) {
+      errors['firstName'] = 'First name in Arabic is required';
     }
 
-    if (state.secondName.trim().isEmpty) {
-      errors['secondName'] = 'Last name is required';
+    if (state.secondNameArabic.trim().isEmpty) {
+      errors['secondName'] = 'Last name in Arabic is required';
     }
 
-    if (state.companyName.trim().isEmpty) {
-      errors['companyName'] = 'Company name is required';
+    if (state.companyNameArabic.trim().isEmpty) {
+      errors['companyName'] = 'Company name in Arabic is required';
     }
 
     if (state.email.trim().isEmpty) {
@@ -245,6 +255,7 @@ class CustomerFormNotifier extends StateNotifier<AddCustomerModel> {
   }
 }
 
-final customerFormProvider = StateNotifierProvider<CustomerFormNotifier, AddCustomerModel>((ref) {
+final customerFormProvider =
+    StateNotifierProvider<CustomerFormNotifier, AddCustomerModel>((ref) {
   return CustomerFormNotifier();
 });

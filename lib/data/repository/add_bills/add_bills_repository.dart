@@ -30,7 +30,7 @@ class AddBillRepository {
   Future<String> submitBill() async {
     final state = ref.read(addBillFormProvider);
     final url = Uri.parse(
-        'http://158.101.247.195/pb-process-service/bill/getBillModal');
+        'http://81.208.173.149/pb-process-service/bill/getBillModal');
 
     final productDetails = state.itemDetails.map((item) {
       return {

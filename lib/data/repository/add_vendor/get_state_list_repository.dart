@@ -26,7 +26,7 @@ class GetStateListRepository {
     }
     return _apiService.getApi(
       url:
-          'http://158.101.247.195/pb-common-service/api/companyInfo/getStateList?Id=$countryCode',
+          'http://81.208.173.149/pb-common-service/api/companyInfo/getStateList?Id=$countryCode',
       fromJson: (json) => GetStateListModel.fromJson(json),
     );
   }

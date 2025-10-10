@@ -8,7 +8,7 @@ class GetTotalPayablesRepository {
 
   Future<GetTotalPayables> fetchData() {
     return _apiService.getApi(
-      url: 'http://158.101.247.195/pb-accounting-service/api/dashboard/getTotalPayables',
+      url: 'http://81.208.173.149/pb-accounting-service/api/dashboard/getTotalPayables',
       fromJson: (json) => GetTotalPayables.fromJson(json),
     );
   }

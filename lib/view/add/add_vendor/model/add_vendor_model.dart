@@ -16,15 +16,19 @@ class AddVendorModel {
   final String vatNumber;
   final String crNum;
   final String displayName;
+
   final Map<String, dynamic> openingBalance;
   final Map<String, dynamic> documents;
   final Map<String, dynamic> remark;
   final Map<String, dynamic> customFields;
   final Map<String, dynamic> reportingTag;
+
   final List<Map<String, dynamic>> contactPersons;
   final bool sameAddressFlag;
-  final Map<String, String> billingAddress;
-  final Map<String, String> shippingAddress;
+
+  final Map<String, dynamic> billingAddress;
+  final Map<String, dynamic> shippingAddress;
+
   final Map<String, String> errors;
 
   AddVendorModel({
@@ -50,10 +54,10 @@ class AddVendorModel {
     required this.remark,
     required this.customFields,
     required this.reportingTag,
-    required this.billingAddress,
-    required this.shippingAddress,
     required this.contactPersons,
     required this.sameAddressFlag,
+    required this.billingAddress,
+    required this.shippingAddress,
     this.errors = const {},
   });
 
@@ -82,18 +86,18 @@ class AddVendorModel {
     Map<String, dynamic>? reportingTag,
     List<Map<String, dynamic>>? contactPersons,
     bool? sameAddressFlag,
-    Map<String, String>? billingAddress,
-    Map<String, String>? shippingAddress,
+    Map<String, dynamic>? billingAddress,
+    Map<String, dynamic>? shippingAddress,
     Map<String, String>? errors,
   }) {
     return AddVendorModel(
       salutation: salutation ?? this.salutation,
       firstName: firstName ?? this.firstName,
-      firstNameArabic: firstName ?? this.firstName,
+      firstNameArabic: firstNameArabic ?? this.firstNameArabic,
       secondName: secondName ?? this.secondName,
-      secondNameArabic: secondName ?? this.secondName,
+      secondNameArabic: secondNameArabic ?? this.secondNameArabic,
       companyName: companyName ?? this.companyName,
-      companyNameArabic: companyName ?? this.companyName,
+      companyNameArabic: companyNameArabic ?? this.companyNameArabic,
       email: email ?? this.email,
       mobile: mobile ?? this.mobile,
       workPhone: workPhone ?? this.workPhone,
@@ -125,12 +129,10 @@ class AddVendorModel {
     "primaryContactArabic": {
       "firstName": firstNameArabic,
       "lastName": secondNameArabic,
-      // "firstNameArabic": firstNameArabic, // As per your JSON
-      // "lastNameArabic": secondNameArabic, // As per your JSON
     },
     "customerType": customerType,
     "partyType": partyType,
-    "companyName": companyName, // "companyNameArabic": companyNameArabic, // As per your JSON
+    "companyName": companyName,
     "displayName": displayName,
     "emailAddress": email,
     "phoneCode": phoneCode,
@@ -145,25 +147,23 @@ class AddVendorModel {
     "customFields": customFields,
     "reportingTag": reportingTag,
     "billingAddress": {
-      "countryRegion": billingAddress["country"] ?? '',
+      "countryRegion": billingAddress["countryRegion"] ?? '',
       "buildingNumber": billingAddress["building"] ?? '',
-      "streetName": null,
-      "streetAddress": billingAddress["street"] ?? '',
-      // "streetAddressArabic": billingAddress["streetArabic"] ?? '', // As per your JSON
+      "streetName": billingAddress["streetName"] ?? null,
+      "streetAddress": billingAddress["streetAddress"] ?? '',
       "city": billingAddress["city"] ?? '',
-      // "cityArabic": billingAddress["cityArabic"] ?? '', // As per your JSON
       "state": billingAddress["state"] ?? '',
+      "stateId": billingAddress["stateId"] ?? '',
       "zipCode": billingAddress["zip"] ?? '',
     },
     "shippingAddress": {
-      "countryRegion": shippingAddress["country"] ?? '',
+      "countryRegion": shippingAddress["countryRegion"] ?? '',
       "buildingNumber": shippingAddress["building"] ?? '',
-      "streetName": null,
-      "streetAddress": shippingAddress["street"] ?? '',
-      // "streetAddressArabic": shippingAddress["streetArabic"] ?? '', // As per your JSON
+      "streetName": shippingAddress["streetName"] ?? null,
+      "streetAddress": shippingAddress["streetAddress"] ?? '',
       "city": shippingAddress["city"] ?? '',
-      // "cityArabic": shippingAddress["cityArabic"] ?? '', // As per your JSON
       "state": shippingAddress["state"] ?? '',
+      "stateId": shippingAddress["stateId"] ?? '',
       "zipCode": shippingAddress["zip"] ?? '',
     },
     "contactPersons": contactPersons,

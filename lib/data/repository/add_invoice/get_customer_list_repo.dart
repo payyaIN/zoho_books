@@ -8,7 +8,7 @@ class GetCustomerListRepository {
 
   Future<List<Customer>> fetchCustomerList() {
     return apiService.getApi(
-      url: 'http://158.101.247.195/pb-process-service/api/process/getCustomerList',
+      url: 'http://81.208.173.149/pb-process-service/api/process/getCustomerList',
       fromJson: (json) {
         final dataList = json['response']['response'] as List<dynamic>;
         return dataList.map((itemJson) => Customer.fromJson(itemJson)).toList();

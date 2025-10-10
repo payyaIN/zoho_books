@@ -10,7 +10,7 @@ class GetAllRfqRepo {
   Future<GetAllRfqList> fetchAllRfqs({required int pageNo, required int rowPerPage}) async {
     try {
       final result = await _apiService.postApi(
-        url: "http://158.101.247.195/pb-process-service/rfq/getAllRfqs?pageNo=$pageNo&RowPerPage=$rowPerPage",
+        url: "http://81.208.173.149/pb-process-service/rfq/getAllRfqs?pageNo=$pageNo&RowPerPage=$rowPerPage",
         body: {
           "requestCriteria": {
             "rfqId": "",

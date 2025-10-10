@@ -26,7 +26,7 @@ class GenerateBillRepository {
     required String token,
   }) async {
     final uri = Uri.parse(
-        'http://158.101.247.195/pb-process-service/bill/generateBillWf');
+        'http://81.208.173.149/pb-process-service/bill/generateBillWf');
 
     final request = http.MultipartRequest('POST', uri)
       ..headers.addAll({

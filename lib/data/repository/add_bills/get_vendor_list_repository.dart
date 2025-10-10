@@ -7,7 +7,7 @@ class GetVendorListRepository {
 
   Future<VendorListResponse> fetchData() {
     return _apiService.getApi(
-      url: 'http://158.101.247.195/pb-process-service/api/process/getVendorList',
+      url: 'http://81.208.173.149/pb-process-service/api/process/getVendorList',
       fromJson: (json) => VendorListResponse.fromJson(json),
     );
   }

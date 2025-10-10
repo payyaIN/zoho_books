@@ -7,7 +7,7 @@ class UnitRepository {
   UnitRepository(this.apiService);
 
   Future<List<Unit>> fetchUnits() {
-    const url = 'http://158.101.247.195/pb-process-service/rfq/getUnitList';
+    const url = 'http://81.208.173.149/pb-process-service/rfq/getUnitList';
     return apiService.getListApi(
       url: url,
       fromJson: (json) => Unit.fromJson(json),

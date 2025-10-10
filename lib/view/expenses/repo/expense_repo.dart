@@ -16,7 +16,7 @@ class GetAllExpensesRepository {
   }) async {
     try {
       final uri =
-          "http://158.101.247.195/pb-accounting-service/api/expense/getExpenceList?pageNo=$pageNo&rowPerPage=$rowsPerPage";
+          "http://81.208.173.149/pb-accounting-service/api/expense/getExpenceList?pageNo=$pageNo&rowPerPage=$rowsPerPage";
 
       final requestBody = {
         "requestCriteria": {

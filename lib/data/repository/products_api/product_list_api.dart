@@ -41,7 +41,7 @@ import 'dart:developer' as developer;
 
 //       return await _apiService.postApi(
 //         url:
-//             "http://158.101.247.195/pb-item-service/v1/items/search/items?pageNo=$pageNo&RowPerPage=$rowsPerPage",
+//             "http://81.208.173.149/pb-item-service/v1/items/search/items?pageNo=$pageNo&RowPerPage=$rowsPerPage",
 //         body: requestBody,
 //         fromJson: (json) {
 //           print('Product list API response received');
@@ -201,7 +201,7 @@ class GetAllProductRepository {
 
       return await _apiService.postApi(
         url:
-            "http://158.101.247.195/pb-item-service/v1/items/search/items?pageNo=$pageNo&RowPerPage=$rowsPerPage",
+            "http://81.208.173.149/pb-item-service/v1/items/search/items?pageNo=$pageNo&RowPerPage=$rowsPerPage",
         body: requestBody,
         fromJson: (json) {
           developer.log('Product list API response received',

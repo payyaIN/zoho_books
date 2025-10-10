@@ -117,7 +117,7 @@ class AddExpenseController extends StateNotifier<bool> {
 
       final api = ref.read(apiServiceProvider);
       final response = await api.postFileAsJson(
-        url: 'http://158.101.247.195/pb-accounting-service/api/expense/record',
+        url: 'http://81.208.173.149/pb-accounting-service/api/expense/record',
         body: payload,
         files: files,
         fromJson: (json) => AddExpenseApiResponse.fromJson(json),

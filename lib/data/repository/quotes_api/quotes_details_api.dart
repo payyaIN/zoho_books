@@ -13,7 +13,7 @@ class GetQuoteDetailsRepository {
 
       final result = await _apiService.getApi(
         url:
-            "http://158.101.247.195/pb-process-service/quotation/getQuotationByQuoteId?quoteId=$quoteId",
+            "http://81.208.173.149/pb-process-service/quotation/getQuotationByQuoteId?quoteId=$quoteId",
         fromJson: (json) {
           print('Quote detail API response received for quoteId $quoteId');
           return QuotesDetailsModel.fromJson(json);

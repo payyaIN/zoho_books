@@ -41,7 +41,7 @@ class GetAllCustomerRepository {
 
       return await _apiService.postApi(
         url:
-            "http://158.101.247.195/pb-process-service/api/process/customers?pageNo=$pageNo&RowPerPage=$rowsPerPage",
+            "http://81.208.173.149/pb-process-service/api/process/customers?pageNo=$pageNo&RowPerPage=$rowsPerPage",
         body: requestBody,
         fromJson: (json) {
           developer.log('Customer list API response received',

@@ -9,7 +9,7 @@ class GetEventsRepository {
   Future<List<EventModel>> fetchEvents() async {
     try {
       return await _apiService.getListApi(
-        url: 'http://158.101.247.195/pb-process-service/api/process/getEvents',
+        url: 'http://81.208.173.149/pb-process-service/api/process/getEvents',
         fromJson: (json) => EventModel.fromJson(json),
       );
     } catch (e) {

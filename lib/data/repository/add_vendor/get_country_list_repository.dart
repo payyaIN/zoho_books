@@ -9,7 +9,7 @@ class GetCountryListRepository {
   Future<GetCountryListModel> fetchData() {
     return _apiService.getApi(
       url:
-          'http://158.101.247.195/pb-common-service/api/companyInfo/getCountryList',
+          'http://81.208.173.149/pb-common-service/api/companyInfo/getCountryList',
       fromJson: (json) => GetCountryListModel.fromJson(json),
     );
   }
@@ -19,3 +19,8 @@ final getCountryListProvider = Provider<GetCountryListRepository>((ref) {
   final apiService = ref.read(apiServiceProvider);
   return GetCountryListRepository(apiService);
 });
+final getCountryList = FutureProvider<GetCountryListModel>((ref) async {
+  final repository = ref.watch(getCountryListProvider);
+  return repository.fetchData();
+});
+

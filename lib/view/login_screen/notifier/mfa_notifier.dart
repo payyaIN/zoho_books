@@ -20,7 +20,7 @@ class MfaLoginNotifier extends StateNotifier<AsyncValue<String>> {
 
     try {
       final response = await http.post(
-        Uri.parse("http://158.101.247.195/pb-auth-service/oauth/token"),
+        Uri.parse("http://81.208.173.149/pb-auth-service/oauth/token"),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "grant_type": "password",

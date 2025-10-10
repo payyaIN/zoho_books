@@ -12,7 +12,7 @@ class NotificationRepository {
       print('Fetching notifications with timezone: $timezone');
       return await _apiService.getApi(
         url:
-            "http://158.101.247.195/pb-process-service/common/getNotifications?timezone=$timezone",
+            "http://81.208.173.149/pb-process-service/common/getNotifications?timezone=$timezone",
         fromJson: (json) {
           print('Notifications API response received');
           return NotificationModel.fromMap(json);

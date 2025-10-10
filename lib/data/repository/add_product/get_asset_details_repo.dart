@@ -9,7 +9,7 @@ class GetAssetDetailsRepo {
 
   Future<GetAssetDetailsModel> fetchChartOfAccounts() {
     return apiService.getApi(
-      url: 'http://158.101.247.195/pb-item-service/v1/items/fetchAssetCategoryTypes',
+      url: 'http://81.208.173.149/pb-item-service/v1/items/fetchAssetCategoryTypes',
       fromJson: (json) => GetAssetDetailsModel.fromJson(json),
     );
   }

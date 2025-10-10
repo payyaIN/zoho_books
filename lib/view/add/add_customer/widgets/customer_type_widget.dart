@@ -6,6 +6,7 @@ import 'package:payzo_books/utils/focus_utility/focus_utility.dart';
 import 'package:payzo_books/view/add/add_vendor/notifier/add_vendor_notifier.dart';
 import 'package:payzo_books/utils/common_widgets/reusable_bottom_sheet.dart';
 import 'package:payzo_books/utils/common_widgets/sar_textfield.dart';
+import '../../../../data/repository/add_vendor/get_country_list_repository.dart';
 import '../../../../import_data.dart';
 
 class CustomerTypeWidget extends ConsumerWidget {
@@ -90,12 +91,18 @@ class CustomerTypeWidget extends ConsumerWidget {
                       ? TextInputType.numberWithOptions()
                       : fieldKey == 'firstName' ||
                               fieldKey == 'secondName' ||
-                              fieldKey == 'companyName'
+                              fieldKey == 'companyName' ||
+                              fieldKey == 'firstNameArabic' ||
+                              fieldKey == 'secondNameArabic' ||
+                              fieldKey == 'companyNameArabic'
                           ? TextInputType.name
                           : TextInputType.emailAddress,
                   inputFormatters: fieldKey == 'firstName' ||
                           fieldKey == 'secondName' ||
-                          fieldKey == 'companyName'
+                          fieldKey == 'companyName' ||
+                          fieldKey == 'firstNameArabic'||
+                          fieldKey == 'secondNameArabic' ||
+                          fieldKey == 'companyNameArabic'
                       ? PayzoInputFormatters.onlyAlphabets
                       : isWorkPhone || isMobile
                           ? PayzoInputFormatters.mobileNumber

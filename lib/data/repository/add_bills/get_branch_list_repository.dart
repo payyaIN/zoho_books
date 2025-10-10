@@ -8,7 +8,7 @@ class GetBranchListRepository {
 
   Future<BranchListResponse> fetchBranchList() async {
     const url =
-        'http://158.101.247.195/pb-common-service/api/branches/getAllBranchList';
+        'http://81.208.173.149/pb-common-service/api/branches/getAllBranchList';
     return _apiService.getApi(
       url: url,
       fromJson: (json) => BranchListResponse.fromJson(json),

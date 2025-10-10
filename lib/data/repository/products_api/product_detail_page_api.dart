@@ -12,7 +12,7 @@ class GetProductDetailsRepository {
 
       final result = await _apiService.getApi(
         url:
-            "http://158.101.247.195/pb-item-service/v1/items/view?productId=$productId",
+            "http://81.208.173.149/pb-item-service/v1/items/view?productId=$productId",
         fromJson: (json) {
           print(
               'Product detail API response received for productId $productId');

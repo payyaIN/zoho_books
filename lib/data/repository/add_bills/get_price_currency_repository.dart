@@ -7,7 +7,7 @@ class GetPriceCurrencyRepository {
 
   Future<List<GetPriceCurrency>> fetchShippingMethods() {
     return apiService.getListApi(
-      url: 'http://158.101.247.195/pb-process-service/rfq/getPriceCurrency',
+      url: 'http://81.208.173.149/pb-process-service/rfq/getPriceCurrency',
       fromJson: (json) => GetPriceCurrency.fromJson(json),
     );
   }

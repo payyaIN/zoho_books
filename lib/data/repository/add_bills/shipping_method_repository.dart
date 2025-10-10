@@ -7,7 +7,7 @@ class ShippingMethodRepository {
 
   Future<List<ShippingMethodModel>> fetchShippingMethods() {
     return apiService.getListApi(
-      url: 'http://158.101.247.195/pb-process-service/rfq/getShippingMethod',
+      url: 'http://81.208.173.149/pb-process-service/rfq/getShippingMethod',
       fromJson: (json) => ShippingMethodModel.fromJson(json),
     );
   }

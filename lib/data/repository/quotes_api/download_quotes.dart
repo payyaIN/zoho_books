@@ -13,7 +13,7 @@ class DownloadQuoteRepository {
 
       final result = await _apiService.getApi(
         url:
-            "http://158.101.247.195/pb-process-service/quotation/getQuotesPdf?quoteId=$quoteId",
+            "http://81.208.173.149/pb-process-service/quotation/getQuotesPdf?quoteId=$quoteId",
         fromJson: (json) {
           print('Quote PDF API response received for quoteId $quoteId');
           return QuoteDownloadModel.fromJson(json);

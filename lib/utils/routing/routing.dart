@@ -2,6 +2,7 @@ import 'package:payzo_books/import_data.dart';
 import 'package:payzo_books/view/add/add_expense/add_expense.dart';
 import 'package:payzo_books/view/expenses/expenses_listing_screen.dart';
 import 'package:payzo_books/view/login_screen/mfa_otp_screen.dart';
+import 'package:payzo_books/view/two_step_verification/two_step_verification_screen.dart';
 
 class AppRouter {
   Route? onGenerateRoute(RouteSettings routeSettings) {
@@ -17,6 +18,11 @@ class AppRouter {
       case RouteNames.homeScreen:
         return MaterialPageRoute(
             builder: (_) => MonitorConnectionView(child: const MainScreen()),
+            settings: routeSettings);
+      case RouteNames.twostepverification:
+        return MaterialPageRoute(
+            builder: (_) =>
+                MonitorConnectionView(child: const TwoStepVerificationScreen()),
             settings: routeSettings);
       case RouteNames.notificationScreen:
         return MaterialPageRoute(

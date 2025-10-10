@@ -8,7 +8,7 @@ class GetAccountListRepository {
 
   Future<List<Account>> fetchAccountList() {
     return apiService.getListApi(
-      url: 'http://158.101.247.195/pb-accounting-service/api/chartOfAccounts/getAllAccounts',
+      url: 'http://81.208.173.149/pb-accounting-service/api/chartOfAccounts/getAllAccounts',
       fromJson: (json) => Account.fromJson(json),
     );
   }

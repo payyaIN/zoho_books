@@ -1,9 +1,7 @@
-import 'package:payzo_books/data/repository/add_bills/generate_bill_repository.dart';
 import 'package:payzo_books/data/repository/add_bills/get_price_currency_repository.dart';
 import 'package:payzo_books/data/repository/add_bills/get_vendor_list_repository.dart';
 import 'package:payzo_books/data/repository/add_bills/shipping_method_repository.dart';
 import 'package:payzo_books/utils/app_data/input_formatters.dart';
-import 'package:payzo_books/utils/focus_utility/focus_utility.dart';
 import 'package:payzo_books/view/add/add_billls/notifier/add_bill_form_notifier.dart';
 import 'package:intl/intl.dart';
 import 'package:payzo_books/utils/common_widgets/reusable_bottom_sheet.dart';
@@ -176,7 +174,6 @@ class _BillDetailsAddBillsState extends ConsumerState<BillDetailsAddBills> {
                   return Consumer(
                     builder: (context, ref, _) {
                       final branchAsync = ref.watch(fetchBranchListProvider);
-
                       return branchAsync.when(
                         data: (data) {
                           final branches = data.data

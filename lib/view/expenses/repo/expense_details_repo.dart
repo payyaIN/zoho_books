@@ -12,7 +12,7 @@ class GetExpenseDetailsRepository {
 
       final result = await _apiService.getApi(
         url:
-        "http://158.101.247.195/pb-accounting-service/api/expense/view?expenseId=$expenseId",
+        "http://81.208.173.149/pb-accounting-service/api/expense/view?expenseId=$expenseId",
         fromJson: (json) {
           print('Expense detail API response received for expenseId $expenseId');
           return  ExpenseDetailModel.fromJson(json);

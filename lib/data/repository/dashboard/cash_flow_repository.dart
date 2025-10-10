@@ -8,7 +8,7 @@ class CashFlowRepository {
 
   Future<CashFlowModel> fetchData() {
     return _apiService.getApi(
-      url: 'http://158.101.247.195/pb-accounting-service/api/dashboard/getCashFlow?periodType=0',
+      url: 'http://81.208.173.149/pb-accounting-service/api/dashboard/getCashFlow?periodType=0',
       fromJson: (json) => CashFlowModel.fromJson(json),
     );
   }

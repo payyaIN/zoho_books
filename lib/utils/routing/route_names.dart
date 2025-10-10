@@ -1,5 +1,6 @@
 class RouteNames {
   static const initialRoute = '/';
+  static const twostepverification = '/TwoStepVerificationScreen';
   static const homeScreen = '/HomeScreen';
   static const loginScreen = '/LoginScreen';
   static const mfaScreen = '/MfaScreen';

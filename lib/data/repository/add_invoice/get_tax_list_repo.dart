@@ -7,7 +7,7 @@ class TaxRepository {
 
   Future<TaxResponse> fetchAllTaxes() {
     return apiService.getApi(
-      url: 'http://158.101.247.195/pb-process-service/taxes/getAllTaxList',
+      url: 'http://81.208.173.149/pb-process-service/taxes/getAllTaxList',
       fromJson: (json) {
         print("🌐 Raw Tax API Response: $json");
         return TaxResponse.fromJson(json); // ✅ Pass the full JSON

@@ -12,7 +12,7 @@ class GetVendorDetailsRepository {
 
       final result = await _apiService.getApi(
         url:
-            "http://158.101.247.195/pb-process-service/api/process/viewParty?partyId=$partyId",
+            "http://81.208.173.149/pb-process-service/api/process/viewParty?partyId=$partyId",
         fromJson: (json) {
           print('Vendor detail API response received for partyId $partyId');
           return VendorModel.fromMap(json);
@@ -77,7 +77,7 @@ final getVendorDetailsProvider =
 
 //         final result = await _apiService.getApi(
 //           url:
-//               "http://158.101.247.195/pb-process-service/api/process/viewParty?partyId=$partyId",
+//               "http://81.208.173.149/pb-process-service/api/process/viewParty?partyId=$partyId",
 //           fromJson: (json) {
 //             print('Vendor detail API response received for partyId $partyId');
 //             print('Response structure: ${json.keys.join(", ")}');

@@ -19,7 +19,7 @@ class RejectNotificationRepository {
 
       return await _apiService.getApi(
         url:
-            "http://158.101.247.195/pb-process-service/rfq/rejectWF?processId=$processId&reason=$encodedReason&typeId=$typeId",
+            "http://81.208.173.149/pb-process-service/rfq/rejectWF?processId=$processId&reason=$encodedReason&typeId=$typeId",
         fromJson: (json) {
           print('Reject Notification API response received');
           return RejectModel.fromMap(json);

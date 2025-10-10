@@ -23,6 +23,5 @@ final specificCustomerProvider =
   if (model == null || model.response.response.isEmpty) {
     return null;
   }
-
   return model.response.response[0];
 });

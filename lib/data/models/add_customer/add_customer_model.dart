@@ -1,8 +1,11 @@
 class AddCustomerModel {
   final String salutation;
   final String firstName;
+  final String firstNameArabic;
   final String secondName;
+  final String secondNameArabic;
   final String companyName;
+  final String companyNameArabic;
   final String email;
   final String mobile;
   final String workPhone;
@@ -28,8 +31,11 @@ class AddCustomerModel {
   AddCustomerModel({
     required this.salutation,
     required this.firstName,
+    required this.firstNameArabic,
     required this.secondName,
+    required this.secondNameArabic,
     required this.companyName,
+    required this.companyNameArabic,
     required this.email,
     required this.mobile,
     required this.workPhone,
@@ -79,6 +85,9 @@ class AddCustomerModel {
       firstName: firstName ?? this.firstName,
       secondName: secondName ?? this.secondName,
       companyName: companyName ?? this.companyName,
+      firstNameArabic: '',
+      secondNameArabic: '',
+      companyNameArabic: '',
       email: email ?? this.email,
       mobile: mobile ?? this.mobile,
       workPhone: workPhone ?? this.workPhone,
@@ -97,31 +106,32 @@ class AddCustomerModel {
       billingAddress: billingAddress ?? this.billingAddress,
       shippingAddress: shippingAddress ?? this.shippingAddress,
       errors: errors ?? this.errors,
+
     );
   }
 
   Map<String, dynamic> toJson() => {
-    "salutation": salutation,
-    "firstName": firstName,
-    "secondName": secondName,
-    "companyName": companyName,
-    "email": email,
-    "mobile": mobile,
-    "workPhone": workPhone,
-    "customerType": customerType,
-    "phoneCode": phoneCode,
-    "mobileCode": mobileCode,
-    "cpPhnCode": cpPhnCode,
-    "cpMobCode": cpMobCode,
-    "branchId": branchId,
-    "currencyId": currencyId,
-    "openingAmount": openingAmount,
-    "expiryDate": expiryDate,
-    "documentType": documentType,
-    "documentNumber": documentNumber,
-    "remark": remark,
-    "billingAddress": billingAddress,
-    "shippingAddress": shippingAddress,
-    "errors": errors,
-  };
+        "salutation": salutation,
+        "firstName": firstName,
+        "secondName": secondName,
+        "companyName": companyName,
+        "email": email,
+        "mobile": mobile,
+        "workPhone": workPhone,
+        "customerType": customerType,
+        "phoneCode": phoneCode,
+        "mobileCode": mobileCode,
+        "cpPhnCode": cpPhnCode,
+        "cpMobCode": cpMobCode,
+        "branchId": branchId,
+        "currencyId": currencyId,
+        "openingAmount": openingAmount,
+        "expiryDate": expiryDate,
+        "documentType": documentType,
+        "documentNumber": documentNumber,
+        "remark": remark,
+        "billingAddress": billingAddress,
+        "shippingAddress": shippingAddress,
+        "errors": errors,
+      };
 }

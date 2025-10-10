@@ -12,7 +12,7 @@ class GetAllQuotesRepo {
     try {
       return await _apiService.postApi(
         url:
-            "http://158.101.247.195/pb-process-service/quotation/getAllQuotation?pageNo=$pageNo&RowPerPage=$rowPerPage",
+            "http://81.208.173.149/pb-process-service/quotation/getAllQuotation?pageNo=$pageNo&RowPerPage=$rowPerPage",
         body: {
           "requestCriteria": {"quoteId": "", "qteIsVerified": ""},
           "sortingCriteria": {},

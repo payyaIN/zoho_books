@@ -55,7 +55,7 @@ import 'dart:developer' as developer;
 //       }
 
 //       return await _apiService.postApi(
-//         url: "http://158.101.247.195/pb-process-service/invoice/getAllInvoice",
+//         url: "http://81.208.173.149/pb-process-service/invoice/getAllInvoice",
 //         body: requestBody,
 //         fromJson: (json) {
 //           print('Invoice list API response received');
@@ -215,7 +215,7 @@ class GetAllInvoiceRepository {
           name: 'InvoiceAPI');
 
       return await _apiService.postApi(
-        url: "http://158.101.247.195/pb-process-service/invoice/getAllInvoice",
+        url: "http://81.208.173.149/pb-process-service/invoice/getAllInvoice",
         body: requestBody,
         fromJson: (json) {
           developer.log('INVOICE API RESPONSE RECEIVED', name: 'InvoiceAPI');

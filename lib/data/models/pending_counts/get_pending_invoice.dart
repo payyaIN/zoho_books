@@ -10,7 +10,7 @@ class GetPendingInvoiceRepository {
 
   Future<InvoiceModel> fetchPendingInvoices() {
     return _apiService.postApi(
-      url: "http://158.101.247.195/pb-process-service/invoice/getAllInvoice",
+      url: "http://81.208.173.149/pb-process-service/invoice/getAllInvoice",
       body: {
         "requestCriteria": {
           "invoiceStatus": "1",

@@ -13,7 +13,7 @@ class GetOrderDetailsRepository {
 
       final result = await _apiService.getApi(
         url:
-        "http://158.101.247.195/pb-process-service/order/getOrderByOrderId?orderId=$orderId",
+        "http://81.208.173.149/pb-process-service/order/getOrderByOrderId?orderId=$orderId",
         fromJson: (json) {
           print('Order detail API response received for orderId $orderId');
           return GetOrderDetailsModel.fromJson(json);

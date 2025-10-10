@@ -9,7 +9,7 @@ class GetBankAccountRepository {
 
   Future<List<BankAccount>> fetchBankAccounts() {
     return apiService.getApi(
-      url: 'http://158.101.247.195/pb-accounting-service/api/statements/bankAccountsList',
+      url: 'http://81.208.173.149/pb-accounting-service/api/statements/bankAccountsList',
       fromJson: (json) {
         final List<dynamic> data = json['response'] ?? [];
         return data.map((e) => BankAccount.fromJson(e)).toList();

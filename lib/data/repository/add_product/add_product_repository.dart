@@ -65,7 +65,7 @@ class AddProductRepository {
 
     debugPrint("📦 Final Product Payload: $body");
 
-    const url = 'http://158.101.247.195/pb-item-service/v1/items';
+    const url = 'http://81.208.173.149/pb-item-service/v1/items';
 
     return await ref.read(apiServiceProvider).postApi<AddProductApiModel>(
       url: url,

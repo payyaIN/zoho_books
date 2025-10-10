@@ -8,7 +8,7 @@ class GetItemListRepository {
 
   Future<List<Item>> fetchItemList() {
     return apiService.getApi(
-      url: 'http://158.101.247.195/pb-item-service/v1/items/getItems',
+      url: 'http://81.208.173.149/pb-item-service/v1/items/getItems',
       fromJson: (json) {
         final dataList = json['data'] as List<dynamic>;
         return dataList.map((itemJson) => Item.fromJson(itemJson)).toList();

@@ -12,7 +12,7 @@ class GetInvoiceDetailsRepository {
 
       final result = await _apiService.getApi(
         url:
-            "http://158.101.247.195/pb-process-service/invoice/getInvoiceByInvoiceId?invoiceId=$invoiceId",
+            "http://81.208.173.149/pb-process-service/invoice/getInvoiceByInvoiceId?invoiceId=$invoiceId",
         fromJson: (json) {
           print(
               'Invoice detail API response received for invoiceId $invoiceId');

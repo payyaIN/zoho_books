@@ -176,40 +176,78 @@ class _AddBillsState extends ConsumerState<AddBills> {
                   ),
                 ),
                 const ReusableSizedBox(height: 15),
-                ReusableRow(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: <Widget>[
-                    SvgPictureWidget(
-                        image: 'assets/pin.svg', height: 20, width: 20),
-                    const ReusableSizedBox(width: 5),
-                    SizedBox(
-                      height: 32,
-                      width: 321,
-                      child: PayzoBottomsheetNavigator(
-                        title: 'Attachments',
-                        divider: false,
-                        trailing: state.attachment?.path.split('/').last ??
-                            'Tap to Select',
-                        onTap: () async {
-                          await ref.read(focusUtilsProvider).unfocusAndDelay();
-                          final result = await FilePicker.platform.pickFiles(
-                            type: FileType.custom,
-                            allowedExtensions: ['pdf', 'jpg', 'png', 'jpeg'],
-                          );
+                FormContainer(
+                  child: Padding(
+                    padding: const EdgeInsets.all(15.0),
+                    child: ReusableColumn(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ReusableRow(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: <Widget>[
+                            SvgPictureWidget(
+                                image: 'assets/pin.svg', height: 24, width: 24), // Increased size
+                            const ReusableSizedBox(width: 10), // Increased spacing
+                            Expanded(
+                              child: PayzoBottomsheetNavigator(
+                                title: 'Attachments',
+                                divider: false,
+                                trailing: state.attachment?.path.split('/').last ??
+                                    'Tap to Select',
+                                onTap: () async {
+                                  await ref.read(focusUtilsProvider).unfocusAndDelay();
+                                  final result = await FilePicker.platform.pickFiles(
+                                    type: FileType.custom,
+                                    allowedExtensions: ['pdf', 'jpg', 'png', 'jpeg'],
+                                  );
 
-                          if (result != null &&
-                              result.files.single.path != null) {
-                            final pickedFile = File(result.files.single.path!);
-                            notifier.updateField('attachment', pickedFile);
-                          } else {
-                            debugPrint('❌ No file selected');
-                          }
-                        },
-                      ),
+                                  if (result != null &&
+                                      result.files.single.path != null) {
+                                    final pickedFile = File(result.files.single.path!);
+                                    notifier.updateField('attachment', pickedFile);
+                                  } else {
+                                    debugPrint('❌ No file selected');
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (state.attachment != null) ...[
+                          const ReusableSizedBox(height: 12), // Increased spacing
+                          Padding(
+                            padding: const EdgeInsets.only(left: 34.0), // Align with the navigator
+                            child: ReusableRow(
+                              children: [
+                                const Icon(Icons.insert_drive_file_outlined, color: AppColors.appMainColor, size: 20), // Changed icon and color
+                                const ReusableSizedBox(width: 8),
+                                Expanded(
+                                  child: ReusableText(
+                                    text: state.attachment!.path.split('/').last,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    fontSize: 14, // Adjusted font size
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                InkWell( // Changed to InkWell for better tap area
+                                  onTap: () {
+                                    notifier.updateField('attachment', null);
+                                  },
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(4.0), // Add padding for tap area
+                                    child: Icon(Icons.cancel_outlined, color: Colors.redAccent, size: 20), // Changed icon and color
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
-                  ],
+                  ),
                 ),
+                const ReusableSizedBox(height: 15),
                 BillTotalWidget(),
               ],
             ),

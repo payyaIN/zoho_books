@@ -8,7 +8,7 @@ class GetUserDetailsRepo {
 
   Future<GetUserDetails> fetchAccountList() {
     return apiService.getApi(
-      url: 'http://158.101.247.195/pb-common-service/api/common/getUserDetails',
+      url: 'http://81.208.173.149/pb-common-service/api/common/getUserDetails',
       fromJson: (json) => GetUserDetails.fromJson(json),
     );
   }

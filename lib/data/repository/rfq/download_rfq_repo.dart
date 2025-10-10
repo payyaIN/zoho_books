@@ -12,7 +12,7 @@ class DownloadRfqRepository {
       print(' Fetching RFQ PDF for rfqId: $rfqId');
 
       final result = await _apiService.getApi(
-        url: "http://158.101.247.195/pb-process-service/rfq/downloadRfqPdf?rfqId=$rfqId",
+        url: "http://81.208.173.149/pb-process-service/rfq/downloadRfqPdf?rfqId=$rfqId",
         fromJson: (json) {
           print(' RFQ PDF API response received');
           return RfqDownloadModel.fromJson(json);

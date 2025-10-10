@@ -10,7 +10,7 @@ class GetDocumentTypesRepository {
     try {
       return await _apiService.getListApi(
         url:
-            'http://158.101.247.195/pb-common-service/api/company/getDocumenyTypes',
+            'http://81.208.173.149/pb-common-service/api/company/getDocumenyTypes',
         fromJson: (json) => DocumentTypeModel.fromJson(json),
       );
     } catch (e) {

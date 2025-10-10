@@ -13,7 +13,7 @@ class GetRfqDetailsRepository {
 
       final result = await _apiService.getApi(
         url:
-            "http://158.101.247.195/pb-process-service/rfq/getRfqByRfqId?rfqId=$rfqId",
+            "http://81.208.173.149/pb-process-service/rfq/getRfqByRfqId?rfqId=$rfqId",
         fromJson: (json) {
           print('RFQ API response received for rfqId: $rfqId');
           return GetRfqDetails.fromJson(json).rfqDetails!;

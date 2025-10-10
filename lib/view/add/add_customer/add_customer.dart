@@ -11,6 +11,8 @@ import 'package:payzo_books/utils/common_widgets/payzo_progress.dart';
 import 'package:payzo_books/utils/common_widgets/reusable_bottom_sheet.dart';
 import 'package:payzo_books/view/main_screen/notifiers/bottom_nav_bar_notifier.dart';
 
+import '../../../data/repository/add_vendor/get_country_list_repository.dart';
+
 final customerSameAsBillingToggleProvider = StateProvider<bool>((ref) => false);
 
 class AddCustomer extends ConsumerStatefulWidget {
@@ -37,36 +39,29 @@ class _AddCustomerState extends ConsumerState<AddCustomer> {
     });
     customerTypeController = {
       "firstName": TextEditingController(),
-      "firstNameArabic": TextEditingController(),
       "secondName": TextEditingController(),
-      "lastNameArabic": TextEditingController(),
       "companyName": TextEditingController(),
-      "companyNameArabic": TextEditingController(),
-      "displayName": TextEditingController(),
       "email": TextEditingController(),
       "mobile": TextEditingController(),
       "workPhone": TextEditingController(),
-      "vatNumber": TextEditingController(),
-      "crNum": TextEditingController(),
-      "remark": TextEditingController(),
     };
     openingAmountController = TextEditingController();
     billController = {
       "building": TextEditingController(),
       "street": TextEditingController(),
+      "streetArabic": TextEditingController(),
       "city": TextEditingController(),
-      "zip": TextEditingController(),
-      "streetAddressArabic": TextEditingController(),
       "cityArabic": TextEditingController(),
+      "zip": TextEditingController(),
     };
 
     shippingController = {
       "building": TextEditingController(),
       "street": TextEditingController(),
+      "streetArabic": TextEditingController(),
       "city": TextEditingController(),
-      "zip": TextEditingController(),
-      "streetAddressArabic": TextEditingController(),
       "cityArabic": TextEditingController(),
+      "zip": TextEditingController(),
     };
   }
 
@@ -200,6 +195,8 @@ class _AddCustomerState extends ConsumerState<AddCustomer> {
                                 'building': '',
                                 'street': '',
                                 'city': '',
+                                'streetArabic': '',
+                                'cityArabic': '',
                                 'zip': ''
                               },
                             );
@@ -455,7 +452,8 @@ class _AddCustomerState extends ConsumerState<AddCustomer> {
             );
           },
         ),
-        ...['building', 'street', 'city', 'zip'].map((fieldKey) {
+        ...['building', 'street', 'streetArabic', 'city', 'cityArabic', 'zip']
+            .map((fieldKey) {
           return PayzoInputField(
               enabled: enabled,
               required: true,
@@ -463,7 +461,11 @@ class _AddCustomerState extends ConsumerState<AddCustomer> {
                   ? PayzoInputFormatters.onlyDigits
                   : fieldKey == 'street'
                       ? PayzoInputFormatters.street
+                      : fieldKey == 'streetArabic'
+                      ? PayzoInputFormatters.street
                       : fieldKey == 'city'
+                          ? PayzoInputFormatters.city
+                          :  fieldKey == 'cityArabic'
                           ? PayzoInputFormatters.city
                           : fieldKey == 'zip'
                               ? PayzoInputFormatters.onlyFiveDigits

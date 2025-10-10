@@ -15,7 +15,7 @@ class ApproveNotificationRepository {
           'Approving notification for typeId: $typeId, processId: $processId');
       return await _apiService.getApi(
         url:
-            "http://158.101.247.195/pb-process-service/rfq/verifyWF?typeId=$typeId&processId=$processId",
+            "http://81.208.173.149/pb-process-service/rfq/verifyWF?typeId=$typeId&processId=$processId",
         fromJson: (json) {
           print('Approve Notification API response received');
           return ApproveModel.fromMap(json);

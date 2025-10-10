@@ -12,7 +12,7 @@ class GetCustomerDetailsRepository {
 
       final result = await _apiService.getApi(
         url:
-            "http://158.101.247.195/pb-process-service/api/process/viewParty?partyId=$partyId",
+            "http://81.208.173.149/pb-process-service/api/process/viewParty?partyId=$partyId",
         fromJson: (json) {
           print('Customer detail API response received for partyId $partyId');
           return CustomerModel.fromMap(json);
