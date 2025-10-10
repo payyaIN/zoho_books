@@ -19,11 +19,13 @@ class _ProductMainBodyState extends ConsumerState<ProductMainBody> {
   @override
   Widget build(BuildContext context) {
     final paginationState = ref.watch(productPaginationStateProvider);
+
     final paginationNotifier =
         ref.read(productPaginationStateProvider.notifier);
     final productSelectionState = ref.watch(productSelectionProvider);
     final productSelectionNotifier =
         ref.read(productSelectionProvider.notifier);
+
     ref.listen<ProductPaginationState>(productPaginationStateProvider,
         (previous, current) {
       if (previous?.products.length != current.products.length) {
@@ -50,10 +52,26 @@ class _ProductMainBodyState extends ConsumerState<ProductMainBody> {
         });
       }
     });
+    // return Expanded(
+    //   child: RefreshIndicator(
+    //     onRefresh: () async {
+    //       paginationNotifier.refresh();
+    //     },
+    //     child:
     return Expanded(
       child: RefreshIndicator(
         onRefresh: () async {
-          paginationNotifier.refresh();
+          final paginationState = ref.read(productPaginationStateProvider);
+
+          if (paginationState.searchQuery.isNotEmpty) {
+            // ✅ If searching, maintain search
+            await ref
+                .read(productPaginationStateProvider.notifier)
+                .setSearchQuery(paginationState.searchQuery);
+          } else {
+            // ✅ Otherwise refresh from page 0
+            await ref.read(productPaginationStateProvider.notifier).refresh();
+          }
         },
         child: paginationState.isLoading && paginationState.products.isEmpty
             ? const Center(

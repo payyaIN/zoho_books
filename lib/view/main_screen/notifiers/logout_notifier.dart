@@ -263,18 +263,21 @@ Future<void> performLogout(BuildContext context, WidgetRef ref) async {
 }
 
 /// Clears all stored credentials from SharedPreferences
+
 Future<void> _clearAllCredentials() async {
   try {
-    print('🔄 Clearing all credentials...');
+    print('🔄 Clearing all credentials and MFA OTP...');
 
     await Future.wait([
       SharedPreferencesHelper.remove(SharedPreferenceKey.accessToken),
       SharedPreferencesHelper.remove(SharedPreferenceKey.refreshToken),
       SharedPreferencesHelper.remove(SharedPreferenceKey.loginEmail),
       SharedPreferencesHelper.remove(SharedPreferenceKey.loginPassword),
+      SharedPreferencesHelper.remove(SharedPreferenceKey.savedOtp),
+      SharedPreferencesHelper.remove(SharedPreferenceKey.otpTimestamp),
     ]);
 
-    print('✅ All credentials cleared successfully');
+    print('✅ All credentials and MFA OTP cleared successfully');
   } catch (e) {
     print('❌ Error clearing credentials: $e');
     rethrow;

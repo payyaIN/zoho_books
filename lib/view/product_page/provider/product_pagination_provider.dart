@@ -281,10 +281,13 @@ class ProductPaginationNotifier extends StateNotifier<ProductPaginationState> {
     }
   }
 
-  void refresh() {
+  // void refresh() {
+  Future<void> refresh() async {
     developer.log('REFRESHING PRODUCTS AND CLEARING SEARCH',
         name: 'ProductPagination');
-    state = state.copyWith(searchQuery: '');
-    fetchProducts();
+    // state = state.copyWith(searchQuery: '');
+    // fetchProducts();
+    state = state.copyWith(searchQuery: '', isSearching: false);
+    await fetchProducts();
   }
 }

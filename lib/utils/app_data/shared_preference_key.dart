@@ -3,6 +3,8 @@ class SharedPreferenceKey {
   static const loginPassword = 'password';
   static const accessToken = 'access_token';
   static const refreshToken = 'refresh_token';
+  static const savedOtp = 'saved_otp';
+  static const otpTimestamp = 'otp_timestamp';
 
   // static const String rememberMe = 'remember_me';
   // static const String savedUsername = 'saved_username';

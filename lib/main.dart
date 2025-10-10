@@ -9,7 +9,6 @@ double scaleFactorCallback(Size deviceSize) {
   const double widthOfDesign = 435;
   return deviceSize.width / widthOfDesign;
 }
-
 // void main() {
 //   ScaledWidgetsFlutterBinding.ensureInitialized(
 //     scaleFactor: scaleFactorCallback,

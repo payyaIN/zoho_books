@@ -101,7 +101,7 @@ class ProviderInvalidationHelper {
     ref.invalidate(getCountryList);
     ref.invalidate(countryListProvider);
 
-    print('✅ Data providers invalidated');
+    print('Data providers invalidated');
   }
 
   /// Invalidates all pagination state providers
