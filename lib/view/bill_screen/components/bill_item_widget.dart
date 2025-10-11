@@ -172,7 +172,7 @@ class BillItemWidget extends StatelessWidget {
                                 ),
                                 SizedBox(width: 8),
                                 ReusableText(
-                                  text: "Unit Price: $unitPrice",
+                                  text: "Unit Price: $currency $unitPrice",
                                   color: Color(0xFF555555),
                                   fontSize: 12,
                                   fontWeight: FontWeight.w400,

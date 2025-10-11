@@ -1,3 +1,4 @@
+import 'package:payzo_books/data/repository/vendor_api/vendor_listing/vendor_api.dart';
 import 'package:payzo_books/import_data.dart';
 import 'package:payzo_books/view/vendor_screen/components/vendor_app_bar.dart';
 import 'package:payzo_books/view/vendor_screen/components/vendor_body_widget.dart';
@@ -52,7 +53,21 @@ class _VendorScreenState extends ConsumerState<VendorScreen>
     }
   }
 
+  // Future<void> _refresh() async {
+  //   final paginationState = ref.read(vendorPaginationStateProvider);
+
+  //   if (paginationState.searchQuery.isNotEmpty) {
+  //     await ref
+  //         .read(vendorPaginationStateProvider.notifier)
+  //         .setSearchQuery(paginationState.searchQuery);
+  //   } else {
+  //     await ref.read(vendorPaginationStateProvider.notifier).refresh();
+  //   }
+  // }
   Future<void> _refresh() async {
+    // ✅ Clear cache before refreshing
+    ref.invalidate(getVendorDataWithPagination);
+
     final paginationState = ref.read(vendorPaginationStateProvider);
 
     if (paginationState.searchQuery.isNotEmpty) {

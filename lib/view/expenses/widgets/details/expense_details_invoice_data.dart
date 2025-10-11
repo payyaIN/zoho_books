@@ -24,9 +24,9 @@ class _ExpenseDetailInvoiceInfoState
         return invoiceAndBillInformationWidget(
           isBill: false,
           invoiceCreatedByName: '', // not available in the response
-          invoiceCreatedBy: '',     // not available in the response
+          invoiceCreatedBy: '', // not available in the response
           invoiceCustomerName: data.vendor ?? '',
-          invoiceShippingType: data.paidThrough ?? '',
+          // invoiceShippingType: data.paidThrough ?? '',
         );
       },
       loading: () => const Center(

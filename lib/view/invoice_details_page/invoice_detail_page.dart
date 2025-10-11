@@ -72,14 +72,14 @@ class InvoiceDetailPage extends ConsumerWidget {
                           moreOnTap: () {},
                           isMoreNeeded: false),
                       invoiceAndBillInformationWidget(
-                          isBill: false,
-                          invoiceCreatedByName:
-                              invoiceDetail.invoiceCreatedByName,
-                          invoiceCreatedBy: invoiceDetail.invoiceCreatedBy,
-                          invoiceCustomerName:
-                              invoiceDetail.invoiceCustomerName,
-                          invoiceShippingType:
-                              invoiceDetail.invoiceShippingType),
+                        isBill: false,
+                        invoiceCreatedByName:
+                            invoiceDetail.invoiceCreatedByName,
+                        invoiceCreatedBy: invoiceDetail.invoiceCreatedBy,
+                        invoiceCustomerName: invoiceDetail.invoiceCustomerName,
+                        // invoiceShippingType:
+                        //     invoiceDetail.invoiceShippingType
+                      ),
                       GapSpace.height20,
                       billData(
                           context: context,

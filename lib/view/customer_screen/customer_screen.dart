@@ -1,4 +1,5 @@
 import 'package:payzo_books/data/models/customer_model/customer_model.dart';
+import 'package:payzo_books/data/repository/customer_list_page/customer_listing_api.dart';
 import 'package:payzo_books/import_data.dart';
 import 'package:payzo_books/utils/searchbar/provider/search_bar_provider.dart';
 import 'package:payzo_books/view/customer_screen/components/customer_body_listview.dart';
@@ -57,7 +58,22 @@ class _CustomerScreenState extends ConsumerState<CustomerScreen>
     }
   }
 
+  // Future<void> _refresh() async {
+  //   final paginationState = ref.read(customerPaginationStateProvider);
+
+  //   if (paginationState.searchQuery.isNotEmpty) {
+  //     await ref
+  //         .read(customerPaginationStateProvider.notifier)
+  //         .setSearchQuery(paginationState.searchQuery);
+  //   } else {
+  //     await ref.read(customerPaginationStateProvider.notifier).refresh();
+  //   }
+  // }
+
   Future<void> _refresh() async {
+    // ✅ Clear cache before refreshing
+    ref.invalidate(getCustomerDataWithPagination);
+
     final paginationState = ref.read(customerPaginationStateProvider);
 
     if (paginationState.searchQuery.isNotEmpty) {

@@ -19,13 +19,26 @@ class _BillDetailAdditionalInfoState
     final billDetailsAsync = ref.watch(getBillDetailsProvider(effectiveBillId));
     return billDetailsAsync.when(
         data: (billDetail) {
-          return billDetail.billCustomerNotes.trim().isNotEmpty ||
-                  billDetail.billTermsCondition.trim().isNotEmpty
+          // return billDetail.billCustomerNotes.trim().isNotEmpty ||
+          //         billDetail.billTermsCondition.trim().isNotEmpty
+          //     ? billAdditionalInfo(
+          //         billDetail: billDetail,
+          //         customerNotes: billDetail.billCustomerNotes,
+          //         termsAndConditions: billDetail.billTermsCondition)
+          //     : SizedBox();
+          final hasCustomerNotes =
+              billDetail.billCustomerNotes?.trim().isNotEmpty ?? false;
+          final hasTermsCondition =
+              billDetail.billTermsCondition?.trim().isNotEmpty ?? false;
+
+          return hasCustomerNotes || hasTermsCondition
               ? billAdditionalInfo(
                   billDetail: billDetail,
-                  customerNotes: billDetail.billCustomerNotes,
-                  termsAndConditions: billDetail.billTermsCondition)
-              : SizedBox();
+                  // ✅ FIX 2: Provide default empty string for nullable strings
+                  // This prevents "The argument type 'String?' can't be assigned to the parameter type 'String'"
+                  customerNotes: billDetail.billCustomerNotes ?? "",
+                  termsAndConditions: billDetail.billTermsCondition ?? "")
+              : const SizedBox();
         },
         loading: () => const Center(
               child: CircularProgressIndicator(

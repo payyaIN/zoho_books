@@ -27,9 +27,13 @@ class _BillDetailProductDataState extends ConsumerState<BillDetailProductData> {
               productDisc: product.productDesc,
               quantity: product.quantity.toString(),
               productUnit: product.productUnit,
-              unitPrice: product.unitPrice.toString(),
-              discountAmnt: product.discountAmount.toString(),
-              // formatCurrency(product.discountAmount, billDetail.billCurrency),
+              // unitPrice: product.unitPrice.toString(),
+              // discountAmnt: product.discountAmount.toString(),
+              unitPrice:
+                  formatCurrency(product.unitPrice, billDetail.billCurrency),
+              discountAmnt: formatCurrency(
+                  product.discountAmount, billDetail.billCurrency),
+
               discountPercentage: formatPercentage(product.discountPercentage),
               taxType: product.taxType ?? "N/A",
               productTotal:

@@ -100,12 +100,60 @@ class ProductPaginationNotifier extends StateNotifier<ProductPaginationState> {
     fetchProducts();
   }
 
-  Future<void> fetchProducts() async {
+  // Future<void> fetchProducts() async {
+  //   if (state.isLoading) return;
+
+  //   state = state.copyWith(isLoading: true, errorMessage: null);
+
+  //   try {
+  //     final params = ProductPaginationParams(pageNo: 0, rowsPerPage: _pageSize);
+
+  //     developer.log('FETCHING INITIAL PRODUCTS - Page 0',
+  //         name: 'ProductPagination');
+
+  //     final result =
+  //         await _ref.read(getProductDataWithPagination(params).future);
+
+  //     final products = result.response.data;
+  //     final totalCount = result.response.totalRecord;
+
+  //     developer.log('RECEIVED ${products.length} PRODUCTS (Total: $totalCount)',
+  //         name: 'ProductPagination');
+
+  //     state = state.copyWith(
+  //       products: products,
+  //       currentPage: 0,
+  //       totalCount: totalCount,
+  //       hasNextPage: products.length < totalCount,
+  //       isLoading: false,
+  //     );
+
+  //     if (products.isNotEmpty) {
+  //       _ref
+  //           .read(productSelectionProvider.notifier)
+  //           .updateSelectionSize(products.length);
+  //     }
+  //   } catch (error) {
+  //     developer.log('ERROR FETCHING PRODUCTS: $error',
+  //         name: 'ProductPagination', error: error);
+  //     state = state.copyWith(
+  //       isLoading: false,
+  //       errorMessage: error.toString(),
+  //     );
+  //   }
+  // }
+
+  Future<void> fetchProducts({bool forceRefresh = false}) async {
     if (state.isLoading) return;
 
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
+      // ✅ Invalidate cache if force refresh requested
+      if (forceRefresh) {
+        _ref.invalidate(getProductDataWithPagination);
+      }
+
       final params = ProductPaginationParams(pageNo: 0, rowsPerPage: _pageSize);
 
       developer.log('FETCHING INITIAL PRODUCTS - Page 0',
@@ -282,12 +330,17 @@ class ProductPaginationNotifier extends StateNotifier<ProductPaginationState> {
   }
 
   // void refresh() {
+  //   developer.log('REFRESHING PRODUCTS AND CLEARING SEARCH',
+  //       name: 'ProductPagination');
+  //   state = state.copyWith(searchQuery: '');
+  //   fetchProducts();
+
+  // }
+
   Future<void> refresh() async {
     developer.log('REFRESHING PRODUCTS AND CLEARING SEARCH',
         name: 'ProductPagination');
-    // state = state.copyWith(searchQuery: '');
-    // fetchProducts();
     state = state.copyWith(searchQuery: '', isSearching: false);
-    await fetchProducts();
+    await fetchProducts(forceRefresh: true);
   }
 }

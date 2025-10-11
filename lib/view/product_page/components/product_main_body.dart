@@ -1,3 +1,4 @@
+import 'package:payzo_books/data/repository/products_api/product_list_api.dart';
 import 'package:payzo_books/import_data.dart';
 import 'package:payzo_books/view/product_page/components/product_empty_view.dart';
 import 'package:payzo_books/view/product_page/components/product_error_view.dart';
@@ -61,15 +62,16 @@ class _ProductMainBodyState extends ConsumerState<ProductMainBody> {
     return Expanded(
       child: RefreshIndicator(
         onRefresh: () async {
+          // ✅ Clear cache before refreshing
+          ref.invalidate(getProductDataWithPagination);
+
           final paginationState = ref.read(productPaginationStateProvider);
 
           if (paginationState.searchQuery.isNotEmpty) {
-            // ✅ If searching, maintain search
             await ref
                 .read(productPaginationStateProvider.notifier)
                 .setSearchQuery(paginationState.searchQuery);
           } else {
-            // ✅ Otherwise refresh from page 0
             await ref.read(productPaginationStateProvider.notifier).refresh();
           }
         },

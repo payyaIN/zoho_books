@@ -295,9 +295,16 @@ class CustomerPaginationNotifier
     }
   }
 
-  refresh() {
+  // refresh() {
+  //   developer.log('REFRESHING CUSTOMERS', name: 'CustomerPagination');
+  //   state = state.copyWith(searchQuery: '');
+  //   fetchCustomers();
+  // }
+
+  Future<void> refresh() async {
+    // ✅ Changed from void to Future<void>
     developer.log('REFRESHING CUSTOMERS', name: 'CustomerPagination');
-    state = state.copyWith(searchQuery: '');
-    fetchCustomers();
+    state = state.copyWith(searchQuery: '', isSearching: false);
+    await fetchCustomers(); // ✅ Added await
   }
 }

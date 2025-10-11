@@ -18,11 +18,12 @@ class _BillDetailInvoiceInfoState extends ConsumerState<BillDetailInvoiceInfo> {
     return billDetailsAsync.when(
         data: (billDetail) {
           return invoiceAndBillInformationWidget(
-              isBill: true,
-              invoiceCreatedByName: billDetail.billCreatedByName,
-              invoiceCreatedBy: billDetail.billCreatedBy,
-              invoiceCustomerName: billDetail.billVenderName,
-              invoiceShippingType: billDetail.billShippingType);
+            isBill: true,
+            invoiceCreatedByName: billDetail.billCreatedByName,
+            invoiceCreatedBy: billDetail.billCreatedBy,
+            invoiceCustomerName: billDetail.billVenderName,
+            // invoiceShippingType: billDetail.billShippingType
+          );
         },
         loading: () => const Center(
               child: CircularProgressIndicator(

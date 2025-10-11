@@ -295,9 +295,16 @@ class VendorPaginationNotifier extends StateNotifier<VendorPaginationState> {
     }
   }
 
-  refresh() {
+  // refresh() {
+  //   developer.log('REFRESHING VENDORS', name: 'VendorPagination');
+  //   state = state.copyWith(searchQuery: '');
+  //   fetchVendors();
+  // }
+
+  Future<void> refresh() async {
+    // ✅ Changed from void to Future<void>
     developer.log('REFRESHING VENDORS', name: 'VendorPagination');
-    state = state.copyWith(searchQuery: '');
-    fetchVendors();
+    state = state.copyWith(searchQuery: '', isSearching: false);
+    await fetchVendors(); // ✅ Added await
   }
 }
