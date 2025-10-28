@@ -109,7 +109,7 @@ class PayzoBottomsheetNavigator extends StatelessWidget {
                     ),
                   ),
 
-                  /// Navigation Button / Add Button
+                  /// Navigation Button  / Add Button
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [

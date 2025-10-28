@@ -249,7 +249,65 @@ class AddProductTopSection extends ConsumerWidget {
                 detail:
                     '${selectedDefaultTax.taxName} (${selectedDefaultTax.tcdTaxRate.toStringAsFixed(2)}%)',
               ),
-            ]
+            ],
+            PayzoDivider(),
+            ExpansionToggleButtons(
+              'Category',
+              true,
+              [
+                FormRadioButton(
+                  value: 'Trade',
+                  groupValue: product.purchaseType,
+                  title: 'Trade',
+                  onChanged: (val) {
+                    print('good val:$val');
+                    notifier.updateRadio(
+                        'purchaseType', val!); // 'Trade' for UI
+                    notifier.updatePurchaseInfo(
+                        purchaseType: 1); // 1 for API
+                    notifier.updateToggle(section: 'purchaseInfo', value: true);
+                    notifier.updateField('purchaseFlag', true);
+                    notifier.updateToggle(section: 'salesInfo', value: true);
+                    notifier.updateField('salesFlag', true);
+                    debugPrint(
+                        '✅ Purchase Info type: ${notifier.state.purchaseInformation.purchaseType}');
+                  },
+                ),
+                ReusableSizedBox(height: 5),
+                FormRadioButton(
+                  value: 'Assets',
+                  groupValue: product.purchaseType,
+                  title: 'Assets',
+                  onChanged: (val) {
+                    notifier.updateRadio('purchaseType', val!);
+                    notifier.updatePurchaseInfo(purchaseType: 2);
+                    notifier.updateToggle(section: 'purchaseInfo', value: false);
+                    notifier.updateField('purchaseFlag', false);
+                    notifier.updateToggle(section: 'salesInfo', value: false);
+                    notifier.updateField('salesFlag', false);
+                    debugPrint(
+                        '✅ Purchase Info type: ${notifier.state.purchaseInformation.purchaseType}');
+                  },
+                ),
+                ReusableSizedBox(height: 5),
+                FormRadioButton(
+                  value: 'Expense',
+                  groupValue: product.purchaseType,
+                  title: 'Expense',
+                  onChanged: (val) {
+                    notifier.updateRadio('purchaseType', val!);
+                    notifier.updatePurchaseInfo(purchaseType: 3);
+                    notifier.updateToggle(section: 'purchaseInfo', value: false);
+                    notifier.updateField('purchaseFlag', false);
+                    notifier.updateToggle(section: 'salesInfo', value: false);
+                    notifier.updateField('salesFlag', false);
+                    debugPrint(
+                        '✅ Purchase Info type: ${notifier.state.purchaseInformation.purchaseType}');
+                  },
+                ),
+              ],
+                  (_) {},
+            ),
           ],
         ),
       ),

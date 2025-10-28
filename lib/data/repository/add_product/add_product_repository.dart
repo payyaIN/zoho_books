@@ -9,10 +9,24 @@ class AddProductRepository {
 
   AddProductRepository(this.ref);
 
+  // Map purchaseType -> itemCategory (as per required payload)
+  String _mapItemCategory(int purchaseType) {
+    switch (purchaseType) {
+      case 1:
+        return 'TRADE';
+      case 2:
+        return 'ASSET';
+      case 3:
+        return 'EXPENSE';
+      default:
+        return 'TRADE';
+    }
+  }
+
   Future<AddProductApiModel> addProduct() async {
     final state = ref.read(productFormProvider);
 
-    // ✅ Basic validation
+    // ✅ Basic validation (as you had)
     if (state.name.trim().isEmpty) {
       throw Exception("Product name is required");
     }
@@ -24,43 +38,54 @@ class AddProductRepository {
     }
 
     final body = {
-      "type": state.typeBool,
-      "name": state.name,
-      "nameArabic": state.itemNameArabic,
-      "unitId": state.unitId,
-      "code": state.code.isEmpty ? '' : state.code,
-      "categoryType": state.categoryType,
-      "exemptionReason": state.exemptionReason,
-      "inventoryFlag": state.inventoryFlag,
-      "invetoryDto": {
-        "stockAccountId": state.inventoryDto.stockAccountId,
-        "openingStock": state.inventoryDto.openingStock,
-        "stockCurrency": state.inventoryDto.stockCurrency,
-        "openingStockRate": state.inventoryDto.openingStockRate,
-      },
-      "purchaseFlag": state.purchaseFlag,
-      "purchaseInformation": {
-        "purchaseType": state.purchaseInformation.purchaseType,
-        "costCurrency": state.purchaseInformation.costCurrency,
-        "costPrice": state.purchaseInformation.costPrice,
-        "purchaseAccount": state.purchaseInformation.purchaseAccount,
-        "description": state.purchaseInformation.description,
-        "descriptionArabic": state.purchaseInformation.descriptionArabic,
-        "preferedVendor": state.purchaseInformation.preferedVendor,
-        "categoryType": state.purchaseInformation.categoryType,
-      },
-      "salesFlag": state.salesFlag,
-      "saleInformation": {
-        "salesCurrency": state.saleInformation.salesCurrency,
-        "sellingPrice": state.saleInformation.sellingPrice,
-        "sellingAccount": state.saleInformation.sellingAccount,
-        "description": state.saleInformation.description,
-        "descriptionArabic": state.saleInformation.descriptionArabic,
-      },
+      // --- EXACT KEYS / SHAPES AS REQUIRED ---
+      "type": state.typeBool,                                   // bool
+      "name": state.name,                                       // string
+      "nameArabic": state.itemNameArabic,                       // string
+      "unitId": state.unitId,                                   // int
+      "code": state.code.isEmpty ? '' : state.code,             // string
       "taxPreference": {
-        "taxId": state.taxPrefObj.taxId,
-        "taxType": state.taxPrefObj.taxType,
+        "taxId": state.taxPrefObj.taxId,                        // int
+        "taxType": state.taxPrefObj.taxType,                    // string (e.g., "default")
       },
+      "exemptionReason": state.exemptionReason,                 // string
+      "salesFlag": state.salesFlag,                             // bool
+      "purchaseFlag": state.purchaseFlag,                       // bool
+
+      // 🔥 NEW: itemCategory (derived from purchaseType int)
+      "itemCategory": _mapItemCategory(state.purchaseInformation.purchaseType),
+
+      "purchaseInformation": {
+        "purchaseType": state.purchaseInformation.purchaseType,     // int (1/2/3)
+        "costCurrency": state.purchaseInformation.costCurrency,     // int
+        "costPrice": state.purchaseInformation.costPrice,           // string
+        "purchaseAccount": state.purchaseInformation.purchaseAccount, // int
+        "description": state.purchaseInformation.description,       // string
+        "descriptionArabic": state.purchaseInformation.descriptionArabic, // string
+        "preferedVendor": state.purchaseInformation.preferedVendor, // int
+        "categoryType": state.purchaseInformation.categoryType,     // null or id
+      },
+      "saleInformation": {
+        "salesCurrency": state.saleInformation.salesCurrency,       // int
+        "sellingPrice": state.saleInformation.sellingPrice,         // string
+        "sellingAccount": state.saleInformation.sellingAccount,     // int
+        "description": state.saleInformation.description,           // string
+        "descriptionArabic": state.saleInformation.descriptionArabic, // string
+      },
+
+      // top-level categoryType (null in your example)
+      "categoryType": state.categoryType,
+
+      "invetoryDto": {
+        "stockAccountId": state.inventoryDto.stockAccountId,        // int
+        "openingStock": state.inventoryDto.openingStock,            // number
+        "stockCurrency": state.inventoryDto.stockCurrency,          // int
+        // 👇 required as STRING in payload
+        "openingStockRate": state.inventoryDto.openingStockRate == null
+            ? null
+            : state.inventoryDto.openingStockRate!.toString(),
+      },
+      "inventoryFlag": state.inventoryFlag,                         // bool
     };
 
     debugPrint("📦 Final Product Payload: $body");

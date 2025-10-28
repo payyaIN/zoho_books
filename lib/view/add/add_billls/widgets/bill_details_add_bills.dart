@@ -2,15 +2,21 @@ import 'package:payzo_books/data/repository/add_bills/get_price_currency_reposit
 import 'package:payzo_books/data/repository/add_bills/get_vendor_list_repository.dart';
 import 'package:payzo_books/data/repository/add_bills/shipping_method_repository.dart';
 import 'package:payzo_books/utils/app_data/input_formatters.dart';
+import 'package:payzo_books/utils/common_widgets/payzo_address_shower/payzo_address_shower.dart';
 import 'package:payzo_books/view/add/add_billls/notifier/add_bill_form_notifier.dart';
 import 'package:intl/intl.dart';
 import 'package:payzo_books/utils/common_widgets/reusable_bottom_sheet.dart';
+import 'package:payzo_books/view/add/add_billls/widgets/payzo_discount_selector.dart';
 import '../../../../data/repository/add_bills/get_branch_list_repository.dart';
 import '../../../../import_data.dart';
+import '../../../../utils/common_widgets/payzo_address_shower/providers/payzo_address_shower_provider.dart';
+import 'package:payzo_books/utils/common_widgets/payzo_address_shower/providers/payzo_address_shower_provider.dart'
+    show payzoFirstAddressListProvider, payzoSecondAddressListProvider;
 
 class BillDetailsAddBills extends ConsumerStatefulWidget {
   final List<TextEditingController> controller;
-  const BillDetailsAddBills({super.key,required this.controller, });
+
+  const BillDetailsAddBills({super.key, required this.controller,});
 
   @override
   ConsumerState<BillDetailsAddBills> createState() =>
@@ -62,9 +68,13 @@ class _BillDetailsAddBillsState extends ConsumerState<BillDetailsAddBills> {
       ref.read(fetchBranchListProvider);
       ref.read(fetchShippingMethodsProvider);
       ref.read(fetchPriceCurrencyProvider);
-      ref.read(addBillFormProvider.notifier).updateField('billDate', DateTime.now());
-      ref.read(addBillFormProvider.notifier).updateField('dueDate', DateTime.now());
-      final shippingMethods = await ref.read(fetchShippingMethodsProvider.future);
+
+      ref.read(addBillFormProvider.notifier).updateField(
+          'billDate', DateTime.now());
+      ref.read(addBillFormProvider.notifier).updateField(
+          'dueDate', DateTime.now());
+      final shippingMethods = await ref.read(
+          fetchShippingMethodsProvider.future);
       final landFreight = shippingMethods.firstWhere(
             (method) => method.shpmName == "Land Freight",
         orElse: () => shippingMethods.first,
@@ -79,7 +89,8 @@ class _BillDetailsAddBillsState extends ConsumerState<BillDetailsAddBills> {
         orElse: () => currencyList.first,
       );
       notifier.updateField('currency', sarCurrency.currencyValue ?? '');
-      notifier.updateField('currencyId', sarCurrency.currencyId); // ✅ Important for backend payload
+      notifier.updateField('currencyId',
+          sarCurrency.currencyId); // ✅ Important for backend payload
     });
   }
 
@@ -87,13 +98,21 @@ class _BillDetailsAddBillsState extends ConsumerState<BillDetailsAddBills> {
   void dispose() {
     customerNotesController.dispose();
     termsAndConditionsController.dispose();
+
+    // 🧹 Clear address providers when closing screen
+    ref.read(payzoFirstAddressListProvider.notifier).clearAddresses();
+    ref.read(payzoSecondAddressListProvider.notifier).clearAddresses();
+
     super.dispose();
   }
+
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(addBillFormProvider);
     final notifier = ref.read(addBillFormProvider.notifier);
+    final billingList = ref.watch(payzoFirstAddressListProvider);
+    final shippingList = ref.watch(payzoSecondAddressListProvider);
 
     return CustomExpansionTile(
       title: 'Bill Details',
@@ -121,26 +140,49 @@ class _BillDetailsAddBillsState extends ConsumerState<BillDetailsAddBills> {
                   return vendorAsync.when(
                     data: (data) {
                       final vendorNames = data.response?.response
-                              ?.map((e) => e.displayName ?? '')
-                              .where((e) => e.isNotEmpty)
-                              .toSet()
-                              .toList() ??
+                          ?.map((e) => e.displayName ?? '')
+                          .where((e) => e.isNotEmpty)
+                          .toSet()
+                          .toList() ??
                           [];
 
                       return ReusableCountryBottomSheet(
                         title: 'Vendor',
                         items: vendorNames,
+                        // inside ReusableCountryBottomSheet(onSelect:)
                         onSelect: (selectedVendorName) {
                           final selected = data.response?.response?.firstWhere(
-                            (element) =>
-                                element.displayName == selectedVendorName,
+                                (element) =>
+                            element.displayName == selectedVendorName,
                             orElse: () => data.response!.response!.first,
                           );
 
                           if (selected != null) {
+                            // ✅ update form
                             notifier.updateField('vendorId', selected.partyId);
                             notifier.updateField(
                                 'vendor', selected.displayName ?? '');
+
+                            // ✅ update Payzo address lists
+                            final billingLines = buildBillingAddressLines(
+                                selected);
+                            final shippingLines = buildShippingAddressLines(
+                                selected);
+
+                            final firstNotifier = ref.read(
+                                payzoFirstAddressListProvider.notifier);
+                            final secondNotifier = ref.read(
+                                payzoSecondAddressListProvider.notifier);
+
+                            firstNotifier.clearAddresses();
+                            for (final line in billingLines) {
+                              firstNotifier.addAddress(line);
+                            }
+
+                            secondNotifier.clearAddresses();
+                            for (final line in shippingLines) {
+                              secondNotifier.addAddress(line);
+                            }
                           }
                         },
                       );
@@ -151,12 +193,21 @@ class _BillDetailsAddBillsState extends ConsumerState<BillDetailsAddBills> {
                           child: Text('Failed to load vendor list'));
                     },
                     loading: () =>
-                        const Center(child: CircularProgressIndicator()),
+                    const Center(child: CircularProgressIndicator()),
                   );
                 },
               );
             },
           ),
+          ReusableSizedBox(height: 5),
+
+
+          if (billingList.isNotEmpty || shippingList.isNotEmpty) ...[
+            PayzoAddressShower(
+              title: 'Billing Address',
+              secondTitle: 'Shipping Address',
+            ),
+          ],
           ReusableSizedBox(height: 5),
           PayzoBottomsheetNavigator(
             required: true,
@@ -177,9 +228,9 @@ class _BillDetailsAddBillsState extends ConsumerState<BillDetailsAddBills> {
                       return branchAsync.when(
                         data: (data) {
                           final branches = data.data
-                                  ?.map((b) => b.namePrimary ?? '')
-                                  .where((name) => name.isNotEmpty)
-                                  .toList() ??
+                              ?.map((b) => b.namePrimary ?? '')
+                              .where((name) => name.isNotEmpty)
+                              .toList() ??
                               [];
 
                           return ReusableCountryBottomSheet(
@@ -187,7 +238,7 @@ class _BillDetailsAddBillsState extends ConsumerState<BillDetailsAddBills> {
                             items: branches,
                             onSelect: (selectedName) {
                               final selectedBranch = data.data?.firstWhere(
-                                (b) => b.namePrimary == selectedName,
+                                    (b) => b.namePrimary == selectedName,
                                 orElse: () => data.data!.first,
                               );
 
@@ -195,15 +246,16 @@ class _BillDetailsAddBillsState extends ConsumerState<BillDetailsAddBills> {
                                 ref
                                     .read(addBillFormProvider.notifier)
                                     .updateField('branch',
-                                        selectedBranch.namePrimary ?? '');
+                                    selectedBranch.namePrimary ?? '');
                               }
                             },
                           );
                         },
                         loading: () =>
-                            const Center(child: CircularProgressIndicator()),
-                        error: (err, _) => Center(
-                            child: Text('Failed to load branches: $err')),
+                        const Center(child: CircularProgressIndicator()),
+                        error: (err, _) =>
+                            Center(
+                                child: Text('Failed to load branches: $err')),
                       );
                     },
                   );
@@ -250,7 +302,8 @@ class _BillDetailsAddBillsState extends ConsumerState<BillDetailsAddBills> {
             errorText: state.errors['dueDate'],
             isPayzoColor: true,
             title: 'Due Date',
-            trailing: formatDate(state.dueDate ?? DateTime.now().add(Duration(days: 30))),
+            trailing: formatDate(
+                state.dueDate ?? DateTime.now().add(Duration(days: 30))),
             onTap: () async {
               await ref.read(focusUtilsProvider).unfocusAndDelay();
               final selectedDate = await pickDate(context);
@@ -260,63 +313,63 @@ class _BillDetailsAddBillsState extends ConsumerState<BillDetailsAddBills> {
             },
           ),
           ReusableSizedBox(height: 5),
-          PayzoBottomsheetNavigator(
-              required: true,
-              errorText: state.errors['shippingMethod'],
-              isPayzoColor: true,
-              title: 'Shipping Method',
-              trailing: state.shippingMethod ?? 'Tap to Select',
-              onTap: () async {
-                await ref.read(focusUtilsProvider).unfocusAndDelay();
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (context) {
-                    return Consumer(
-                      builder: (context, ref, _) {
-                        final shippingAsync =
-                            ref.watch(fetchShippingMethodsProvider);
-
-                        return shippingAsync.when(
-                            data: (shippingList) {
-                              final methods = shippingList
-                                  .map((method) => method.shpmName ?? '')
-                                  .where((name) => name.isNotEmpty)
-                                  .toList();
-
-                              return ReusableCountryBottomSheet(
-                                title: 'Select Shipping Method',
-                                items: methods,
-                                onSelect: (selectedMethod) {
-                                  final selected = shippingList.firstWhere(
-                                    (element) =>
-                                        element.shpmName == selectedMethod,
-                                    orElse: () => shippingList.first,
-                                  );
-
-                                  ref
-                                      .read(addBillFormProvider.notifier)
-                                      .updateField('shippingMethod',
-                                          selected.shpmName ?? '');
-                                },
-                              );
-                            },
-                            loading: () => const Center(
-                                child: CircularProgressIndicator()),
-                            error: (err, _) {
-                              print("error is:$err");
-                              print('the stacktrace is:$_');
-                              return Center(
-                                child: Text(
-                                    'Error loading shipping methods: $err'),
-                              );
-                            });
-                      },
-                    );
-                  },
-                );
-              }),
+          // PayzoBottomsheetNavigator(
+          //     required: true,
+          //     errorText: state.errors['shippingMethod'],
+          //     isPayzoColor: true,
+          //     title: 'Shipping Method',
+          //     trailing: state.shippingMethod ?? 'Tap to Select',
+          //     onTap: () async {
+          //       await ref.read(focusUtilsProvider).unfocusAndDelay();
+          //       showModalBottomSheet(
+          //         context: context,
+          //         isScrollControlled: true,
+          //         backgroundColor: Colors.transparent,
+          //         builder: (context) {
+          //           return Consumer(
+          //             builder: (context, ref, _) {
+          //               final shippingAsync =
+          //               ref.watch(fetchShippingMethodsProvider);
+          //
+          //               return shippingAsync.when(
+          //                   data: (shippingList) {
+          //                     final methods = shippingList
+          //                         .map((method) => method.shpmName ?? '')
+          //                         .where((name) => name.isNotEmpty)
+          //                         .toList();
+          //
+          //                     return ReusableCountryBottomSheet(
+          //                       title: 'Select Shipping Method',
+          //                       items: methods,
+          //                       onSelect: (selectedMethod) {
+          //                         final selected = shippingList.firstWhere(
+          //                               (element) =>
+          //                           element.shpmName == selectedMethod,
+          //                           orElse: () => shippingList.first,
+          //                         );
+          //                         ref
+          //                             .read(addBillFormProvider.notifier)
+          //                             .updateField('shippingMethod',
+          //                             selected.shpmName ?? '');
+          //                       },
+          //                     );
+          //                   },
+          //                   loading: () =>
+          //                   const Center(
+          //                       child: CircularProgressIndicator()),
+          //                   error: (err, _) {
+          //                     print("error is:$err");
+          //                     print('the stacktrace is:$_');
+          //                     return Center(
+          //                       child: Text(
+          //                           'Error loading shipping methods: $err'),
+          //                     );
+          //                   });
+          //             },
+          //           );
+          //         },
+          //       );
+          //     }),
           ReusableSizedBox(height: 15),
           PayzoBottomsheetNavigator(
             required: true,
@@ -333,7 +386,7 @@ class _BillDetailsAddBillsState extends ConsumerState<BillDetailsAddBills> {
                   return Consumer(
                     builder: (context, ref, _) {
                       final currencyAsync =
-                          ref.watch(fetchPriceCurrencyProvider);
+                      ref.watch(fetchPriceCurrencyProvider);
 
                       return currencyAsync.when(
                         data: (currencyList) {
@@ -347,23 +400,23 @@ class _BillDetailsAddBillsState extends ConsumerState<BillDetailsAddBills> {
                             items: currencyNames,
                             onSelect: (selectedCurrency) {
                               final selected = currencyList.firstWhere(
-                                (element) =>
-                                    element.currencyValue == selectedCurrency,
+                                    (element) =>
+                                element.currencyValue == selectedCurrency,
                                 orElse: () => currencyList.first,
                               );
-
                               ref
                                   .read(addBillFormProvider.notifier)
                                   .updateField(
-                                      'currency', selected.currencyValue ?? '');
+                                  'currency', selected.currencyValue ?? '');
                             },
                           );
                         },
                         loading: () =>
-                            const Center(child: CircularProgressIndicator()),
-                        error: (err, _) => Center(
-                          child: Text('Error loading currency list: $err'),
-                        ),
+                        const Center(child: CircularProgressIndicator()),
+                        error: (err, _) =>
+                            Center(
+                              child: Text('Error loading currency list: $err'),
+                            ),
                       );
                     },
                   );
@@ -371,6 +424,7 @@ class _BillDetailsAddBillsState extends ConsumerState<BillDetailsAddBills> {
               );
             },
           ),
+          PayzoInputField(label: 'Bill Info'),
           ReusableSizedBox(height: 15),
           CustomDescriptionField(
             // required: true,
@@ -392,6 +446,11 @@ class _BillDetailsAddBillsState extends ConsumerState<BillDetailsAddBills> {
             controller: termsAndConditionsController,
           ),
           ReusableSizedBox(height: 15),
+          PayzoDiscountSelector(
+            title: "Apply Discount",
+            globalLabel: "Global level discount",
+            itemLabel: "Item level discount",
+          ),
         ],
       ),
     );

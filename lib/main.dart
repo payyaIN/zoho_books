@@ -21,6 +21,7 @@ double scaleFactorCallback(Size deviceSize) {
 //   ));
 //   runApp(const ProviderScope(child: MyApp()));
 // }
+
 Future<void> main() async {
 //Firebase Account
 //techinterland@gmail.com

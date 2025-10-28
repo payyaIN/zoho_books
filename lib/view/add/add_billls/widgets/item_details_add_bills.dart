@@ -8,20 +8,33 @@ import 'package:payzo_books/utils/focus_utility/focus_utility.dart';
 import 'package:payzo_books/view/add/add_billls/notifier/add_bill_form_notifier.dart';
 import 'package:intl/intl.dart';
 import 'package:payzo_books/utils/common_widgets/reusable_bottom_sheet.dart';
+import 'package:payzo_books/view/add/add_billls/widgets/add_bills_item_discount.dart';
 
 import '../../../../data/repository/add_bills/get_item_repository.dart';
 import 'package:collection/collection.dart';
 
+import '../notifier/add_bill_providers.dart';
+
 class ItemDetailsAddBills extends ConsumerWidget {
   final int index;
-  final List <TextEditingController> controllers;
-  const ItemDetailsAddBills({super.key, required this.index,required this.controllers, });
+  final List<TextEditingController> controllers;
+
+  const ItemDetailsAddBills({
+    super.key,
+    required this.index,
+    required this.controllers,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(addBillFormProvider);
     final notifier = ref.read(addBillFormProvider.notifier);
     final item = state.itemDetails[index];
+
+    // Watch discount provider to decide whether to show item discount field
+    final discountState = ref.watch(payzoDiscountProvider);
+    final showItemDiscount =
+        discountState.apply && discountState.level == PayzoDiscountLevel.item;
 
     return ScalingFactor(
       child: CustomExpansionTile(
@@ -31,13 +44,19 @@ class ItemDetailsAddBills extends ConsumerWidget {
         onToggle: () {},
         height: 2,
         child: ReusableColumn(children: [
-          PayzoBottomsheetNavigator(
+          PayzoInputField(
+            showList: true,
+            controller: controllers[3],
             required: true,
-            errorText: state.errors['itemName'],
-            title: 'Select Item',
-            isPayzoColor: true,
-            trailing: item.itemName ?? '',
-            onTap: () async {
+            label: 'Item name',
+            initialValue: item.rateDate?.toString() ?? '',
+            errorText: state.errors['rateDate'],
+            keyboardType: TextInputType.text,
+            onChanged: (val) {
+              // When user types manually, just update the item name in the state
+              notifier.updateItemField(index, 'itemName', val);
+            },
+            showListTap: () async {
               await ref.read(focusUtilsProvider).unfocusAndDelay();
               showModalBottomSheet(
                 context: context,
@@ -58,19 +77,21 @@ class ItemDetailsAddBills extends ConsumerWidget {
                         title: 'Item',
                         items: itemNames,
                         onSelect: (selectedItem) {
-                          final unitList = ref.read(fetchUnitListProvider).asData?.value ?? [];
+                          final unitList =
+                              ref.read(fetchUnitListProvider).asData?.value ??
+                                  [];
 
-                          final selected = data.firstWhere((e) => e.itemName == selectedItem);
-                          // final matchedUnit = unitList.firstWhereOrNull(
-                          //       (unit) => unit.unitId == selected.unitId,
-                          // );
+                          final selected = data
+                              .firstWhere((e) => e.itemName == selectedItem);
 
-                          notifier.updateItemField(index, 'itemName', selected.itemName ?? '');
-                          notifier.updateItemField(index, 'unitId', selected.unitId ?? 0);
-                          // notifier.updateItemField(index, 'unitType', matchedUnit?.displayUnit ?? '');
-                          notifier.updateItemField(index, 'amount', selected.salesRate ?? 0.0);
-
-
+                          // Update the controller to show the selected name
+                          controllers[3].text = selected.itemName ?? '';
+                          notifier.updateItemField(
+                              index, 'itemName', selected.itemName ?? '');
+                          notifier.updateItemField(
+                              index, 'unitId', selected.unitId ?? 0);
+                          notifier.updateItemField(
+                              index, 'amount', selected.salesRate ?? 0.0);
                         },
                       );
                     },
@@ -83,7 +104,16 @@ class ItemDetailsAddBills extends ConsumerWidget {
             },
           ),
 
-          ReusableSizedBox(height: 5),
+          // PayzoBottomsheetNavigator(
+          //   required: true,
+          //   errorText: state.errors['itemName'],
+          //   title: 'Select Item',
+          //   isPayzoColor: true,
+          //   trailing: item.itemName ?? '',
+          //
+          // ),
+
+          const ReusableSizedBox(height: 5),
 
           PayzoBottomsheetNavigator(
             required: true,
@@ -135,14 +165,10 @@ class ItemDetailsAddBills extends ConsumerWidget {
             onChanged: (val) {
               final parsed = int.tryParse(val);
               notifier.updateItemField(index, 'quantity', parsed ?? 0);
+              notifier.calculateItemAmount(index, ref);
             },
           ),
-          // PayzoInputField(
-          //   label: 'Unit Type',
-          //   initialValue: item.unitType ?? '',
-          //   onChanged: (val) =>
-          //       notifier.updateItemField(index, 'unitType', val),
-          // ),
+
           PayzoBottomsheetNavigator(
             required: true,
             errorText: state.errors['unitType'],
@@ -183,35 +209,84 @@ class ItemDetailsAddBills extends ConsumerWidget {
             },
           ),
 
-          ReusableSizedBox(height: 5),
+          // // ⇢ Show item discount only when apply=true && level==item
+          // if (showItemDiscount) ...[
+          //   ReusableSizedBox(height: 8),
+          //   AddBillItemDiscountField(
+          //     controller: ref.watch(addBillItemDiscountProvider),
+          //   ),
+          // ],
 
-          // PayzoBottomsheetNavigator(
-          //   required: true,
-          //   errorText: state.errors['rateDate'],
-          //   isPayzoColor: true,
-          //   title: 'Rate',
-          //   trailing: formatDate(item.rateDate),
-          //   onTap: () async {
-          //     await ref.read(focusUtilsProvider).unfocusAndDelay();
-          //     final selectedDate = await pickDate(context);
-          //     if (selectedDate != null) {
-          //       notifier.updateItemField(index, 'rateDate', selectedDate);
-          //     }
-          //   },
-          // ),
-          // 🔥 Rate
+          // Rate
           PayzoInputField(
             controller: controllers[1],
             required: true,
-            label: 'Rate',
-            initialValue: item.rateDate?.toString() ?? '',
+            label: 'Unit price/Amount',
+            initialValue: item.rateDate?.toString() ?? '0.0',
             errorText: state.errors['rateDate'],
             keyboardType: TextInputType.number,
             inputFormatters: PayzoInputFormatters.onlyDigits,
             onChanged: (val) {
               notifier.updateItemField(index, 'rateDate', val);
+              notifier.calculateItemAmount(index,ref);
             },
           ),
+
+          if (showItemDiscount)PayzoInputField(
+            controller: controllers[4],
+            required: true,
+            label: 'Discount',
+            initialValue: item.discountAmount?.toString() ?? '',
+            errorText: state.errors['discountAmount'],
+            keyboardType: TextInputType.number,
+            leading: GestureDetector(
+              child: ReusableSizedBox(
+                width: 40,
+                child: ReusableRow(children:<Widget>[
+                  ReusableText(text: '${ref.watch(addBillItemDiscountCurrencyStringProvider)}'),
+                  ReusableSizedBox(width: 5,),
+                  Icon(Icons.keyboard_arrow_down)
+                ]),
+              ),
+              onTap: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (_) {
+                    final taxOptions = [
+                      '\$',
+                      '%'
+                    ];
+
+                    return ReusableCountryBottomSheet(
+                      title: 'Select discount type',
+                      items: taxOptions,
+                      onSelect: (selectedDiscount) {
+                        final isDollar = selectedDiscount == '\$';
+
+                        // update the per-item flag first
+                        notifier.updateItemField(index, 'discountIsCurrency', isDollar);
+
+                        // update the small provider/string used for display (optional)
+                        ref.read(addBillItemDiscountCurrencyStringProvider.notifier).state = selectedDiscount;
+
+                        // recalc now that the item has correct flag
+                        notifier.calculateItemAmount(index, ref);
+                      },
+                    );
+                  },
+                );
+              },
+            ),
+            onChanged: (val) {
+              final parsedDiscount = double.tryParse(val) ?? 0.0;
+              notifier.updateItemField(index, 'discountAmount', parsedDiscount);
+              controllers[4].text = parsedDiscount.toString();
+              notifier.calculateItemAmount(index, ref);
+            },
+          ),
+
           PayzoBottomsheetNavigator(
             required: true,
             errorText: state.errors['taxType'],
@@ -252,67 +327,82 @@ class ItemDetailsAddBills extends ConsumerWidget {
               );
             },
           ),
-          // 🔥 Customer Details
+
+          // // Customer Details
+          // PayzoBottomsheetNavigator(
+          //   required: true,
+          //   errorText: state.errors['customerDate'],
+          //   isPayzoColor: true,
+          //   title: 'Customer',
+          //   trailing: item.customerDate?.toString() ?? 'Tap to Select',
+          //   onTap: () async {
+          //     await ref.read(focusUtilsProvider).unfocusAndDelay();
+          //
+          //     showModalBottomSheet(
+          //       context: context,
+          //       isScrollControlled: true,
+          //       backgroundColor: Colors.transparent,
+          //       builder: (_) {
+          //         final customerAsync = ref.watch(fetchCustomerListProvider);
+          //         return customerAsync.when(
+          //           data: (data) {
+          //             final customerNames = data
+          //                 .map((e) => e.displayName ?? '')
+          //                 .where((name) => name.isNotEmpty)
+          //                 .toList();
+          //
+          //             return ReusableCountryBottomSheet(
+          //               title: 'Select Customer',
+          //               items: customerNames,
+          //               onSelect: (selectedName) {
+          //                 final selected = data.firstWhere(
+          //                       (c) => c.displayName == selectedName,
+          //                   orElse: () => data.first,
+          //                 );
+          //
+          //                 notifier.updateItemField(
+          //                     index, 'customerDate', selected.displayName ?? '');
+          //                 notifier.updateItemField(
+          //                     index, 'customerId', selected.partyId ?? 0);
+          //               },
+          //             );
+          //           },
+          //           error: (e, _) =>
+          //               Center(child: Text('Error loading customers: $e')),
+          //           loading: () =>
+          //           const Center(child: CircularProgressIndicator()),
+          //         );
+          //       },
+          //     );
+          //   },
+          // ),
+
+          // PayzoInputField(
+          //   controller: controllers[2],
+          //   required: true,
+          //   inputFormatters: PayzoInputFormatters.onlyDigits,
+          //   label: 'Amount',
+          //   keyboardType: TextInputType.number,
+          //   initialValue: item.amount?.toStringAsFixed(2) ?? '0.00',
+          //   errorText: state.errors['amount'],
+          //   onChanged: (val) {
+          //     final parsed = double.tryParse(val);
+          //     notifier.updateItemField(index, 'amount', parsed ?? 0.0);
+          //   },
+          // ),
+          const ReusableSizedBox(height: 5),
           PayzoBottomsheetNavigator(
-            required: true,
-            errorText: state.errors['customerDate'],
-            isPayzoColor: true,
-            title: 'Customer',
-            trailing: item.customerDate?.toString() ?? 'Tap to Select',
-            onTap: () async {
-              await ref.read(focusUtilsProvider).unfocusAndDelay();
-
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                builder: (_) {
-                  final customerAsync = ref.watch(fetchCustomerListProvider);
-                  return customerAsync.when(
-                    data: (data) {
-                      final customerNames = data
-                          .map((e) => e.displayName ?? '')
-                          .where((name) => name.isNotEmpty)
-                          .toList();
-
-                      return ReusableCountryBottomSheet(
-                        title: 'Select Customer',
-                        items: customerNames,
-                        onSelect: (selectedName) {
-                          final selected = data.firstWhere(
-                                (c) => c.displayName == selectedName,
-                            orElse: () => data.first,
-                          );
-
-                          notifier.updateItemField(index, 'customerDate', selected.displayName ?? '');
-                          notifier.updateItemField(index, 'customerId', selected.partyId ?? 0);
-                        },
-                      );
-                    },
-                    error: (e, _) =>
-                        Center(child: Text('Error loading customers: $e')),
-                    loading: () =>
-                    const Center(child: CircularProgressIndicator()),
-                  );
-                },
-              );
-            },
-          ),
-          PayzoInputField(
-            controller:controllers[2],
-            required: true,
-            inputFormatters: PayzoInputFormatters.onlyDigits,
-            label: 'Amount',
-            keyboardType: TextInputType.number,
-            initialValue: item.amount?.toStringAsFixed(2) ?? '',
+            title: 'Amount',
+            divider: false,
+            trailing: item.amount.toString().isEmpty?'0.00':item.amount.toString(),
             errorText: state.errors['amount'],
-            onChanged: (val) {
-              final parsed = double.tryParse(val);
-              notifier.updateItemField(index, 'amount', parsed ?? 0.0);
-            },
+            onTap: () {},
+            enabled: false,
+            isPayzoColor: true,
+            navigationButton: false,
           ),
 
-          ReusableSizedBox(height: 5),
+          const ReusableSizedBox(height: 5),
         ]),
       ),
     );

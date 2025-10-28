@@ -73,7 +73,7 @@ class AppText {
   static const String invoices = 'Invoices';
   static const String edit = 'Edit';
   static const String payments = 'Payments';
-  static const String printpdf = 'Print PDF';
+  static const String downloadpdf = 'Download PDF';
   static const String product = 'Product';
   static const String paid = 'PAID';
   static const String pending = 'PENDING';

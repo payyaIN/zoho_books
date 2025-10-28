@@ -1,15 +1,13 @@
 import '../../import_data.dart';
 
-class FormRadioButton extends StatelessWidget {
-  final String value;
-  final String groupValue;
+class FormCheckbox extends StatelessWidget {
+  final bool value;
+  final ValueChanged<bool?>? onChanged;
   final String title;
-  final void Function(String?)? onChanged;
 
-  const FormRadioButton({
+  const FormCheckbox({
     super.key,
     required this.value,
-    required this.groupValue,
     required this.title,
     this.onChanged,
   });
@@ -20,18 +18,21 @@ class FormRadioButton extends StatelessWidget {
       behavior: HitTestBehavior.translucent,
       onTap: () {
         if (onChanged != null) {
-          onChanged!(value);
+          onChanged!(!value);
         }
       },
       child: ReusableRow(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Radio(
-            activeColor: AppColors.appMainColor,
+          Checkbox(
             value: value,
-            groupValue: groupValue,
             onChanged: onChanged,
+            activeColor: AppColors.appMainColor, // ✅ same color as FormRadioButton
+            side: BorderSide(
+              color: AppColors.appMainColor, // ✅ same border color
+              width: 1.6,
+            ),
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
           ),

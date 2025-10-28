@@ -72,6 +72,7 @@ class _AddProductState extends ConsumerState<AddProduct> {
   @override
   Widget build(BuildContext context) {
     final notifier = ref.read(productFormProvider.notifier);
+    final product = ref.watch(productFormProvider);
 
     return PopScope(
       onPopInvokedWithResult: (didPop, result) {
@@ -106,9 +107,9 @@ class _AddProductState extends ConsumerState<AddProduct> {
                   children: <Widget>[
                     AddProductTopSection(controllers: controllers),
                     const ReusableSizedBox(height: 15),
-                    SalesInformationAddProducts(controllers: controllers),
-                    const ReusableSizedBox(height: 15),
                     PurchaseSectionAddProduct(controllers: controllers),
+                    const ReusableSizedBox(height: 15),
+                    if (product.purchaseType != 'Expense')SalesInformationAddProducts(controllers: controllers),
                     const ReusableSizedBox(height: 15),
                   ],
                 ),

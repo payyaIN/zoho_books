@@ -13,97 +13,83 @@ import 'package:payzo_books/view/expenses/provider/expense_pagination_provider.d
 import '../../../../data/other_providers/price_currency_proider.dart';
 import '../../../../data/repository/add_bills/get_price_currency_repository.dart';
 import '../../../../import_data.dart';
+import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'dart:convert';
+import 'package:mime/mime.dart';
+
+import '../../../../utils/app_data/shared_preference_key.dart';
+
 
 class AddExpenseController extends StateNotifier<bool> {
   final Ref ref;
 
   AddExpenseController(this.ref) : super(false);
 
+  // --------------- submitExpense ---------------
+  // Replace the existing submitExpense with this implementation
   Future<void> submitExpense(BuildContext context, WidgetRef ref) async {
     state = true;
-
     try {
-      // Controllers
+      // --- read controllers & providers (from the providers you supplied) ---
       final amount = ref.read(amountControllerProvider).text.trim();
       final reference = ref.read(referenceControllerProvider).text.trim();
       final notes = ref.read(notesControllerProvider).text.trim();
       final exemptionReason = ref.read(expensesExemptionReasonControllerProvider).text.trim();
+      final expenseInfo = ref.read(expenseInfoControllerProvider).text.trim();
 
-      // Required fields
       final branchId = ref.read(branchIdProvider);
       final currencyId = ref.read(expenseCurrencyIdProvider);
       final date = ref.read(dateProvider);
       final expenseAccountId = ref.read(expenseAccountIdProvider);
       final paidThroughId = ref.read(paidThroughIdProvider);
 
-      // Optional/extra fields
       final vendorId = ref.read(vendorIdProvider);
       final taxId = ref.read(taxIdProvider);
       final customerId = ref.read(customerIdProvider);
-      final files = ref.read(expenseAttachmentProvider);
+      final files = ref.read(expenseAttachmentProvider); // List<File>
 
-      // === ✅ Clear previous errors ===
+      final product = ref.read(productTypeProvider);
+      final int claimableFlag = (product.isClaimable ?? false) ? 1 : 0;
+
+      // Clear previous errors
       ref.read(branchErrorProvider.notifier).state = null;
       ref.read(dateErrorProvider.notifier).state = null;
       ref.read(expenseAccountErrorProvider.notifier).state = null;
       ref.read(amountErrorProvider.notifier).state = null;
       ref.read(paidThroughErrorProvider.notifier).state = null;
 
-      // === ❌ Validation ===
+      // Validation
       bool hasError = false;
-
-      if (branchId == null) {
-        ref.read(branchErrorProvider.notifier).state = "Branch is required.";
-        hasError = true;
-      }
-
-      if (date == null) {
-        ref.read(dateErrorProvider.notifier).state = "Date is required.";
-        hasError = true;
-      }
-
-      if (expenseAccountId == null || expenseAccountId == 0) {
-        ref.read(expenseAccountErrorProvider.notifier).state = "Expense account is required.";
-        hasError = true;
-      }
-
-      if (amount.isEmpty || double.tryParse(amount) == null) {
-        ref.read(amountErrorProvider.notifier).state = "Enter a valid expense amount.";
-        hasError = true;
-      }
-
-      if (paidThroughId == null || paidThroughId == 0) {
-        ref.read(paidThroughErrorProvider.notifier).state = "Paid through account is required.";
-        hasError = true;
-      }
-
+      if (branchId == null) { ref.read(branchErrorProvider.notifier).state = "Branch is required."; hasError = true; }
+      if (date == null) { ref.read(dateErrorProvider.notifier).state = "Date is required."; hasError = true; }
+      if (expenseAccountId == null || expenseAccountId == 0) { ref.read(expenseAccountErrorProvider.notifier).state = "Expense account is required."; hasError = true; }
+      if (amount.isEmpty || double.tryParse(amount) == null) { ref.read(amountErrorProvider.notifier).state = "Enter a valid expense amount."; hasError = true; }
+      if (paidThroughId == null || paidThroughId == 0) { ref.read(paidThroughErrorProvider.notifier).state = "Paid through account is required."; hasError = true; }
       if (hasError) {
-        showPayzoSnackBar(
-          context: context,
-          ref: ref,
-          message: "Please fill all the required fields.",
-          type: PayzoSnackType.error,
-        );
+        showPayzoSnackBar(context: context, ref: ref, message: "Please fill all the required fields.", type: PayzoSnackType.error);
         return;
       }
 
-      // === ✅ Payload ===
-      final payload = {
-        'branch': branchId,
-        'currency': currencyId,
-        'date': date?.toIso8601String(),
+      // Resolve tax info (use taxJsonProvider if set; respect exemption flag)
+      final rawTaxJson = ref.read(taxJsonProvider) ?? {};
+      final bool showExemption = ref.read(showExemptionReasonProvider) ?? false;
+      final resolvedTaxId = ref.read(taxIdProvider) ?? rawTaxJson['taxId'];
+      final resolvedTaxType = showExemption ? 'non-taxable' : (rawTaxJson['taxType'] as String?) ?? 'default';
+
+      final String dateString = date != null ? DateFormat('yyyy-MM-dd').format(date) : '';
+
+      // Build payload exactly like working web example
+      final Map<String, dynamic> payload = {
+        'file': null,
         'expenseAccountId': expenseAccountId,
-        'expenseAmount': amount,
-        'expenseDescription': notes,
-        'reference': reference,
         'paidThroughAccountId': paidThroughId,
+        'expenseAmount': amount,
+        'currency': currencyId,
+        'expenseDescription': notes.isEmpty ? null : notes,
         'vendorId': vendorId,
         'vendorAccount': null,
-        'exemptionReason': exemptionReason,
-        'tax': {
-          'taxId': taxId,
-          'taxType': ref.read(showExemptionReasonProvider) ? 'non-taxable' : 'standard-rate',
-        },
         'customerDto': {
           'customerId': customerId,
           'curtomerChartOfAccountId': null,
@@ -111,41 +97,107 @@ class AddExpenseController extends StateNotifier<bool> {
           'markUpby': null,
           'projectId': 1,
         },
+        'branch': branchId,
+        'date': dateString,
+        'reference': reference.isEmpty ? null : reference,
+        'tax': {
+          'taxId': resolvedTaxId,
+          'taxType': resolvedTaxType,
+        },
+        'exemptionReason': exemptionReason ?? '',
+        'isModalShown': 1,
+        'expenseInfo': expenseInfo.isEmpty ? null : expenseInfo,
+        'claimable': claimableFlag,
       };
 
-      print("📦 Submitting Expense Payload: $payload");
+      // Build request
+      final baseUrl ='http://81.208.173.149';
+      final uri = Uri.parse('$baseUrl/pb-accounting-service/api/expense/record');
+      final request = http.MultipartRequest('POST', uri);
 
-      final api = ref.read(apiServiceProvider);
-      final response = await api.postFileAsJson(
-        url: 'http://81.208.173.149/pb-accounting-service/api/expense/record',
-        body: payload,
-        files: files,
-        fromJson: (json) => AddExpenseApiResponse.fromJson(json),
+      // Attach JSON 'data' part as filename 'blob' with Content-Type: application/json
+      final String jsonString = jsonEncode(payload);
+      final http.MultipartFile jsonPart = http.MultipartFile.fromString(
+        'data',
+        jsonString,
+        filename: 'blob',
+        contentType: MediaType('application', 'json'),
       );
+      request.files.add(jsonPart);
 
-      print("✅ Expense submitted successfully: $response");
+      // Attach files (expenseAttachmentProvider) - expecting List<File>
+      if (files != null && files.isNotEmpty) {
+        for (final f in files) {
+          try {
+            if (f == null) continue;
+            if (f is File) {
+              final filename = f.path.split(Platform.pathSeparator).last;
+              final mime = lookupMimeType(f.path) ?? 'application/octet-stream';
+              final mtParts = mime.split('/');
+              if (mtParts.length == 2) {
+                request.files.add(await http.MultipartFile.fromPath('file', f.path, filename: filename, contentType: MediaType(mtParts[0], mtParts[1])));
+              } else {
+                request.files.add(await http.MultipartFile.fromPath('file', f.path, filename: filename));
+              }
+            }
+          } catch (fileErr) {
+            // ignore single file error and continue
+            debugPrint('⚠️ attach-file skipped: $fileErr');
+          }
+        }
+      }
 
-      showPayzoSnackBar(
-        context: context,
-        ref: ref,
-        message: "Expense recorded successfully.",
-        type: PayzoSnackType.success,
-      );
-      await ref.read(expensesPaginationStateProvider.notifier).fetchExpenses();
-      await Navigator.pushNamed(context, RouteNames.expensesListing);
-      clearForm();
-    } catch (e) {
-      print("❌ Error submitting expense: $e");
-      showPayzoSnackBar(
-        context: context,
-        ref: ref,
-        message: "Something went wrong. Try again.",
-        type: PayzoSnackType.error,
-      );
+      // Headers: read from global providers (replace names if different)
+      final token =
+      SharedPreferencesHelper.getString(SharedPreferenceKey.accessToken)??'';
+      final companyId = '1';
+      final countryCode = 'AE';
+
+      if (token.isNotEmpty) request.headers['Authorization'] = 'Bearer $token';
+      if (companyId != null) request.headers['company-id'] = companyId.toString();
+      request.headers['country-code'] = countryCode.toString();
+      request.headers['Accept'] = 'application/json';
+
+      debugPrint("📦 Submitting multipart (data=blob JSON + file(s)). JSON: $jsonString");
+
+      final streamedResp = await request.send();
+      final resp = await http.Response.fromStream(streamedResp);
+
+      debugPrint('📨 Response (${resp.statusCode}): ${resp.body}');
+
+      if (resp.statusCode >= 200 && resp.statusCode < 300) {
+        final decoded = jsonDecode(resp.body);
+        final apiResp = AddExpenseApiResponse.fromJson(decoded);
+        debugPrint("✅ Expense submitted successfully: ${apiResp.message ?? 'OK'}");
+
+        showPayzoSnackBar(context: context, ref: ref, message: "Expense recorded successfully.", type: PayzoSnackType.success);
+
+        // Refresh list & navigate (keep your flow)
+        await ref.read(expensesPaginationStateProvider.notifier).fetchExpenses();
+        await Navigator.pushNamed(context, RouteNames.expensesListing);
+
+        // Clear form
+        clearForm();
+      } else {
+        String serverMsg = resp.body;
+        try {
+          final decoded = jsonDecode(resp.body);
+          serverMsg = decoded['message']?.toString() ?? resp.body;
+        } catch (_) {}
+        debugPrint('❌ POST failed ${resp.statusCode}: $serverMsg');
+        showPayzoSnackBar(context: context, ref: ref, message: "Failed: $serverMsg", type: PayzoSnackType.error);
+      }
+    } catch (e, st) {
+      debugPrint("❌ Error submitting expense: $e\n$st");
+      showPayzoSnackBar(context: context, ref: ref, message: "Something went wrong. Try again.", type: PayzoSnackType.error);
     } finally {
       state = false;
     }
   }
+
+
+
+
 
 
 
@@ -203,10 +255,10 @@ class AddExpenseController extends StateNotifier<bool> {
   //ui methods
 
   // Format date for UI
-  String formatDate(DateTime? date) {
-    if (date == null) return 'Tap to select';
-    return DateFormat('dd MMM yyyy').format(date);
-  }
+    String formatDate(DateTime? date) {
+      if (date == null) return 'Tap to select';
+      return DateFormat('dd MMM yyyy').format(date);
+    }
 
   // Date picker with future date constraint
   Future<void> showDatePickerAndSet(BuildContext context) async {
@@ -520,7 +572,127 @@ class AddExpenseController extends StateNotifier<bool> {
       },
     );
   }
+  // --------------- calculateTotal ---------------
+  void calculateTotal(BuildContext context, WidgetRef ref) {
+    // read amount text and parse (entered amount is tax-INCLUSIVE)
+    final amountText = ref.read(amountControllerProvider).text.trim();
+    final enteredAmount = double.tryParse(amountText.replaceAll(',', '')) ?? 0.0;
 
+    // figure out taxRate (priority: taxJson.taxRate -> taxJson.rate -> lookup by taxId)
+    double taxRate = 0.0;
+    String? selectedTaxName = ref.read(taxProvider);
+    final taxJsonRaw = ref.read(taxJsonProvider) ?? {};
+
+    // 1) Try direct taxRate from taxJson (this will be present when user selected a tax)
+    if (taxJsonRaw.containsKey('taxRate')) {
+      final dynamic r = taxJsonRaw['taxRate'];
+      taxRate = (r is num) ? r.toDouble() : (double.tryParse('$r') ?? 0.0);
+    } else if (taxJsonRaw.containsKey('rate')) {
+      final dynamic r = taxJsonRaw['rate'];
+      taxRate = (r is num) ? r.toDouble() : (double.tryParse('$r') ?? 0.0);
+    } else {
+      // fallback: lookup rate from fetched taxes provider (if available)
+      final taxAsync = ref.read(fetchAllTaxesProvider);
+      taxAsync.when(
+        data: (taxResponse) {
+          try {
+            final List<dynamic> all = [
+              ...taxResponse.defaultTax,
+              ...taxResponse.others,
+            ];
+            final selId = ref.read(taxIdProvider);
+            if (selId != null) {
+              final match = all.firstWhere(
+                    (t) => (t.taxId?.toInt() ?? t.taxId) == selId,
+                orElse: () => null,
+              );
+              if (match != null) {
+                if (match.tcdTaxRate != null) {
+                  taxRate = (match.tcdTaxRate is num) ? match.tcdTaxRate.toDouble() : double.tryParse('${match.tcdTaxRate}') ?? 0.0;
+                } else if (match.taxRate != null) {
+                  taxRate = (match.taxRate is num) ? match.taxRate.toDouble() : double.tryParse('${match.taxRate}') ?? 0.0;
+                } else if (match.rate != null) {
+                  taxRate = (match.rate is num) ? match.rate.toDouble() : double.tryParse('${match.rate}') ?? 0.0;
+                }
+                selectedTaxName ??= match.taxName ?? match.name ?? selectedTaxName;
+              }
+            }
+          } catch (_) {}
+        },
+        loading: () => {},
+        error: (_, __) => {},
+      );
+    }
+
+    // Force zero if non-taxable/exempt/zero name
+    final taxType = ref.read(taxTypeProvider);
+    final showExemption = ref.read(showExemptionReasonProvider);
+    if (taxType == 'non-taxable' || showExemption == true) {
+      taxRate = 0.0;
+    }
+    if (selectedTaxName != null && selectedTaxName!.toLowerCase().contains('zero')) {
+      taxRate = 0.0;
+    }
+
+    // treat enteredAmount as tax-INCLUSIVE amount
+    double baseAmount;
+    double taxAmount;
+    double totalAmount;
+
+    if (taxRate == 0.0) {
+      baseAmount = enteredAmount;
+      taxAmount = 0.0;
+      totalAmount = enteredAmount;
+    } else {
+      // Base = Amount / (1 + TaxRate/100)
+      baseAmount = enteredAmount / (1 + (taxRate / 100.0));
+      baseAmount = double.parse(baseAmount.toStringAsFixed(2));
+      // Tax = Amount - Base
+      taxAmount = double.parse((enteredAmount - baseAmount).toStringAsFixed(2));
+      totalAmount = double.parse(enteredAmount.toStringAsFixed(2));
+    }
+
+    // update providers
+    ref.read(addExpenseSubtotalProvider.notifier).state = baseAmount;
+    ref.read(addExpenseTaxAmountProvider.notifier).state = taxAmount;
+    ref.read(addExpenseTotalProvider.notifier).state = totalAmount;
+    ref.read(addExpenseSelectedTaxNameProvider.notifier).state = selectedTaxName;
+
+    debugPrint('🧮 (inclusive) Entered: $enteredAmount, taxRate: $taxRate%, base: $baseAmount, tax: $taxAmount, total: $totalAmount');
+  }
+
+
+  /// Try multiple possible property names at runtime and return a double rate.
+  double _extractRateFromDynamic(dynamic dyn) {
+    try {
+      // If the runtime object has tcdTaxRate (as in DefaultTax) prefer that.
+      final candidateList = <dynamic>[
+        // common names based on your API and models
+        dyn.tcdTaxRate,
+        dyn.tcdTaxRateValue, // just in case
+        dyn.taxRate,
+        dyn.rate,
+        dyn.tcdTaxRateStr, // if some models use strings
+        dyn.tax_percent, // improbable, but harmless to try
+      ];
+
+      for (final c in candidateList) {
+        if (c == null) continue;
+        if (c is num) return c.toDouble();
+        if (c is String) {
+          final parsed = double.tryParse(c.replaceAll(',', ''));
+          if (parsed != null) return parsed;
+        }
+      }
+    } catch (_) {
+      // Accessing a missing getter on some dynamic implementations can throw;
+      // we ignore and return 0.0 as fallback.
+    }
+    return 0.0;
+  }
+
+
+  // --------------- showTaxSelector ---------------
   void showTaxSelector(BuildContext context, WidgetRef ref) async {
     await ref.read(focusUtilsProvider).unfocusAndDelay();
 
@@ -535,16 +707,28 @@ class AddExpenseController extends StateNotifier<bool> {
 
             return taxAsync.when(
               data: (taxResponse) {
+                // include rate into the entries so selection immediately has rate
                 final List<Map<String, dynamic>> allTaxEntries = [
-                  ...taxResponse.defaultTax.map((e) => {
-                    'name': e.taxName,
-                    'id': e.taxId,
-                    'type': e.taxType,
+                  ...taxResponse.defaultTax.map((e) {
+                    final dyn = e as dynamic;
+                    // attempt to read several possible fields at runtime
+                    final double resolvedRate = _extractRateFromDynamic(dyn);
+                    return {
+                      'name': dyn.taxName ?? dyn.tcdTaxName ?? dyn.name,
+                      'id': dyn.taxId ?? dyn.tcdTaxId ?? dyn.id,
+                      'type': dyn.taxType ?? dyn.tcdTaxType,
+                      'rate': resolvedRate,
+                    };
                   }),
-                  ...taxResponse.others.map((e) => {
-                    'name': e.taxName,
-                    'id': e.taxId,
-                    'type': e.taxType,
+                  ...taxResponse.others.map((e) {
+                    final dyn = e as dynamic;
+                    final double resolvedRate = _extractRateFromDynamic(dyn);
+                    return {
+                      'name': dyn.taxName ?? dyn.tcdTaxName ?? dyn.name,
+                      'id': dyn.taxId ?? dyn.tcdTaxId ?? dyn.id,
+                      'type': dyn.taxType ?? dyn.tcdTaxType,
+                      'rate': resolvedRate,
+                    };
                   }),
                 ];
 
@@ -553,29 +737,26 @@ class AddExpenseController extends StateNotifier<bool> {
                 return ReusableCountryBottomSheet(
                   title: 'Select Tax',
                   items: taxNames,
-                    onSelect: (selectedName) {
-                      final selected = allTaxEntries.firstWhere(
-                            (entry) => entry['name'] == selectedName,
-                        orElse: () => allTaxEntries.first,
-                      );
+                  onSelect: (selectedName) {
+                    final selected = allTaxEntries.firstWhere(
+                          (entry) => entry['name'] == selectedName,
+                      orElse: () => allTaxEntries.first,
+                    );
 
-                      // Store individual pieces
-                      ref.read(taxProvider.notifier).state = selected['name'];
-                      ref.read(taxIdProvider.notifier).state = selected['id'];
-                      ref.read(showExemptionReasonProvider.notifier).state =
-                          selected['type'] == 'non-taxable';
+                    // apply selection...
+                    ref.read(taxProvider.notifier).state = selected['name'];
+                    ref.read(taxIdProvider.notifier).state = selected['id'];
+                    ref.read(showExemptionReasonProvider.notifier).state = selected['type'] == 'non-taxable';
+                    ref.read(taxJsonProvider.notifier).state = {
+                      'taxId': selected['id'],
+                      'taxType': selected['type'],
+                      'taxRate': selected['rate'],
+                    };
+                    ref.read(addExpenseSelectedTaxNameProvider.notifier).state = selected['name'];
 
-                      // ✅ Store complete tax object for the payload
-                      ref.read(taxJsonProvider.notifier).state = {
-                        "taxId": selected['id'],
-                        "taxType": selected['type'],
-                      };
-
-                      print("📌 Tax Selected: ${selected['name']}");
-                      print("🆔 Tax ID: ${selected['id']}");
-                      print("📃 Tax Type: ${selected['type']}");
-                      print("🧾 Show Exemption Reason: ${selected['type'] == 'non-taxable'}");
-                    }
+                    // recalc totals now taxJson has the numeric taxRate
+                    calculateTotal(context, ref);
+                  },
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -586,4 +767,5 @@ class AddExpenseController extends StateNotifier<bool> {
       },
     );
   }
+
 }

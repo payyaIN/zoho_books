@@ -2,6 +2,7 @@ import 'package:http/http.dart' as http;
 import 'package:payzo_books/utils/app_data/shared_preference_key.dart';
 import 'package:payzo_books/view/add/add_billls/notifier/add_bill_form_notifier.dart';
 import '../../../import_data.dart';
+import 'package:http_parser/http_parser.dart';
 
 class AddBillRepository {
   final Ref ref;
@@ -29,63 +30,96 @@ class AddBillRepository {
 
   Future<String> submitBill() async {
     final state = ref.read(addBillFormProvider);
-    final url = Uri.parse(
-        'http://81.208.173.149/pb-process-service/bill/getBillModal');
+    final url = Uri.parse('http://81.208.173.149/pb-process-service/bill/getBillModal');
 
+    // ✅ Build product list to match expected structure
     final productDetails = state.itemDetails.map((item) {
       return {
-        "billProdId": 1,
-        "billProdName": item.itemName ?? "Sample Product",
-        "billProdCatId": 1,
-        "billProdDesc": "Description",
-        "billProdTax": {"taxId": 1, "taxType": "non-taxable"},
-        "billProdTaxExmptionReason": "Reason",
+        "billProdId": item.prodId,
+        "billProdName": item.itemName ?? "",
+        "billProdCatId": item.prodCatId,
+        "billProdDesc": item.description ?? "",
+        "billProdTax": {
+          "taxId": 1,
+          "taxType": item.taxType ?? "default",
+        },
+        "billProdTaxExmptionReason": item.exemptionReason ?? "",
         "billProdAccount": int.tryParse(item.account ?? '') ?? 0,
         "billProdQuantity": item.quantity ?? 0,
-        "billProdUnitId": int.tryParse(item.unitType ?? '') ?? 0,
+        "billProdUnitId": item.unitId ?? 1,
         "billProdUnitPrice": item.amount ?? 0.0,
-        "billProdCustomerId": 1,
-        "billProdTotalAmount":
-            ((item.quantity ?? 0) * (item.amount ?? 0)).toInt(),
-        "billProdTaxAmount": 0,
-        "billProdDiscountAmount": null,
-        "billProdDiscountPercentage": null,
-        "billProdOthersAmount": null,
-        "billProdTaxDesc": null,
-        "billProdOthersDesc": null,
+        "billProdCustomerId": item.customerId,
+        "billProdTotalAmount": ((item.quantity ?? 0) * (item.amount ?? 0)).toDouble(),
+        "billProdTaxAmount": item.taxAmount ?? 0.0,
+        "billProdDiscountAmount": item.discountAmount ?? 0.0,
+        "billProdDiscountPercentage": item.discountPercentage ?? 0.0,
+        "billProdDiscountType": "FIXED",
+        "billProdOthersAmount": item.othersAmount ?? 0.0,
+        "billProdTaxDesc": item.taxDescription,
+        "billProdOthersDesc": item.othersDescription,
+        "billPercentage": item.percentage,
       };
     }).toList();
 
+    // ✅ Final payload matching required JSON exactly
     final payload = {
-      "billVendorId": int.tryParse(state.vendor ?? '') ?? 0,
-      "billCustomerId": null,
+      "billVendorId": state.vendorId,
+      "billCustomerId": state.customerId,
       "billBranchId": int.tryParse(state.branch ?? '') ?? 1,
-      "billInvoiceNumber": state.billRefNo,
-      "billOrderNumber": state.orderNo,
+      "billInvoiceNumber": state.billRefNo ?? "",
+      "billOrderNumber": state.orderNo ?? "",
       "billDate": state.billDate?.toIso8601String(),
       "billDueDate": state.dueDate?.toIso8601String(),
-      "billShippingType": int.tryParse(state.shippingMethod ?? '') ?? 3,
-      "billCurrencyId": int.tryParse(state.currency ?? '') ?? 1,
-      "billPaymentTerms": state.terms,
-      "billOrgId": null,
-      "billCmpCr": null,
-      "billCustomerNotes": state.customerNotes,
-      "billTermsCondition": state.terms,
-      "billAmount": state.total?.toInt() ?? 0,
-      "billTotalAmount": state.total?.toInt() ?? 0,
+      "billCurrencyId": int.tryParse(state.currency ?? '') ?? 8,
+      "billPaymentTerms": state.paymentTerms ?? "",
+      "billPaidThroughAcc": null,
+      "billOrgId": state.orgId,
+      "billCmpCr": state.cmpCr,
+      "billCustomerNotes": state.customerNotes ?? "",
+      "billTermsCondition": state.terms ?? "",
+      "billAmount": state.total ?? 0.0,
+      "billTotalAmount": state.total ?? 0.0,
       "isModalShown": 0,
+      "billDiscountType": "FIXED",
       "billDiscountPercentage": 0,
+      "billDiscountAmount": state.itemDetails.fold<double>(
+        0.0,
+            (sum, item) => sum + (item.discountAmount ?? 0.0),
+      ),
+      "billType": 1,
+      "billAdvance": false,
+      "billDelivery": false,
       "billProductDetails": productDetails,
-      "billAttachFile": null
+      "isIncoming": 0,
+      "billStatus": null,
+      "billInfo": "adasdasd",
+      "billDiscountMethod": "GLOBAL_DISCOUNT",
     };
 
     final headers = await _getHeaders();
 
+    // ✅ Multipart request with `billDto` JSON part
     final request = http.MultipartRequest('POST', url);
     request.headers.addAll(headers);
+    request.files.add(
+      http.MultipartFile.fromString(
+        'billDto',
+        jsonEncode(payload),
+        filename: 'blob',
+        contentType: MediaType('application', 'json'),
+      ),
+    );
 
-    // Important: this sets `billDto` field as JSON string (not file)
-    request.fields['billDto'] = jsonEncode(payload);
+    // ✅ If attachment exists, add it too
+    final file = state.attachment;
+    if (file != null) {
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'file',
+          file.path,
+        ),
+      );
+    }
 
     final streamedResponse = await request.send();
     final response = await http.Response.fromStream(streamedResponse);
@@ -98,7 +132,7 @@ class AddBillRepository {
       return responseData['html'] ?? "<h3>No HTML Found</h3>";
     } else {
       throw Exception(
-          'POST API call failed with status code: ${response.statusCode}');
+          'POST API call failed with status code: ${response.statusCode}\n${response.body}');
     }
   }
 }

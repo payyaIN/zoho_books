@@ -1,7 +1,5 @@
 import 'package:flutter/services.dart';
 import 'package:payzo_books/import_data.dart';
-import 'package:payzo_books/utils/common_widgets/red_star_widget.dart';
-
 class PayzoInputField extends StatelessWidget {
   final String label;
   final String? errorText;
@@ -18,6 +16,9 @@ class PayzoInputField extends StatelessWidget {
   final bool? isPrefixText;
   final String? prefixText;
   final List<TextInputFormatter>? inputFormatters;
+  final bool? showList;
+  final VoidCallback? showListTap;
+
 
   const PayzoInputField({
     super.key,
@@ -36,6 +37,8 @@ class PayzoInputField extends StatelessWidget {
     this.enabled = true,
     this.isPrefixText,
     this.prefixText,
+    this.showList=false,
+    this.showListTap,
   });
 
   @override
@@ -118,6 +121,10 @@ class PayzoInputField extends StatelessWidget {
             color: Color.fromRGBO(51, 51, 51, 1),
           ),
           prefixText: isPrefixText == true ? prefixText : null,
+          suffix:showList==true?GestureDetector(
+            onTap: showList==true?showListTap:null,
+            child: Icon(Icons.keyboard_arrow_down,color: const Color.fromRGBO(86, 86, 86, 1),),
+          ):null,
           prefixStyle: const TextStyle(
             fontFamily: 'SF Pro Display',
             fontWeight: FontWeight.w400,

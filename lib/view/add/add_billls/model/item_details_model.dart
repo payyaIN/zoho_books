@@ -21,6 +21,9 @@ class ItemDetail {
   final double? othersAmount;
   final double? percentage;
 
+  // NEW: per-item discount mode. true => currency ($), false => percentage (%)
+  final bool? discountIsCurrency;
+
   const ItemDetail({
     this.prodId,
     this.prodCatId,
@@ -43,6 +46,7 @@ class ItemDetail {
     this.discountPercentage,
     this.othersAmount,
     this.percentage,
+    this.discountIsCurrency, // <-- new
   });
 
   ItemDetail copyWith({
@@ -67,6 +71,7 @@ class ItemDetail {
     double? discountPercentage,
     double? othersAmount,
     double? percentage,
+    bool? discountIsCurrency, // <-- new
   }) {
     return ItemDetail(
       prodId: prodId ?? this.prodId,
@@ -90,6 +95,7 @@ class ItemDetail {
       discountPercentage: discountPercentage ?? this.discountPercentage,
       othersAmount: othersAmount ?? this.othersAmount,
       percentage: percentage ?? this.percentage,
+      discountIsCurrency: discountIsCurrency ?? this.discountIsCurrency,
     );
   }
 }

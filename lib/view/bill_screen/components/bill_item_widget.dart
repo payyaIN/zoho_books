@@ -131,14 +131,13 @@ class BillItemWidget extends StatelessWidget {
                             billInvoiceNumber == null ||
                                     billInvoiceNumber.isEmpty
                                 ? ReusableText(
-                                    text: "Bill Invoice No: -",
+                                    text: "Bill Ref No: -",
                                     color: Color(0xFF333333),
                                     fontSize: 12,
                                     fontWeight: FontWeight.w400,
                                   )
                                 : ReusableText(
-                                    text:
-                                        "Bill Invoice No: ${billInvoiceNumber}",
+                                    text: "Bill Ref No: ${billInvoiceNumber}",
                                     color: Color(0xFF333333),
                                     fontSize: 12,
                                     fontWeight: FontWeight.w400,

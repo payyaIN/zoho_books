@@ -24,6 +24,7 @@ class SalesInformationAddProducts extends ConsumerWidget {
     return ScalingFactor(
       child: FormContainer(
         height: 2,
+
         child: Padding(
           padding:
               const EdgeInsets.only(top: 18, bottom: 18, left: 15, right: 15),

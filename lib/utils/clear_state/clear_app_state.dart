@@ -103,7 +103,6 @@ class ProviderInvalidationHelper {
 
     print('Data providers invalidated');
   }
-
   /// Invalidates all pagination state providers
   static void _invalidatePaginationProviders(WidgetRef ref) {
     print('🔄 Invalidating pagination providers...');

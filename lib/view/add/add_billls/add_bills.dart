@@ -29,11 +29,7 @@ class AddBills extends ConsumerStatefulWidget {
 
 class _AddBillsState extends ConsumerState<AddBills> {
   bool _initialized = false;
-  List <TextEditingController>controllers=[
-    TextEditingController(),
-    TextEditingController(),
-    TextEditingController(),
-  ];
+  List<List<TextEditingController>> itemControllers = [];
   List <TextEditingController>billDetailsControllers=[
     TextEditingController(),
     TextEditingController(),
@@ -41,6 +37,38 @@ class _AddBillsState extends ConsumerState<AddBills> {
     TextEditingController(),
     TextEditingController(),
   ];
+  List<TextEditingController> _createControllersForItem() {
+    return [
+      TextEditingController(), // 0 -> quantity
+      TextEditingController(), // 1 -> rate
+      TextEditingController(), // 2 -> amount (readOnly usually)
+      TextEditingController(), // 3 -> itemName
+      TextEditingController(), // 4 -> itemName
+    ];
+  }
+
+  void _addControllersForNewItem() {
+    itemControllers.add(_createControllersForItem());
+    setState(() {}); // trigger rebuild so new controllers are passed to item widget
+  }
+
+  void _disposeControllersForItemAt(int index) {
+    if (index < 0 || index >= itemControllers.length) return;
+    for (var c in itemControllers[index]) {
+      c.dispose();
+    }
+    itemControllers.removeAt(index);
+    setState(() {});
+  }
+
+  void _disposeAllItemControllers() {
+    for (var list in itemControllers) {
+      for (var c in list) {
+        c.dispose();
+      }
+    }
+    itemControllers.clear();
+  }
 
   @override
   void didChangeDependencies() {
@@ -54,11 +82,23 @@ class _AddBillsState extends ConsumerState<AddBills> {
       Future.microtask(() {
         final itemDetails = ref.read(addBillFormProvider).itemDetails;
 
-        // ✅ Only add item if list is empty
+        // Ensure at least one item exists in state
         if (itemDetails.isEmpty) {
           ref.read(addBillFormProvider.notifier).addNewItem();
         }
+
+        // Ensure controllers count matches items count
+        if (itemControllers.length < ref.read(addBillFormProvider).itemDetails.length) {
+          final missing = ref.read(addBillFormProvider).itemDetails.length - itemControllers.length;
+          for (var i = 0; i < missing; i++) {
+            _addControllersForNewItem();
+          }
+        }
+        if (ref.watch(addBillFormProvider).itemDetails[0].amount==null) {
+          ref.read(addBillFormProvider.notifier).updateItemField(0, 'amount',0.00);
+        }
         // 🔄 Fetch all required data
+        print('the amount is:${ref.watch(addBillFormProvider).itemDetails[0].amount}');
         ref.read(fetchItemListProvider);
         ref.read(fetchAccountListProvider);
         ref.read(fetchUnitListProvider);
@@ -74,9 +114,21 @@ class _AddBillsState extends ConsumerState<AddBills> {
 
   Future<void> clearFormAndControllers() async {
     final notifier = ref.read(addBillFormProvider.notifier);
-    controllers[1].text='';
-    controllers[0].text='';
-    controllers[2].text='';
+
+    // Dispose all item controllers
+    _disposeAllItemControllers();
+
+    // Clear bill controllers
+    for (var c in billDetailsControllers) c.clear();
+
+    // Clear form state
+    notifier.clearForm();
+
+    // Reset to single line item in state + controllers
+    notifier.addNewItem();
+    _addControllersForNewItem();
+
+    ref.read(addNewLineProvider.notifier).state = 1;
     billDetailsControllers[0].text='';
     billDetailsControllers[1].text='';
     billDetailsControllers[2].text='';
@@ -138,9 +190,20 @@ class _AddBillsState extends ConsumerState<AddBills> {
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: state.itemDetails.length,
                   itemBuilder: (context, index) {
+                    final controllersForThisItem = index < itemControllers.length
+                        ? itemControllers[index]
+                        : // fallback: create on the fly (keeps safety)
+                    (() {
+                      _addControllersForNewItem();
+                      return itemControllers[index];
+                    })();
+
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 15),
-                      child: ItemDetailsAddBills(index: index,controllers: controllers,),
+                      child: ItemDetailsAddBills(
+                        index: index,
+                        controllers: controllersForThisItem,
+                      ),
                     );
                   },
                 ),
@@ -162,8 +225,16 @@ class _AddBillsState extends ConsumerState<AddBills> {
                             .validateLastItemFields();
 
                         if (isValid) {
+                          // 1) Add form model item
                           ref.read(addBillFormProvider.notifier).addNewItem();
-                        } else {
+
+                          // 2) Add controllers for new item (must be after state change)
+                          _addControllersForNewItem();
+
+                          // 3) update any counter provider if used
+                          ref.read(addNewLineProvider.notifier).state++;
+                        }
+                        else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('Finish filling out the current item to add a new one.'),
@@ -200,7 +271,6 @@ class _AddBillsState extends ConsumerState<AddBills> {
                                     type: FileType.custom,
                                     allowedExtensions: ['pdf', 'jpg', 'png', 'jpeg'],
                                   );
-
                                   if (result != null &&
                                       result.files.single.path != null) {
                                     final pickedFile = File(result.files.single.path!);
@@ -275,8 +345,7 @@ class _AddBillsState extends ConsumerState<AddBills> {
                   try {
                     final response = await ref.read(generateBillProvider(file).future);
 
-                    Navigator.pop(context); // ✅ pop progress indicator after API call
-
+                    Navigator.pop(context);
                     String invoiceNumber = 'N/A';
                     String billId = 'N/A';
 
@@ -284,7 +353,7 @@ class _AddBillsState extends ConsumerState<AddBills> {
                       invoiceNumber = response.details!.first.billInvoiceNumber ?? 'N/A';
                       billId = response.details!.first.billId.toString();
                     }
-
+                    
                     showDialog(
                       context: context,
                       builder: (_) => AlertDialog(

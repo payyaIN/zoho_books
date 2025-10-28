@@ -53,7 +53,7 @@ class InvoiceDetailPage extends ConsumerWidget {
                           headerText2: invoiceDetail.invoiceCustomerName,
                           imgName1: AppText.edit,
                           imgName2: AppText.payments,
-                          imgName3: AppText.printpdf,
+                          imgName3: AppText.downloadpdf,
                           imgName4: AppText.recrngInvc,
                           img1: AppImages.editWhite,
                           img2: AppImages.moneyBag,

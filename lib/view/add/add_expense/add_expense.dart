@@ -8,6 +8,7 @@ import 'package:payzo_books/data/repository/add_invoice/get_customer_list_repo.d
 import 'package:payzo_books/data/repository/add_product/get_all_account_list_repository.dart';
 import 'package:payzo_books/import_data.dart';
 import 'package:payzo_books/utils/common_widgets/reusable_add_image_widget.dart';
+import 'package:payzo_books/view/add/add_expense/widgets/add_expense_total_shower.dart';
 import 'package:payzo_books/view/add/add_expense/widgets/expense_document_picker.dart';
 import '../../../data/repository/add_invoice/get_tax_list_repo.dart';
 
@@ -113,7 +114,9 @@ class _AddExpenseState extends ConsumerState<AddExpense> {
                 const ReusableSizedBox(height: 15),
                 const AddExpenseForm(),
                 const ReusableSizedBox(height: 15),
-                ExpenseDocumentPicker(),
+                const ExpenseDocumentPicker(),
+                const ReusableSizedBox(height: 15),
+                const AddExpenseTotalShower(),
                 const ReusableSizedBox(height: 15),
               ],
             ),

@@ -4,7 +4,6 @@ import 'package:payzo_books/view/expenses/widgets/details/download_expense_pdf.d
 import 'package:payzo_books/view/expenses/widgets/details/expense_detail_error_widget.dart';
 import 'package:payzo_books/view/notification_details/components/other_widgts.dart';
 
-
 class ExpenseDetailHeaderData extends ConsumerStatefulWidget {
   final int? expenseId;
   const ExpenseDetailHeaderData({required this.expenseId, super.key});
@@ -20,16 +19,17 @@ class _ExpenseDetailHeaderDataState
   Widget build(BuildContext context) {
     final effectiveExpenseId = widget.expenseId ?? 1;
     final expenseDetailsAsync =
-    ref.watch(getExpenseDetailsProvider(effectiveExpenseId));
+        ref.watch(getExpenseDetailsProvider(effectiveExpenseId));
     return expenseDetailsAsync.when(
       data: (expenseDetail) {
         final data = expenseDetail.response!;
         return headerTextAndWidgets(
-          headerText1: formatCurrency(data.expenseAmount!.toDouble(), data.currency!),
+          headerText1:
+              formatCurrency(data.expenseAmount!.toDouble(), data.currency!),
           headerText2: data.vendor ?? '',
           imgName1: AppText.edit,
           imgName2: AppText.payments,
-          imgName3: AppText.printpdf,
+          imgName3: AppText.downloadpdf,
           imgName4: AppText.more,
           img1: AppImages.editWhite,
           img2: AppImages.moneyBag,

@@ -1,27 +1,36 @@
 import 'dart:io';
 
 import 'package:payzo_books/data/models/add_bills/get_price_currency.dart';
+import 'package:payzo_books/view/add/add_expense/model/add_expense_product_type_model.dart';
 
 import '../../../../import_data.dart';
+import '../notifier/add_expense_notifier.dart';
+
 final addExpenseProvider =
-StateNotifierProvider<AddExpenseController, bool>((ref) {
+    StateNotifierProvider<AddExpenseController, bool>((ref) {
   return AddExpenseController(ref);
 });
 
 /// Text Controllers
 final amountControllerProvider = Provider.autoDispose<TextEditingController>(
-      (ref) => TextEditingController(),
+  (ref) => TextEditingController(),
 );
 final referenceControllerProvider = Provider.autoDispose<TextEditingController>(
-      (ref) => TextEditingController(),
+  (ref) => TextEditingController(),
+);
+final expenseInfoControllerProvider =
+    Provider.autoDispose<TextEditingController>(
+  (ref) => TextEditingController(),
 );
 final notesControllerProvider = Provider.autoDispose<TextEditingController>(
-      (ref) => TextEditingController(),
+  (ref) => TextEditingController(),
 );
-final expensesExemptionReasonControllerProvider = Provider.autoDispose<TextEditingController>(
-      (ref) => TextEditingController(),
+final expensesExemptionReasonControllerProvider =
+    Provider.autoDispose<TextEditingController>(
+  (ref) => TextEditingController(),
 );
-final showExemptionReasonProvider = StateProvider.autoDispose<bool>((ref) => false);
+final showExemptionReasonProvider =
+    StateProvider.autoDispose<bool>((ref) => false);
 final expenseAttachmentProvider = StateProvider<List<File>>((ref) => []);
 
 /// Dropdown Selections
@@ -63,3 +72,15 @@ final dateErrorProvider = StateProvider<String?>((ref) => null);
 final amountErrorProvider = StateProvider<String?>((ref) => null);
 final expenseAccountErrorProvider = StateProvider<String?>((ref) => null);
 final paidThroughErrorProvider = StateProvider<String?>((ref) => null);
+
+///option button providers
+final productTypeProvider = StateNotifierProvider<AddExpenseProductTypeNotifier,
+    AddExpenseProductTypeModel>(
+  (ref) => AddExpenseProductTypeNotifier(),
+);
+
+/// calculation providers
+final addExpenseTotalProvider = StateProvider<double?>((ref) => null);
+final addExpenseSubtotalProvider = StateProvider<double?>((ref) => null);
+final addExpenseSelectedTaxNameProvider = StateProvider<String?>((ref) => null);
+final addExpenseTaxAmountProvider = StateProvider<double?>((ref) => null);

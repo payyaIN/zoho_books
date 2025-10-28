@@ -63,54 +63,8 @@ class PurchaseSectionAddProduct extends ConsumerWidget {
               ),
               if (product.purchaseFlag == true)
                 ReusableColumn(children: [
-                  ExpansionToggleButtons(
-                    'Type',
-                    true,
-                    [
-                      FormRadioButton(
-                        value: 'Trade',
-                        groupValue: product.purchaseType,
-                        title: 'Trade',
-                        onChanged: (val) {
-                          print('good val:$val');
-                          notifier.updateRadio(
-                              'purchaseType', val!); // 'Trade' for UI
-                          notifier.updatePurchaseInfo(
-                              purchaseType: 1); // 1 for API
-                          debugPrint(
-                              '✅ Purchase Info type: ${notifier.state.purchaseInformation.purchaseType}');
-                        },
-                      ),
-                      ReusableSizedBox(height: 5),
-                      FormRadioButton(
-                        value: 'Assets',
-                        groupValue: product.purchaseType,
-                        title: 'Assets',
-                        onChanged: (val) {
-                          notifier.updateRadio('purchaseType', val!);
-                          notifier.updatePurchaseInfo(purchaseType: 2);
-                          debugPrint(
-                              '✅ Purchase Info type: ${notifier.state.purchaseInformation.purchaseType}');
-                        },
-                      ),
-                      ReusableSizedBox(height: 5),
-                      FormRadioButton(
-                        value: 'Expense',
-                        groupValue: product.purchaseType,
-                        title: 'Expense',
-                        onChanged: (val) {
-                          notifier.updateRadio('purchaseType', val!);
-                          notifier.updatePurchaseInfo(purchaseType: 3);
-                          debugPrint(
-                              '✅ Purchase Info type: ${notifier.state.purchaseInformation.purchaseType}');
-                        },
-                      ),
-                    ],
-                    (_) {},
-                  ),
-
-                  ReusableSizedBox(height: 15),
-                  PayzoDivider(),
+                  // ReusableSizedBox(height: 15),
+                  // PayzoDivider(),
                   PayzoInputField(
                       inputFormatters: PayzoInputFormatters.onlyDecimalNumbers,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),

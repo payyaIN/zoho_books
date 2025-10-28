@@ -76,7 +76,7 @@ SingleChildScrollView notificationDetailBody({
                     ? Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          actionButton(Icons.print, 'Print PDF',
+                          actionButton(Icons.print, 'Download PDF',
                               onTap: printOnTap),
                         ],
                       )
@@ -94,7 +94,7 @@ SingleChildScrollView notificationDetailBody({
                                 onTap: rejectOnTap),
                           actionButton(
                             Icons.print,
-                            'Print PDF',
+                            'Download PDF',
                             onTap: printOnTap,
                           ),
                         ],

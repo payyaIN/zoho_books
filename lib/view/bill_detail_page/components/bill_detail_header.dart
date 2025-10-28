@@ -25,7 +25,7 @@ class _BillDetailHeaderDataHeaderState
               headerText2: billDetail.billVenderName,
               imgName1: AppText.edit,
               imgName2: AppText.payments,
-              imgName3: AppText.printpdf,
+              imgName3: AppText.downloadpdf,
               imgName4: AppText.more,
               img1: AppImages.editWhite,
               img2: AppImages.moneyBag,
