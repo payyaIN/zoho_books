@@ -459,10 +459,18 @@ class InvoicePaginationNotifier extends StateNotifier<InvoicePaginationState> {
     }
   }
 
-  void refresh() {
+  // void refresh() {
+  //   developer.log('REFRESHING INVOICES AND CLEARING SEARCH',
+  //       name: 'InvoicePagination');
+  //   state = state.copyWith(searchQuery: '');
+  //   fetchInvoices();
+  // }
+
+  Future<void> refresh() async {
+    // ✅ Make it async
     developer.log('REFRESHING INVOICES AND CLEARING SEARCH',
         name: 'InvoicePagination');
-    state = state.copyWith(searchQuery: '');
-    fetchInvoices();
+    state = state.copyWith(searchQuery: '', isSearching: false);
+    await fetchInvoices(); // ✅ Add await
   }
 }

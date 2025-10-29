@@ -335,6 +335,7 @@ class _AddInvoiceState extends ConsumerState<AddInvoice> {
                                 notifier.clearForm();
                                 Navigator.pop(context);
                                 ref.invalidate(getInvoiceDataWithPagination);
+
                                 ref.read(bottomNavBarProvider.notifier).state =
                                     2; // 🔄 set to Vendor/Product index
                                 Navigator.pushNamedAndRemoveUntil(

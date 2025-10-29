@@ -271,10 +271,18 @@ class BillPaginationNotifier extends StateNotifier<BillPaginationState> {
     }
   }
 
-  void refresh() {
+  // void refresh() {
+  //   developer.log('REFRESHING BILLS AND CLEARING SEARCH',
+  //       name: 'BillPagination');
+  //   state = state.copyWith(searchQuery: '');
+  //   fetchBills();
+  // }
+
+  Future<void> refresh() async {
+    // ✅ Make it async
     developer.log('REFRESHING BILLS AND CLEARING SEARCH',
         name: 'BillPagination');
-    state = state.copyWith(searchQuery: '');
-    fetchBills();
+    state = state.copyWith(searchQuery: '', isSearching: false);
+    await fetchBills(); // ✅ Add await
   }
 }

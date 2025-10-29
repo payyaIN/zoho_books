@@ -5,6 +5,7 @@ import 'package:payzo_books/data/repository/add_bills/get_vendor_list_repository
 import 'package:payzo_books/data/repository/add_product/add_product_repository.dart';
 import 'package:payzo_books/data/repository/add_product/get_all_account_list_repository.dart';
 import 'package:payzo_books/data/repository/add_product/get_product_account_list_repo.dart';
+import 'package:payzo_books/data/repository/products_api/product_list_api.dart';
 import 'package:payzo_books/import_data.dart';
 import 'package:payzo_books/data/repository/quotes_api/all_quotes_api.dart';
 import 'package:payzo_books/view/add/add_product/notifier/add_item_notifier.dart';
@@ -109,7 +110,8 @@ class _AddProductState extends ConsumerState<AddProduct> {
                     const ReusableSizedBox(height: 15),
                     PurchaseSectionAddProduct(controllers: controllers),
                     const ReusableSizedBox(height: 15),
-                    if (product.purchaseType != 'Expense')SalesInformationAddProducts(controllers: controllers),
+                    if (product.purchaseType != 'Expense')
+                      SalesInformationAddProducts(controllers: controllers),
                     const ReusableSizedBox(height: 15),
                   ],
                 ),
@@ -149,6 +151,7 @@ class _AddProductState extends ConsumerState<AddProduct> {
                                 onPressed: () {
                                   notifier.clearForm();
                                   Navigator.pop(context);
+                                  ref.invalidate(getProductDataWithPagination);
                                   ref
                                           .read(bottomNavBarProvider.notifier)
                                           .state =

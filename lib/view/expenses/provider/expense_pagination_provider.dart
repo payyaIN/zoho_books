@@ -8,7 +8,8 @@ import 'package:payzo_books/view/expenses/repo/expense_repo.dart';
 import '../../../import_data.dart';
 
 final expensesPaginationStateProvider =
-StateNotifierProvider<ExpensesPaginationNotifier, ExpensesPaginationState>((ref) {
+    StateNotifierProvider<ExpensesPaginationNotifier, ExpensesPaginationState>(
+        (ref) {
   return ExpensesPaginationNotifier(ref);
 });
 
@@ -70,7 +71,8 @@ class ExpensesPaginationState {
   }
 }
 
-class ExpensesPaginationNotifier extends StateNotifier<ExpensesPaginationState> {
+class ExpensesPaginationNotifier
+    extends StateNotifier<ExpensesPaginationState> {
   final Ref _ref;
   static const int _pageSize = 15;
   bool _isLoadingMore = false;
@@ -92,9 +94,11 @@ class ExpensesPaginationNotifier extends StateNotifier<ExpensesPaginationState> 
         "sortingCriteria": {}
       };
 
-      developer.log('FETCHING INITIAL EXPENSES - Page 0', name: 'ExpensesPagination');
+      developer.log('FETCHING INITIAL EXPENSES - Page 0',
+          name: 'ExpensesPagination');
 
-      final result = await _ref.read(getExpenseDataWithPagination(params).future);
+      final result =
+          await _ref.read(getExpenseDataWithPagination(params).future);
 
       final expenses = result.response?.data ?? [];
       final totalCount = result.response?.totalRecord?.toInt() ?? 0;
@@ -111,7 +115,9 @@ class ExpensesPaginationNotifier extends StateNotifier<ExpensesPaginationState> 
       );
 
       if (expenses.isNotEmpty) {
-        _ref.read(expensesSelectionProvider.notifier).updateSelectionSize(expenses.length);
+        _ref
+            .read(expensesSelectionProvider.notifier)
+            .updateSelectionSize(expenses.length);
       }
     } catch (error) {
       developer.log('ERROR FETCHING EXPENSES: $error',
@@ -142,7 +148,8 @@ class ExpensesPaginationNotifier extends StateNotifier<ExpensesPaginationState> 
     try {
       final nextPage = state.currentPage + 1;
 
-      developer.log('LOADING MORE EXPENSES - Page $nextPage', name: 'ExpensesPagination');
+      developer.log('LOADING MORE EXPENSES - Page $nextPage',
+          name: 'ExpensesPagination');
 
       final params = {
         "pageNo": nextPage,
@@ -151,12 +158,15 @@ class ExpensesPaginationNotifier extends StateNotifier<ExpensesPaginationState> 
         "sortingCriteria": {}
       };
 
-      final result = await _ref.read(getExpenseDataWithPagination(params).future);
+      final result =
+          await _ref.read(getExpenseDataWithPagination(params).future);
 
       final newExpenses = result.response?.data ?? [];
-      final totalCount = result.response?.totalRecord?.toInt() ?? state.totalCount;
+      final totalCount =
+          result.response?.totalRecord?.toInt() ?? state.totalCount;
 
-      final Set<int> existingIds = state.expenses.map((e) => e.expenseId?.toInt() ?? -1).toSet();
+      final Set<int> existingIds =
+          state.expenses.map((e) => e.expenseId?.toInt() ?? -1).toSet();
       final List<Data> allExpenses = [...state.expenses];
       int addedCount = 0;
 
@@ -178,7 +188,9 @@ class ExpensesPaginationNotifier extends StateNotifier<ExpensesPaginationState> 
         isLoading: false,
       );
 
-      _ref.read(expensesSelectionProvider.notifier).updateSelectionSize(allExpenses.length);
+      _ref
+          .read(expensesSelectionProvider.notifier)
+          .updateSelectionSize(allExpenses.length);
 
       developer.log(
           'ADDED $addedCount NEW EXPENSES. Has more: $hasMore. Total: ${allExpenses.length}/$totalCount',
@@ -218,7 +230,8 @@ class ExpensesPaginationNotifier extends StateNotifier<ExpensesPaginationState> 
         "sortingCriteria": {}
       };
 
-      final result = await _ref.read(getExpenseDataWithPagination(params).future);
+      final result =
+          await _ref.read(getExpenseDataWithPagination(params).future);
 
       final expenses = result.response?.data ?? [];
       final totalCount = result.response?.totalRecord?.toInt() ?? 0;
@@ -233,10 +246,13 @@ class ExpensesPaginationNotifier extends StateNotifier<ExpensesPaginationState> 
       );
 
       if (expenses.isNotEmpty) {
-        _ref.read(expensesSelectionProvider.notifier).updateSelectionSize(expenses.length);
+        _ref
+            .read(expensesSelectionProvider.notifier)
+            .updateSelectionSize(expenses.length);
       }
 
-      developer.log('SEARCH COMPLETED: Found ${expenses.length} matching "$query"',
+      developer.log(
+          'SEARCH COMPLETED: Found ${expenses.length} matching "$query"',
           name: 'ExpensesPagination');
     } catch (error) {
       developer.log('ERROR SEARCHING EXPENSES: $error',
@@ -249,9 +265,17 @@ class ExpensesPaginationNotifier extends StateNotifier<ExpensesPaginationState> 
     }
   }
 
-  void refresh() {
-    developer.log('REFRESHING EXPENSES AND CLEARING SEARCH', name: 'ExpensesPagination');
-    state = state.copyWith(searchQuery: '');
-    fetchExpenses();
+  // void refresh() {
+  //   developer.log('REFRESHING EXPENSES AND CLEARING SEARCH', name: 'ExpensesPagination');
+  //   state = state.copyWith(searchQuery: '');
+  //   fetchExpenses();
+  // }
+
+  Future<void> refresh() async {
+    // ✅ Make it async
+    developer.log('REFRESHING EXPENSES AND CLEARING SEARCH',
+        name: 'ExpensesPagination');
+    state = state.copyWith(searchQuery: '', isSearching: false);
+    await fetchExpenses(); // ✅ Add await
   }
 }
