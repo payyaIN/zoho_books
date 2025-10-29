@@ -1,4 +1,3 @@
-import 'package:payzo_books/data/repository/add_bills/get_item_repository.dart';
 import 'package:payzo_books/data/repository/add_bills/get_unit_list_repo.dart';
 import 'package:payzo_books/data/repository/add_invoice/get_tax_list_repo.dart';
 import 'package:payzo_books/utils/app_data/input_formatters.dart';
@@ -68,8 +67,6 @@ class AddProductTopSection extends ConsumerWidget {
                 notifier.updateField('itemName', val);
               },
             ),
-            const ReusableSizedBox(height: 8),
-
             /// ✅ Item Name arabic Field
             PayzoInputField(
               inputFormatters: PayzoInputFormatters.onlyAlphabets,

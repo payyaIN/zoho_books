@@ -1,3 +1,4 @@
+import 'package:payzo_books/data/repository/invoice_api/invoice_detail_api.dart';
 import 'package:payzo_books/utils/app_data/parsed_date.dart';
 import 'package:payzo_books/utils/common_widgets/status_color_widget.dart';
 import 'package:payzo_books/utils/searchbar/provider/search_bar_provider.dart';
@@ -96,6 +97,7 @@ class _InvoiceScreenState extends ConsumerState<InvoiceScreen> {
                 Expanded(
                   child: RefreshIndicator(
                     onRefresh: () async {
+                      ref.invalidate(getInvoiceDataWithPagination);
                       paginationNotifier.refresh();
                     },
                     child: paginationState.isLoading &&

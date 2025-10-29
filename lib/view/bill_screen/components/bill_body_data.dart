@@ -1,3 +1,4 @@
+import 'package:payzo_books/data/repository/bills_api/bills_api.dart';
 import 'package:payzo_books/import_data.dart';
 import 'package:payzo_books/view/bill_screen/components/bill_build_listview.dart';
 import 'package:payzo_books/view/bill_screen/components/bill_empty_view.dart';
@@ -55,6 +56,7 @@ class _BillBodyDataState extends ConsumerState<BillBodyData> {
       child: RefreshIndicator(
         onRefresh: () async {
           print('Manual refresh triggered');
+          ref.invalidate(getBillDataWithPagination);
           paginationNotifier.refresh();
         },
         child: paginationState.isLoading && paginationState.bills.isEmpty

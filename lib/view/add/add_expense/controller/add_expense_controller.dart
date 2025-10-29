@@ -9,6 +9,7 @@ import 'package:payzo_books/utils/common_widgets/reusable_bottom_sheet.dart';
 import 'package:payzo_books/utils/common_widgets/reusable_snackbar.dart';
 import 'package:payzo_books/view/add/add_expense/model/add_expense_api_response.dart';
 import 'package:payzo_books/view/expenses/provider/expense_pagination_provider.dart';
+import 'package:payzo_books/view/expenses/repo/expense_repo.dart';
 
 import '../../../../data/other_providers/price_currency_proider.dart';
 import '../../../../data/repository/add_bills/get_price_currency_repository.dart';
@@ -20,7 +21,6 @@ import 'dart:convert';
 import 'package:mime/mime.dart';
 
 import '../../../../utils/app_data/shared_preference_key.dart';
-
 
 class AddExpenseController extends StateNotifier<bool> {
   final Ref ref;
@@ -36,7 +36,8 @@ class AddExpenseController extends StateNotifier<bool> {
       final amount = ref.read(amountControllerProvider).text.trim();
       final reference = ref.read(referenceControllerProvider).text.trim();
       final notes = ref.read(notesControllerProvider).text.trim();
-      final exemptionReason = ref.read(expensesExemptionReasonControllerProvider).text.trim();
+      final exemptionReason =
+          ref.read(expensesExemptionReasonControllerProvider).text.trim();
       final expenseInfo = ref.read(expenseInfoControllerProvider).text.trim();
 
       final branchId = ref.read(branchIdProvider);
@@ -62,13 +63,35 @@ class AddExpenseController extends StateNotifier<bool> {
 
       // Validation
       bool hasError = false;
-      if (branchId == null) { ref.read(branchErrorProvider.notifier).state = "Branch is required."; hasError = true; }
-      if (date == null) { ref.read(dateErrorProvider.notifier).state = "Date is required."; hasError = true; }
-      if (expenseAccountId == null || expenseAccountId == 0) { ref.read(expenseAccountErrorProvider.notifier).state = "Expense account is required."; hasError = true; }
-      if (amount.isEmpty || double.tryParse(amount) == null) { ref.read(amountErrorProvider.notifier).state = "Enter a valid expense amount."; hasError = true; }
-      if (paidThroughId == null || paidThroughId == 0) { ref.read(paidThroughErrorProvider.notifier).state = "Paid through account is required."; hasError = true; }
+      if (branchId == null) {
+        ref.read(branchErrorProvider.notifier).state = "Branch is required.";
+        hasError = true;
+      }
+      if (date == null) {
+        ref.read(dateErrorProvider.notifier).state = "Date is required.";
+        hasError = true;
+      }
+      if (expenseAccountId == null || expenseAccountId == 0) {
+        ref.read(expenseAccountErrorProvider.notifier).state =
+            "Expense account is required.";
+        hasError = true;
+      }
+      if (amount.isEmpty || double.tryParse(amount) == null) {
+        ref.read(amountErrorProvider.notifier).state =
+            "Enter a valid expense amount.";
+        hasError = true;
+      }
+      if (paidThroughId == null || paidThroughId == 0) {
+        ref.read(paidThroughErrorProvider.notifier).state =
+            "Paid through account is required.";
+        hasError = true;
+      }
       if (hasError) {
-        showPayzoSnackBar(context: context, ref: ref, message: "Please fill all the required fields.", type: PayzoSnackType.error);
+        showPayzoSnackBar(
+            context: context,
+            ref: ref,
+            message: "Please fill all the required fields.",
+            type: PayzoSnackType.error);
         return;
       }
 
@@ -76,9 +99,12 @@ class AddExpenseController extends StateNotifier<bool> {
       final rawTaxJson = ref.read(taxJsonProvider) ?? {};
       final bool showExemption = ref.read(showExemptionReasonProvider) ?? false;
       final resolvedTaxId = ref.read(taxIdProvider) ?? rawTaxJson['taxId'];
-      final resolvedTaxType = showExemption ? 'non-taxable' : (rawTaxJson['taxType'] as String?) ?? 'default';
+      final resolvedTaxType = showExemption
+          ? 'non-taxable'
+          : (rawTaxJson['taxType'] as String?) ?? 'default';
 
-      final String dateString = date != null ? DateFormat('yyyy-MM-dd').format(date) : '';
+      final String dateString =
+          date != null ? DateFormat('yyyy-MM-dd').format(date) : '';
 
       // Build payload exactly like working web example
       final Map<String, dynamic> payload = {
@@ -111,8 +137,9 @@ class AddExpenseController extends StateNotifier<bool> {
       };
 
       // Build request
-      final baseUrl ='http://81.208.173.149';
-      final uri = Uri.parse('$baseUrl/pb-accounting-service/api/expense/record');
+      final baseUrl = 'http://81.208.173.149';
+      final uri =
+          Uri.parse('$baseUrl/pb-accounting-service/api/expense/record');
       final request = http.MultipartRequest('POST', uri);
 
       // Attach JSON 'data' part as filename 'blob' with Content-Type: application/json
@@ -135,9 +162,14 @@ class AddExpenseController extends StateNotifier<bool> {
               final mime = lookupMimeType(f.path) ?? 'application/octet-stream';
               final mtParts = mime.split('/');
               if (mtParts.length == 2) {
-                request.files.add(await http.MultipartFile.fromPath('file', f.path, filename: filename, contentType: MediaType(mtParts[0], mtParts[1])));
+                request.files.add(await http.MultipartFile.fromPath(
+                    'file', f.path,
+                    filename: filename,
+                    contentType: MediaType(mtParts[0], mtParts[1])));
               } else {
-                request.files.add(await http.MultipartFile.fromPath('file', f.path, filename: filename));
+                request.files.add(await http.MultipartFile.fromPath(
+                    'file', f.path,
+                    filename: filename));
               }
             }
           } catch (fileErr) {
@@ -149,16 +181,19 @@ class AddExpenseController extends StateNotifier<bool> {
 
       // Headers: read from global providers (replace names if different)
       final token =
-      SharedPreferencesHelper.getString(SharedPreferenceKey.accessToken)??'';
+          SharedPreferencesHelper.getString(SharedPreferenceKey.accessToken) ??
+              '';
       final companyId = '1';
       final countryCode = 'AE';
 
       if (token.isNotEmpty) request.headers['Authorization'] = 'Bearer $token';
-      if (companyId != null) request.headers['company-id'] = companyId.toString();
+      if (companyId != null)
+        request.headers['company-id'] = companyId.toString();
       request.headers['country-code'] = countryCode.toString();
       request.headers['Accept'] = 'application/json';
 
-      debugPrint("📦 Submitting multipart (data=blob JSON + file(s)). JSON: $jsonString");
+      debugPrint(
+          "📦 Submitting multipart (data=blob JSON + file(s)). JSON: $jsonString");
 
       final streamedResp = await request.send();
       final resp = await http.Response.fromStream(streamedResp);
@@ -168,12 +203,19 @@ class AddExpenseController extends StateNotifier<bool> {
       if (resp.statusCode >= 200 && resp.statusCode < 300) {
         final decoded = jsonDecode(resp.body);
         final apiResp = AddExpenseApiResponse.fromJson(decoded);
-        debugPrint("✅ Expense submitted successfully: ${apiResp.message ?? 'OK'}");
+        debugPrint(
+            "✅ Expense submitted successfully: ${apiResp.message ?? 'OK'}");
 
-        showPayzoSnackBar(context: context, ref: ref, message: "Expense recorded successfully.", type: PayzoSnackType.success);
-
+        showPayzoSnackBar(
+            context: context,
+            ref: ref,
+            message: "Expense recorded successfully.",
+            type: PayzoSnackType.success);
+        ref.invalidate(getExpenseDataWithPagination);
         // Refresh list & navigate (keep your flow)
-        await ref.read(expensesPaginationStateProvider.notifier).fetchExpenses();
+        await ref
+            .read(expensesPaginationStateProvider.notifier)
+            .fetchExpenses();
         await Navigator.pushNamed(context, RouteNames.expensesListing);
 
         // Clear form
@@ -185,25 +227,23 @@ class AddExpenseController extends StateNotifier<bool> {
           serverMsg = decoded['message']?.toString() ?? resp.body;
         } catch (_) {}
         debugPrint('❌ POST failed ${resp.statusCode}: $serverMsg');
-        showPayzoSnackBar(context: context, ref: ref, message: "Failed: $serverMsg", type: PayzoSnackType.error);
+        showPayzoSnackBar(
+            context: context,
+            ref: ref,
+            message: "Failed: $serverMsg",
+            type: PayzoSnackType.error);
       }
     } catch (e, st) {
       debugPrint("❌ Error submitting expense: $e\n$st");
-      showPayzoSnackBar(context: context, ref: ref, message: "Something went wrong. Try again.", type: PayzoSnackType.error);
+      showPayzoSnackBar(
+          context: context,
+          ref: ref,
+          message: "Something went wrong. Try again.",
+          type: PayzoSnackType.error);
     } finally {
       state = false;
     }
   }
-
-
-
-
-
-
-
-
-
-
 
   void clearForm() async {
     print("🧼 Clearing form...");
@@ -237,15 +277,16 @@ class AddExpenseController extends StateNotifier<bool> {
     final currencyData = await ref.read(fetchPriceCurrencyProvider.future);
     if (currencyData.isNotEmpty) {
       final currency = currencyData.first;
-      ref.read(expenseCurrencyProvider.notifier).state = currency.currencyValue ?? 'SAR';
-      ref.read(expenseCurrencyIdProvider.notifier).state = currency.currencyId?.toInt();
+      ref.read(expenseCurrencyProvider.notifier).state =
+          currency.currencyValue ?? 'SAR';
+      ref.read(expenseCurrencyIdProvider.notifier).state =
+          currency.currencyId?.toInt();
     }
     // === 📅 Date
     ref.read(dateProvider.notifier).state = DateTime.now();
 
     print("🔄 Form reset with default currency.");
   }
-
 
   void setBranch(String value) {
     ref.read(branchProvider.notifier).state = value;
@@ -255,10 +296,10 @@ class AddExpenseController extends StateNotifier<bool> {
   //ui methods
 
   // Format date for UI
-    String formatDate(DateTime? date) {
-      if (date == null) return 'Tap to select';
-      return DateFormat('dd MMM yyyy').format(date);
-    }
+  String formatDate(DateTime? date) {
+    if (date == null) return 'Tap to select';
+    return DateFormat('dd MMM yyyy').format(date);
+  }
 
   // Date picker with future date constraint
   Future<void> showDatePickerAndSet(BuildContext context) async {
@@ -572,11 +613,13 @@ class AddExpenseController extends StateNotifier<bool> {
       },
     );
   }
+
   // --------------- calculateTotal ---------------
   void calculateTotal(BuildContext context, WidgetRef ref) {
     // read amount text and parse (entered amount is tax-INCLUSIVE)
     final amountText = ref.read(amountControllerProvider).text.trim();
-    final enteredAmount = double.tryParse(amountText.replaceAll(',', '')) ?? 0.0;
+    final enteredAmount =
+        double.tryParse(amountText.replaceAll(',', '')) ?? 0.0;
 
     // figure out taxRate (priority: taxJson.taxRate -> taxJson.rate -> lookup by taxId)
     double taxRate = 0.0;
@@ -603,18 +646,25 @@ class AddExpenseController extends StateNotifier<bool> {
             final selId = ref.read(taxIdProvider);
             if (selId != null) {
               final match = all.firstWhere(
-                    (t) => (t.taxId?.toInt() ?? t.taxId) == selId,
+                (t) => (t.taxId?.toInt() ?? t.taxId) == selId,
                 orElse: () => null,
               );
               if (match != null) {
                 if (match.tcdTaxRate != null) {
-                  taxRate = (match.tcdTaxRate is num) ? match.tcdTaxRate.toDouble() : double.tryParse('${match.tcdTaxRate}') ?? 0.0;
+                  taxRate = (match.tcdTaxRate is num)
+                      ? match.tcdTaxRate.toDouble()
+                      : double.tryParse('${match.tcdTaxRate}') ?? 0.0;
                 } else if (match.taxRate != null) {
-                  taxRate = (match.taxRate is num) ? match.taxRate.toDouble() : double.tryParse('${match.taxRate}') ?? 0.0;
+                  taxRate = (match.taxRate is num)
+                      ? match.taxRate.toDouble()
+                      : double.tryParse('${match.taxRate}') ?? 0.0;
                 } else if (match.rate != null) {
-                  taxRate = (match.rate is num) ? match.rate.toDouble() : double.tryParse('${match.rate}') ?? 0.0;
+                  taxRate = (match.rate is num)
+                      ? match.rate.toDouble()
+                      : double.tryParse('${match.rate}') ?? 0.0;
                 }
-                selectedTaxName ??= match.taxName ?? match.name ?? selectedTaxName;
+                selectedTaxName ??=
+                    match.taxName ?? match.name ?? selectedTaxName;
               }
             }
           } catch (_) {}
@@ -630,7 +680,8 @@ class AddExpenseController extends StateNotifier<bool> {
     if (taxType == 'non-taxable' || showExemption == true) {
       taxRate = 0.0;
     }
-    if (selectedTaxName != null && selectedTaxName!.toLowerCase().contains('zero')) {
+    if (selectedTaxName != null &&
+        selectedTaxName!.toLowerCase().contains('zero')) {
       taxRate = 0.0;
     }
 
@@ -656,11 +707,12 @@ class AddExpenseController extends StateNotifier<bool> {
     ref.read(addExpenseSubtotalProvider.notifier).state = baseAmount;
     ref.read(addExpenseTaxAmountProvider.notifier).state = taxAmount;
     ref.read(addExpenseTotalProvider.notifier).state = totalAmount;
-    ref.read(addExpenseSelectedTaxNameProvider.notifier).state = selectedTaxName;
+    ref.read(addExpenseSelectedTaxNameProvider.notifier).state =
+        selectedTaxName;
 
-    debugPrint('🧮 (inclusive) Entered: $enteredAmount, taxRate: $taxRate%, base: $baseAmount, tax: $taxAmount, total: $totalAmount');
+    debugPrint(
+        '🧮 (inclusive) Entered: $enteredAmount, taxRate: $taxRate%, base: $baseAmount, tax: $taxAmount, total: $totalAmount');
   }
-
 
   /// Try multiple possible property names at runtime and return a double rate.
   double _extractRateFromDynamic(dynamic dyn) {
@@ -690,7 +742,6 @@ class AddExpenseController extends StateNotifier<bool> {
     }
     return 0.0;
   }
-
 
   // --------------- showTaxSelector ---------------
   void showTaxSelector(BuildContext context, WidgetRef ref) async {
@@ -732,27 +783,30 @@ class AddExpenseController extends StateNotifier<bool> {
                   }),
                 ];
 
-                final taxNames = allTaxEntries.map((e) => e['name'] as String).toList();
+                final taxNames =
+                    allTaxEntries.map((e) => e['name'] as String).toList();
 
                 return ReusableCountryBottomSheet(
                   title: 'Select Tax',
                   items: taxNames,
                   onSelect: (selectedName) {
                     final selected = allTaxEntries.firstWhere(
-                          (entry) => entry['name'] == selectedName,
+                      (entry) => entry['name'] == selectedName,
                       orElse: () => allTaxEntries.first,
                     );
 
                     // apply selection...
                     ref.read(taxProvider.notifier).state = selected['name'];
                     ref.read(taxIdProvider.notifier).state = selected['id'];
-                    ref.read(showExemptionReasonProvider.notifier).state = selected['type'] == 'non-taxable';
+                    ref.read(showExemptionReasonProvider.notifier).state =
+                        selected['type'] == 'non-taxable';
                     ref.read(taxJsonProvider.notifier).state = {
                       'taxId': selected['id'],
                       'taxType': selected['type'],
                       'taxRate': selected['rate'],
                     };
-                    ref.read(addExpenseSelectedTaxNameProvider.notifier).state = selected['name'];
+                    ref.read(addExpenseSelectedTaxNameProvider.notifier).state =
+                        selected['name'];
 
                     // recalc totals now taxJson has the numeric taxRate
                     calculateTotal(context, ref);
@@ -760,12 +814,12 @@ class AddExpenseController extends StateNotifier<bool> {
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, _) => Center(child: Text("Failed to load tax: $err")),
+              error: (err, _) =>
+                  Center(child: Text("Failed to load tax: $err")),
             );
           },
         );
       },
     );
   }
-
 }

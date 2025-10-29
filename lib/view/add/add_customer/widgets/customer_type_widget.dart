@@ -1,3 +1,6 @@
+// customer_type_widget.dart
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payzo_books/data/repository/add_bills/get_branch_list_repository.dart';
 import 'package:payzo_books/data/repository/add_bills/get_price_currency_repository.dart';
 import 'package:payzo_books/data/repository/add_customer/add_customer_repository.dart';
@@ -8,13 +11,14 @@ import 'package:payzo_books/utils/common_widgets/reusable_bottom_sheet.dart';
 import 'package:payzo_books/utils/common_widgets/sar_textfield.dart';
 import '../../../../data/repository/add_vendor/get_country_list_repository.dart';
 import '../../../../import_data.dart';
+import '../../../../utils/common_widgets/form_check_box.dart';
+import '../providers/add_customer_providers.dart';
 
 class CustomerTypeWidget extends ConsumerWidget {
-  final Map<String, TextEditingController>? controller;
+  final Map<String, TextEditingController> controller;
   final TextEditingController openingAmountController;
 
-  const CustomerTypeWidget(this.controller, this.openingAmountController,
-      {super.key});
+  const CustomerTypeWidget(this.controller, this.openingAmountController, {super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -23,229 +27,176 @@ class CustomerTypeWidget extends ConsumerWidget {
     final customer = ref.watch(customerFormProvider);
     final countryList = ref.watch(getCountryList);
     final currencyName = ref.watch(openingBalanceProvider);
-    final branchName = ref.watch(openingAmountProvider);
 
-    final Map<String, String> labelToFieldKey = {
-      "First Name": "firstName",
-      "First Name (Arabic)": "firstNameArabic",
-      "Last Name": "secondName",
-      "Last Name (Arabic)": "lastNameArabic",
-      "Company Name": "companyName",
-      "Company Name (Arabic)": "companyNameArabic",
-      "Email": "email",
-      "Mobile": "mobile",
-      "Work Phone Number": "workPhone",
-      "Display Name": "displayName",
-      "VAT Number": "vatNumber",
-      "CR Number": "crNum",
-    };
+    // Errors map from notifier provider
+    final errors = ref.watch(customerErrorsProvider);
+
+    // Fields mapping (Primary Contact, Arabic names, Company info)
+    final List<Map<String, String>> fields = [
+      {'label': 'First Name', 'key': 'firstName'},
+      {'label': 'First Name (Arabic)', 'key': 'firstNameArabic'},
+      {'label': 'Last Name', 'key': 'secondName'},
+      {'label': 'Last Name (Arabic)', 'key': 'secondNameArabic'},
+      {'label': 'Company Name*', 'key': 'companyName'},
+      {'label': 'Company Name (Arabic)*', 'key': 'companyNameArabic'},
+      {'label': 'Email Address', 'key': 'email'},
+      {'label': 'Mobile Number', 'key': 'mobile'},
+      {'label': 'Work Phone Number', 'key': 'workPhone'},
+      {'label': 'VAT Number', 'key': 'vatNumber'},
+      {'label': 'Customer CR', 'key': 'crNum'},
+    ];
 
     return ReusablePadding(
       padding: const EdgeInsets.only(left: 22, right: 22, top: 10),
       child: CustomExpansionTile(
-        height: 466,
+        height: 520,
         title: "Customer type",
         isExpanded: isCustomerExpanded,
         onToggle: () {
-          ref.read(customerTileExpandedProvider.notifier).state =
-              !isCustomerExpanded;
+          ref.read(customerTileExpandedProvider.notifier).state = !isCustomerExpanded;
         },
         child: ReusableColumn(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Customer Type radios
             FormRadioButton(
-              value: 'Business',
-              groupValue: customer.customerType,
+              value: 'BUSINESS',
+              groupValue: customer.customerType ?? 'BUSINESS',
               title: 'Business',
               onChanged: (value) {
                 if (value != null) {
-                  print("✅ Selected Customer Type: $value"); // Debug print
-                  notifier.updateCustomerType(value);
+                  notifier.state = notifier.state.copyWith(customerType: value);
                 }
               },
             ),
-            const SizedBox(height: 15),
+            const SizedBox(height: 12),
             FormRadioButton(
-              value: 'Individual',
-              groupValue: customer.customerType,
+              value: 'INDIVIDUAL',
+              groupValue: customer.customerType ?? 'BUSINESS',
               title: 'Individual',
               onChanged: (value) {
                 if (value != null) {
-                  print("✅ Selected Customer Type: $value"); // Debug print
-                  notifier.updateCustomerType(value);
+                  notifier.state = notifier.state.copyWith(customerType: value);
                 }
               },
             ),
             const SizedBox(height: 16),
-            const Divider(
-                color: Color.fromRGBO(228, 228, 228, 1), thickness: 1),
+            const Divider(color: Color.fromRGBO(228, 228, 228, 1), thickness: 1),
+            const SizedBox(height: 8),
+
+            // Primary & Company fields (including Arabic)
             ReusableColumn(
-              children: labelToFieldKey.entries.map((entry) {
-                final label = entry.key;
-                final fieldKey = entry.value;
-                final isWorkPhone = label == 'Work Phone Number';
-                final isMobile = label == 'Mobile';
+              children: fields.map((m) {
+                final label = m['label']!;
+                final key = m['key']!;
+                final isPhoneField = key == 'workPhone' || key == 'mobile';
+
+                final keyboardType = isPhoneField ? TextInputType.numberWithOptions() : TextInputType.text;
+
+                final inputFormatter = (key == 'firstName' ||
+                    key == 'secondName' ||
+                    key == 'companyName' ||
+                    key == 'firstNameArabic' ||
+                    key == 'secondNameArabic' ||
+                    key == 'companyNameArabic')
+                    ? PayzoInputFormatters.onlyAlphabets
+                    : isPhoneField
+                    ? PayzoInputFormatters.mobileNumber
+                    : PayzoInputFormatters.email;
 
                 return PayzoInputField(
-                  keyboardType: isWorkPhone || isMobile
-                      ? TextInputType.numberWithOptions()
-                      : fieldKey == 'firstName' ||
-                              fieldKey == 'secondName' ||
-                              fieldKey == 'companyName' ||
-                              fieldKey == 'firstNameArabic' ||
-                              fieldKey == 'secondNameArabic' ||
-                              fieldKey == 'companyNameArabic'
-                          ? TextInputType.name
-                          : TextInputType.emailAddress,
-                  inputFormatters: fieldKey == 'firstName' ||
-                          fieldKey == 'secondName' ||
-                          fieldKey == 'companyName' ||
-                          fieldKey == 'firstNameArabic'||
-                          fieldKey == 'secondNameArabic' ||
-                          fieldKey == 'companyNameArabic'
-                      ? PayzoInputFormatters.onlyAlphabets
-                      : isWorkPhone || isMobile
-                          ? PayzoInputFormatters.mobileNumber
-                          : fieldKey == 'vatNumber'
-                              ? PayzoInputFormatters.saudiVatNumber
-                              : fieldKey == 'crNumber'
-                                  ? PayzoInputFormatters.saudiCrNumber
-                                  : PayzoInputFormatters.email,
                   label: label,
-                  controller: controller![fieldKey],
-                  required: isWorkPhone ? false : true,
-                  errorText: customer.errors[fieldKey],
-                  countryFlagCode: isWorkPhone
+                  controller: controller[key],
+                  keyboardType: keyboardType,
+                  inputFormatters: inputFormatter,
+                  required: key == 'companyName' || key == 'companyNameArabic',
+                  errorText: errors[key],
+                  countryFlagCode: key == 'workPhone'
                       ? ref.watch(countryFlagCustomerProvider)
-                      : isMobile
-                          ? ref.watch(countryFlagCustomerMobileProvider)
-                          : null,
-                  countryTap: isWorkPhone || isMobile
-                      ? () async {
-                          await ref.read(focusUtilsProvider).unfocusAndDelay();
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (_) => countryList.when(
-                              data: (data) => ReusableCountryBottomSheet(
-                                title: 'Countries',
-                                items: data.response
-                                        ?.map((e) => e.countryName!)
-                                        .toList() ??
-                                    [],
-                                onSelect: (selectedCountry) {
-                                  final selected = data.response?.firstWhere(
-                                    (e) => e.countryName == selectedCountry,
-                                  );
-                                  if (selected != null) {
-                                    final code =
-                                        selected.ccphnCode?.toString() ?? '';
-                                    final flag =
-                                        selected.countryFlag?.toString() ?? '';
-
-                                    if (isWorkPhone) {
-                                      ref
-                                          .read(countryPhoneCustomerProvider
-                                              .notifier)
-                                          .state = code;
-                                      ref
-                                          .read(countryFlagCustomerProvider
-                                              .notifier)
-                                          .state = flag;
-                                      notifier.updateField('phoneCode', code);
-                                    } else if (isMobile) {
-                                      ref
-                                          .read(
-                                              countryPhoneCustomerMobileProvider
-                                                  .notifier)
-                                          .state = code;
-                                      ref
-                                          .read(
-                                              countryFlagCustomerMobileProvider
-                                                  .notifier)
-                                          .state = flag;
-                                      notifier.updateField('mobileCode', code);
-                                    }
-                                  }
-                                },
-                              ),
-                              error: (err, _) {
-                                print('error loading countries: $err');
-                                return const SizedBox();
-                              },
-                              loading: () => const Center(
-                                  child: CircularProgressIndicator()),
-                            ),
-                          );
-                        }
+                      : key == 'mobile'
+                      ? ref.watch(countryFlagCustomerMobileProvider)
                       : null,
-                  onChanged: (value) => notifier.updateField(fieldKey, value),
+                  countryTap: (key == 'workPhone' || key == 'mobile')
+                      ? () async {
+                    await ref.read(focusUtilsProvider).unfocusAndDelay();
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (_) => countryList.when(
+                        data: (data) {
+                          final items = (data.response ?? [])
+                              .map((e) => e.countryName ?? '')
+                              .where((s) => s.isNotEmpty)
+                              .toList();
+                          return ReusableCountryBottomSheet(
+                            title: 'Countries',
+                            items: items,
+                            onSelect: (selectedCountry) {
+                              final selected = (data.response ?? []).firstWhere(
+                                    (e) => e.countryName == selectedCountry,
+                                orElse: () => (data.response ?? []).first,
+                              );
+
+                              final code = (selected.ccphnCode?.toString() ?? '');
+                              final flag = (selected.countryFlag?.toString() ?? '');
+
+                              if (key == 'workPhone') {
+                                ref.read(countryPhoneCustomerProvider.notifier).state = code;
+                                ref.read(countryFlagCustomerProvider.notifier).state = flag;
+                                notifier.updateField('phoneCode', code);
+                              } else {
+                                ref.read(countryPhoneCustomerMobileProvider.notifier).state = code;
+                                ref.read(countryFlagCustomerMobileProvider.notifier).state = flag;
+                                notifier.updateField('mobileCode', code);
+                              }
+                            },
+                          );
+                        },
+                        loading: () => const Center(child: CircularProgressIndicator()),
+                        error: (err, _) {
+                          debugPrint('error loading countries: $err');
+                          return const SizedBox();
+                        },
+                      ),
+                    );
+                  }
+                      : null,
+                  onChanged: (val) {
+                    notifier.updateField(key, val);
+                  },
                 );
               }).toList(),
             ),
-            PayzoBottomsheetNavigator(
-              // required: true,
-              title: 'Opening Balance',
-              isPayzoColor: true,
-              trailing: branchName,
-              // errorText: customer.errors['branchId'],
-              onTap: () async {
-                await ref.read(focusUtilsProvider).unfocusAndDelay();
 
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (context) {
-                    return Consumer(
-                      builder: (context, ref, _) {
-                        final branchAsync = ref.watch(fetchBranchListProvider);
+            const SizedBox(height: 12),
 
-                        return branchAsync.when(
-                          data: (data) {
-                            final branches = data.data
-                                    ?.map((b) => b.namePrimary ?? '')
-                                    .where((name) => name.isNotEmpty)
-                                    .toList() ??
-                                [];
-
-                            return ReusableCountryBottomSheet(
-                              title: 'Select Opening Balance',
-                              items: branches,
-                              onSelect: (selectedName) {
-                                final selectedBranch = data.data?.firstWhere(
-                                  (b) => b.namePrimary == selectedName,
-                                  orElse: () => data.data!.first,
-                                );
-
-                                if (selectedBranch != null) {
-                                  notifier.updateField('branchId',
-                                      selectedBranch.branchId.toString());
-                                  ref
-                                      .read(openingAmountProvider.notifier)
-                                      .state = selectedBranch.nameSecondary!;
-                                }
-                              },
-                            );
-                          },
-                          loading: () =>
-                              const Center(child: CircularProgressIndicator()),
-                          error: (err, _) => Center(
-                              child: Text('Failed to load branches: $err')),
-                        );
-                      },
-                    );
-                  },
-                );
-              },
+            // Taxed & Government checkboxes
+            FormCheckbox(
+              value: customer.taxedOrganization ?? false,
+              onChanged: (v) =>
+              notifier.state = notifier.state.copyWith(taxedOrganization: v ?? false),
+              title: 'Is this customer a taxed organization?',
             ),
+            const SizedBox(height: 8),
+            FormCheckbox(
+              value: customer.governmentEntity ?? false,
+              onChanged: (v) =>
+              notifier.state = notifier.state.copyWith(governmentEntity: v ?? false),
+              title: 'Is this customer a government entity?',
+            ),
+
+            const SizedBox(height: 12),
+
+            // Opening amount selector
             PayzoInputField(
               leading: SarTextfield(
-                title: customer.currencyId == '' ? 'SAR' : currencyName,
+                title: (customer.openingBalance?.currency == null)
+                    ? 'SAR'
+                    : currencyName,
                 onTap: () async {
                   final currencyList =
-                      await ref.read(fetchPriceCurrencyProvider.future);
+                  await ref.read(fetchPriceCurrencyProvider.future);
 
                   final currencyLabels = currencyList
                       .map((e) => e.currencyValue ?? '')
@@ -253,30 +204,30 @@ class CustomerTypeWidget extends ConsumerWidget {
                       .toSet()
                       .toList();
 
-                  if (context.mounted) {
-                    await ref.read(focusUtilsProvider).unfocusAndDelay();
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (_) => ReusableCountryBottomSheet(
-                        title: 'Select Currency',
-                        items: currencyLabels,
-                        onSelect: (selectedCurrency) {
-                          final selected = currencyList.firstWhere(
-                            (e) => e.currencyValue == selectedCurrency,
-                            orElse: () => currencyList.first,
-                          );
-                          notifier.updateField(
-                              'currencyId', selected.currencyId.toString());
-                          ref.read(openingBalanceProvider.notifier).state =
-                              selected.currencyValue!;
-                          debugPrint(
-                              '✅ Selected Currency: ${selected.currencyValue}, ID: ${selected.currencyId}');
-                        },
-                      ),
-                    );
-                  }
+                  if (!context.mounted) return;
+                  await ref.read(focusUtilsProvider).unfocusAndDelay();
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (ctx) => ReusableCountryBottomSheet(
+                      title: 'Select Currency',
+                      items: currencyLabels,
+                      onSelect: (selectedCurrency) {
+                        final selected = currencyList.firstWhere(
+                              (e) => e.currencyValue == selectedCurrency,
+                          orElse: () => currencyList.first,
+                        );
+                        notifier.updateField(
+                            'currencyId', (selected.currencyId ?? '').toString());
+                        ref
+                            .read(openingBalanceProvider.notifier)
+                            .state = selected.currencyValue ?? 'SAR';
+                        debugPrint(
+                            '✅ Selected Currency: ${selected.currencyValue}, ID: ${selected.currencyId}');
+                      },
+                    ),
+                  );
                 },
               ),
               label: 'Opening Amount',
@@ -286,8 +237,6 @@ class CustomerTypeWidget extends ConsumerWidget {
                 final parsed = double.tryParse(val);
                 if (parsed != null) {
                   notifier.updateField('openingAmount', val);
-                  debugPrint(
-                      '✅ Updated Opening Stock: ${notifier.state.openingAmount}');
                 }
               },
             ),

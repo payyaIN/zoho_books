@@ -294,6 +294,9 @@ class ProductFormNotifier extends StateNotifier<AddProductModel> {
     // 🟡 Basic Product Info
     if (state.name.trim().isEmpty) {
       errors['itemName'] = 'Item name is required';
+    } // 🟡 Basic Product Info
+    if (state.itemNameArabic.trim().isEmpty) {
+      errors['itemNameArabic'] = 'Item name arabic is required';
     }
     if (state.unitId == 0) {
       errors['unitId'] = 'Unit is required';
@@ -365,7 +368,7 @@ class ProductFormNotifier extends StateNotifier<AddProductModel> {
         errors['stockAccount'] = 'Inventory account is required';
       }
       // if (inventory.stockCurrency == 0) {
-      //   errors['stockCurrency'] = 'Stock currency is required';
+      //   errors['stockCurrency'] = 'Opening stock is required';
       // }
       if (inventory.openingStockRate == null ||
           inventory.openingStockRate == 0) {

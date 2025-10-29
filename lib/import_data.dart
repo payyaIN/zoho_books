@@ -54,7 +54,7 @@ export 'package:payzo_books/utils/common_widgets/payzo_input_field.dart';
 export 'package:payzo_books/view/add/add_customer/add_customer.dart';
 export 'package:payzo_books/utils/common_widgets/white_container.dart';
 export 'package:payzo_books/utils/common_widgets/payzo_form_submit_two_buttons.dart';
-export 'package:payzo_books/view/add/add_customer/providers/add_customer_providers.dart';
+// export 'package:payzo_books/view/add/add_customer/providers/add_customer_providers.dart';
 export 'package:payzo_books/view/add/add_customer/widgets/customer_type_widget.dart';
 export 'package:payzo_books/view/login_screen/login_screen.dart';
 export 'package:payzo_books/view/main_screen/main_screen.dart';

@@ -12,6 +12,7 @@ import 'package:payzo_books/data/repository/add_bills/shipping_method_repository
 import 'package:payzo_books/data/repository/add_invoice/add_invoice_repository.dart';
 import 'package:payzo_books/data/repository/add_invoice/get_bank_account_repo.dart';
 import 'package:payzo_books/data/repository/add_invoice/get_customer_list_repo.dart';
+import 'package:payzo_books/data/repository/invoice_api/invoice_detail_api.dart';
 import 'package:payzo_books/import_data.dart';
 import 'package:payzo_books/utils/focus_utility/focus_utility.dart';
 import 'package:payzo_books/view/add_invoice/notifier/add_invoice_form_notifier.dart';
@@ -30,12 +31,12 @@ class AddInvoice extends ConsumerStatefulWidget {
 
 class _AddInvoiceState extends ConsumerState<AddInvoice> {
   bool _initialized = false;
-  List <TextEditingController>controllers=[
+  List<TextEditingController> controllers = [
     TextEditingController(),
     TextEditingController(),
     TextEditingController(),
   ];
-  List <TextEditingController>invoiceDetailsControllers=[
+  List<TextEditingController> invoiceDetailsControllers = [
     TextEditingController(),
     TextEditingController(),
     TextEditingController(),
@@ -55,7 +56,8 @@ class _AddInvoiceState extends ConsumerState<AddInvoice> {
         if (itemDetails.isEmpty) {
           final notifier = ref.read(invoiceFormProvider.notifier);
           notifier.addNewItem();
-          notifier.updateField('orgId', 1); // ✅ Set orgId here (replace 1 with actual orgId logic)
+          notifier.updateField('orgId',
+              1); // ✅ Set orgId here (replace 1 with actual orgId logic)
         }
         // SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
         //   statusBarColor: AppColors.appGreyColor,
@@ -79,14 +81,14 @@ class _AddInvoiceState extends ConsumerState<AddInvoice> {
 
   void clearFormAndControllers() async {
     final notifier = ref.read(invoiceFormProvider.notifier);
-    controllers[1].text='';
-    controllers[0].text='';
-    controllers[2].text='';
-    invoiceDetailsControllers[0].text='';
-    invoiceDetailsControllers[1].text='';
-    invoiceDetailsControllers[2].text='';
-    invoiceDetailsControllers[3].text='';
-    invoiceDetailsControllers[4].text='';
+    controllers[1].text = '';
+    controllers[0].text = '';
+    controllers[2].text = '';
+    invoiceDetailsControllers[0].text = '';
+    invoiceDetailsControllers[1].text = '';
+    invoiceDetailsControllers[2].text = '';
+    invoiceDetailsControllers[3].text = '';
+    invoiceDetailsControllers[4].text = '';
     // Clear everything first
     notifier.clearForm();
 
@@ -101,9 +103,10 @@ class _AddInvoiceState extends ConsumerState<AddInvoice> {
 
     // Set default Shipping Method ("Land Freight")
     try {
-      final shippingMethods = await ref.read(fetchShippingMethodsProvider.future);
+      final shippingMethods =
+          await ref.read(fetchShippingMethodsProvider.future);
       final landFreight = shippingMethods.firstWhere(
-            (method) => method.shpmName == "Land Freight",
+        (method) => method.shpmName == "Land Freight",
         orElse: () => shippingMethods.first,
       );
       notifier.updateField('shippingMethod', landFreight.shpmName ?? '');
@@ -116,7 +119,7 @@ class _AddInvoiceState extends ConsumerState<AddInvoice> {
     try {
       final currencies = await ref.read(fetchPriceCurrencyProvider.future);
       final sarCurrency = currencies.firstWhere(
-            (c) => c.currencyValue == "SAR",
+        (c) => c.currencyValue == "SAR",
         orElse: () => currencies.first,
       );
       notifier.updateField('currency', sarCurrency.currencyValue ?? '');
@@ -125,7 +128,6 @@ class _AddInvoiceState extends ConsumerState<AddInvoice> {
       debugPrint('❌ Failed to set default currency: $e');
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -154,7 +156,9 @@ class _AddInvoiceState extends ConsumerState<AddInvoice> {
                 padding: const EdgeInsets.symmetric(horizontal: 22),
                 child: ReusableColumn(
                   children: <Widget>[
-                    InvoiceDetailsAddInvoice(controller: invoiceDetailsControllers,),
+                    InvoiceDetailsAddInvoice(
+                      controller: invoiceDetailsControllers,
+                    ),
                     const ReusableSizedBox(height: 15),
                     ListView.builder(
                       shrinkWrap: true,
@@ -163,7 +167,10 @@ class _AddInvoiceState extends ConsumerState<AddInvoice> {
                       itemBuilder: (context, index) {
                         return Padding(
                             padding: const EdgeInsets.only(bottom: 15),
-                            child: ItemDetailsAddInvoice(index: index, controllers: controllers,));
+                            child: ItemDetailsAddInvoice(
+                              index: index,
+                              controllers: controllers,
+                            ));
                       },
                     ),
                     const ReusableSizedBox(height: 25),
@@ -178,18 +185,23 @@ class _AddInvoiceState extends ConsumerState<AddInvoice> {
                           trailing: 'Add New Line',
                           divider: false,
                           onTap: () async {
-                            await ref.read(focusUtilsProvider).unfocusAndDelay();
+                            await ref
+                                .read(focusUtilsProvider)
+                                .unfocusAndDelay();
 
                             final isValid = ref
                                 .read(invoiceFormProvider.notifier)
                                 .validateItemFieldsOnly();
 
                             if (isValid) {
-                              ref.read(invoiceFormProvider.notifier).addNewItem();
+                              ref
+                                  .read(invoiceFormProvider.notifier)
+                                  .addNewItem();
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content: Text('Finish filling out the current item to add a new one.'),
+                                  content: Text(
+                                      'Finish filling out the current item to add a new one.'),
                                   duration: Duration(seconds: 2),
                                 ),
                               );
@@ -269,7 +281,8 @@ class _AddInvoiceState extends ConsumerState<AddInvoice> {
                   if (!isValid) {
                     final state = ref.read(invoiceFormProvider);
 
-                    debugPrint("❌ Validation failed with the following errors:");
+                    debugPrint(
+                        "❌ Validation failed with the following errors:");
                     state.errors.forEach((key, value) {
                       debugPrint("• $key: $value");
                     });
@@ -281,7 +294,6 @@ class _AddInvoiceState extends ConsumerState<AddInvoice> {
                     return;
                   }
 
-
                   final invoiceState = ref.read(invoiceFormProvider);
                   final repo = ref.read(invoiceRepositoryProvider);
 
@@ -290,9 +302,12 @@ class _AddInvoiceState extends ConsumerState<AddInvoice> {
                     debugPrint("🆔 Branch ID: ${state.branchId}");
                     debugPrint("🆔 Bank Account ID: ${state.bankAccountId}");
                     debugPrint("🆔 Customer ID: ${state.customerId}");
-                    final item = invoiceState.itemDetails.isNotEmpty ? invoiceState.itemDetails.first : null;
+                    final item = invoiceState.itemDetails.isNotEmpty
+                        ? invoiceState.itemDetails.first
+                        : null;
                     if (item != null) {
-                      debugPrint("🆔 Product ID: ${item.prodId}"); // only if you later add `prodId`
+                      debugPrint(
+                          "🆔 Product ID: ${item.prodId}"); // only if you later add `prodId`
                     }
                     showPayzoProgress(context: context);
                     final response = await repo.submitInvoiceWithAttachment(
@@ -319,6 +334,7 @@ class _AddInvoiceState extends ConsumerState<AddInvoice> {
                               onPressed: () {
                                 notifier.clearForm();
                                 Navigator.pop(context);
+                                ref.invalidate(getInvoiceDataWithPagination);
                                 ref.read(bottomNavBarProvider.notifier).state =
                                     2; // 🔄 set to Vendor/Product index
                                 Navigator.pushNamedAndRemoveUntil(

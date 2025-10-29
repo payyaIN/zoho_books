@@ -1,17 +1,31 @@
+// add_customer.dart
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payzo_books/data/models/add_customer/add_customer_model.dart';
-import 'package:payzo_books/data/repository/add_bills/get_branch_list_repository.dart';
-import 'package:payzo_books/data/repository/add_bills/get_price_currency_repository.dart';
-import 'package:payzo_books/data/repository/add_customer/add_customer_repository.dart';
-import 'package:payzo_books/data/repository/add_vendor/get_state_list_repository.dart';
+import 'package:payzo_books/data/repository/customer_list_page/customer_listing_api.dart';
 import 'package:payzo_books/import_data.dart';
+import 'package:payzo_books/view/add/add_customer/providers/add_customer_providers.dart';
+import 'package:payzo_books/view/add/add_vendor/notifier/add_vendor_notifier.dart';
 import 'package:payzo_books/utils/app_data/input_formatters.dart';
 import 'package:payzo_books/utils/focus_utility/focus_utility.dart';
-import 'package:payzo_books/view/add/add_vendor/notifier/add_vendor_notifier.dart';
 import 'package:payzo_books/utils/common_widgets/payzo_progress.dart';
 import 'package:payzo_books/utils/common_widgets/reusable_bottom_sheet.dart';
 import 'package:payzo_books/view/main_screen/notifiers/bottom_nav_bar_notifier.dart';
 
+import '../../../data/repository/add_bills/get_branch_list_repository.dart';
+import '../../../data/repository/add_bills/get_price_currency_repository.dart';
+import '../../../data/repository/add_customer/add_customer_repository.dart';
 import '../../../data/repository/add_vendor/get_country_list_repository.dart';
+import '../../../data/repository/add_vendor/get_state_list_repository.dart'
+    show getStateList;
+import '../../../data/repository/add_vendor/get_state_list_repository.dart'
+    as state_repo;
+
+// label providers so selected names appear in UI immediately
+final billingCountryLabelProvider = StateProvider<String>((ref) => '');
+final shippingCountryLabelProvider = StateProvider<String>((ref) => '');
+final billingStateLabelProvider = StateProvider<String>((ref) => '');
+final shippingStateLabelProvider = StateProvider<String>((ref) => '');
 
 final customerSameAsBillingToggleProvider = StateProvider<bool>((ref) => false);
 
@@ -37,15 +51,30 @@ class _AddCustomerState extends ConsumerState<AddCustomer> {
       ref.read(fetchBranchListProvider);
       ref.read(fetchPriceCurrencyProvider);
     });
+
     customerTypeController = {
       "firstName": TextEditingController(),
       "secondName": TextEditingController(),
+      "firstNameArabic": TextEditingController(),
+      "secondNameArabic": TextEditingController(),
       "companyName": TextEditingController(),
+      "companyNameArabic": TextEditingController(),
       "email": TextEditingController(),
       "mobile": TextEditingController(),
       "workPhone": TextEditingController(),
+      "vatNumber": TextEditingController(),
+      "crNum": TextEditingController(),
+      "documentType": TextEditingController(),
+      "documentNumber": TextEditingController(),
+      "expiryDate": TextEditingController(),
+      "contact_firstName": TextEditingController(),
+      "contact_lastName": TextEditingController(),
+      "contact_mobile": TextEditingController(),
+      "remark": TextEditingController(),
     };
+
     openingAmountController = TextEditingController();
+
     billController = {
       "building": TextEditingController(),
       "street": TextEditingController(),
@@ -87,8 +116,10 @@ class _AddCustomerState extends ConsumerState<AddCustomer> {
     final countryData = ref.watch(getCountryList);
     final stateData = ref.watch(getStateList);
     final customerState = ref.watch(customerFormProvider);
-    final sameAddress =
-        ref.read(customerSameAsBillingToggleProvider.notifier).state;
+
+    // watch errors from notifier provider
+    final errors = ref.watch(customerErrorsProvider);
+
     void clearFormAndControllers() {
       final notifier = ref.read(customerFormProvider.notifier);
 
@@ -116,6 +147,11 @@ class _AddCustomerState extends ConsumerState<AddCustomer> {
       ref.read(openingAmountProvider.notifier).state = '';
       notifier.updateField('openingAmount', '');
       openingAmountController.text = '';
+      // clear label providers
+      ref.read(billingCountryLabelProvider.notifier).state = '';
+      ref.read(shippingCountryLabelProvider.notifier).state = '';
+      ref.read(billingStateLabelProvider.notifier).state = '';
+      ref.read(shippingStateLabelProvider.notifier).state = '';
     }
 
     return ScalingFactor(
@@ -135,6 +171,7 @@ class _AddCustomerState extends ConsumerState<AddCustomer> {
             physics: const BouncingScrollPhysics(),
             child: ReusableColumn(
               children: [
+                // CustomerTypeWidget expects the expanded customerTypeController with extra keys
                 CustomerTypeWidget(
                     customerTypeController, openingAmountController),
                 const SizedBox(height: 15),
@@ -175,36 +212,64 @@ class _AddCustomerState extends ConsumerState<AddCustomer> {
                               ref.read(customerFormProvider).billingAddress;
 
                           if (value) {
-                            // ✅ Copy billing values to shipping
+                            // Copy billing values to shipping
                             notifier.state = notifier.state.copyWith(
-                              shippingAddress: Map.from(billing),
+                              shippingAddress: ShippingAddress(
+                                countryRegion: billing?.countryRegion ?? '',
+                                buildingNumber: billing?.buildingNumber ?? '',
+                                streetName: billing?.streetName,
+                                streetAddress: billing?.streetAddress ?? '',
+                                streetAddressArabic:
+                                    billing?.streetAddressArabic ?? '',
+                                city: billing?.city ?? '',
+                                cityArabic: billing?.cityArabic ?? '',
+                                state: billing?.state,
+                                zipCode: billing?.zipCode ?? '',
+                              ),
                             );
 
-                            // ✅ Update text controllers
+                            // Update text controllers
                             billController.forEach((key, controller) {
                               if (shippingController.containsKey(key)) {
                                 shippingController[key]?.text = controller.text;
                               }
                             });
+
+                            // Update label providers so UI shows labels immediately
+                            ref
+                                .read(shippingCountryLabelProvider.notifier)
+                                .state = ref.read(billingCountryLabelProvider);
+                            ref
+                                .read(shippingStateLabelProvider.notifier)
+                                .state = ref.read(billingStateLabelProvider);
                           } else {
-                            // ❌ Clear shipping fields (including country and state)
+                            // Clear shipping fields
                             notifier.state = notifier.state.copyWith(
-                              shippingAddress: {
-                                'country': '',
-                                'state': '',
-                                'building': '',
-                                'street': '',
-                                'city': '',
-                                'streetArabic': '',
-                                'cityArabic': '',
-                                'zip': ''
-                              },
+                              shippingAddress: ShippingAddress(
+                                countryRegion: '',
+                                buildingNumber: '',
+                                streetName: null,
+                                streetAddress: '',
+                                streetAddressArabic: '',
+                                city: '',
+                                cityArabic: '',
+                                state: null,
+                                zipCode: '',
+                              ),
                             );
 
                             for (final controller
                                 in shippingController.values) {
                               controller.clear();
                             }
+
+                            // clear shipping labels
+                            ref
+                                .read(shippingCountryLabelProvider.notifier)
+                                .state = '';
+                            ref
+                                .read(shippingStateLabelProvider.notifier)
+                                .state = '';
                           }
                         },
                         divider: false,
@@ -223,10 +288,11 @@ class _AddCustomerState extends ConsumerState<AddCustomer> {
                       ref.read(shippingTileExpandedProvider.notifier).state =
                           !isShippingExpanded;
                     },
+                    // shipping editing should be disabled when "same as billing" is ON
                     child: _buildAddressFields(
                         ref,
                         false,
-                        sameAddress == true ? false : true,
+                        !ref.watch(customerSameAsBillingToggleProvider),
                         shippingController,
                         customerState,
                         countryData,
@@ -238,96 +304,81 @@ class _AddCustomerState extends ConsumerState<AddCustomer> {
             ),
           ),
           bottomNavigationBar: PayzoFormSubmitTwoButtons(
-              safeArea: true,
-              cancelText: 'Clear',
-              saveText: 'Save',
-              cancelOnPressed: () {
-                final notifier = ref.read(customerFormProvider.notifier);
-                for (final controller in billController.values) {
-                  controller.clear();
-                }
-                for (final controller in shippingController.values) {
-                  controller.clear();
-                }
-                for (final controller in customerTypeController.values) {
-                  controller.clear();
-                }
-                ref.read(customerSameAsBillingToggleProvider.notifier).state =
-                    false;
-                notifier.clearForm();
-                openingAmountController.text = '';
-                ref.read(openingAmountProvider.notifier).state =
-                    'Tap to Select';
-                notifier.updateField('openingAmount', '');
-              },
-              saveOnPressed: () async {
-                final notifier = ref.read(customerFormProvider.notifier);
-                notifier.validateFields();
+            safeArea: true,
+            cancelText: 'Clear',
+            saveText: 'Save',
+            cancelOnPressed: () {
+              final notifier = ref.read(customerFormProvider.notifier);
+              for (final controller in billController.values) {
+                controller.clear();
+              }
+              for (final controller in shippingController.values) {
+                controller.clear();
+              }
+              for (final controller in customerTypeController.values) {
+                controller.clear();
+              }
+              ref.read(customerSameAsBillingToggleProvider.notifier).state =
+                  false;
+              notifier.clearForm();
+              openingAmountController.text = '';
+              ref.read(openingAmountProvider.notifier).state = 'Tap to Select';
+              notifier.updateField('openingAmount', '');
+              // clear label providers
+              ref.read(billingCountryLabelProvider.notifier).state = '';
+              ref.read(shippingCountryLabelProvider.notifier).state = '';
+              ref.read(billingStateLabelProvider.notifier).state = '';
+              ref.read(shippingStateLabelProvider.notifier).state = '';
+            },
+            saveOnPressed: () async {
+              final notifier = ref.read(customerFormProvider.notifier);
 
-                if (notifier.state.errors.isEmpty) {
-                  showPayzoProgress(context: context);
-                  try {
-                    final response = await ref
-                        .read(registerCustomerRepoProvider)
-                        .registerCustomer();
+              // call notifier validateFields which writes errors into customerErrorsProvider
+              final isValid = notifier.validateFields();
 
-                    debugPrint("✅ API Response: ${response.toJson()}");
+              if (isValid) {
+                showPayzoProgress(context: context);
+                try {
+                  final response = await ref
+                      .read(registerCustomerRepoProvider)
+                      .registerCustomer();
 
-                    Navigator.pop(context);
+                  debugPrint("✅ API Response: ${response.toJson()}");
 
-                    if (response.error == false || response.error == null) {
-                      showDialog(
-                        context: context,
-                        builder: (_) => AlertDialog(
-                          title: const Text("Success"),
-                          // content: Text(
-                          //     "Customer registered successfully.\nTransaction ID: ${response.transactionId}"),
-                          content: Text("Customer registered successfully."),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                notifier.clearForm();
-                                Navigator.pop(context);
-                                ref.read(bottomNavBarProvider.notifier).state =
-                                    4; // 🔄 set to Vendor/Product index
-                                Navigator.pushNamedAndRemoveUntil(
-                                  context,
-                                  RouteNames.homeScreen,
-                                  (route) => false,
-                                );
-                                Navigator.pushNamed(
-                                    context, RouteNames.customerScreen);
-                              },
-                              child: const Text("OK"),
-                            ),
-                          ],
-                        ),
-                      );
-                    } else {
-                      debugPrint("❌ API returned error: ${response.errorMsg}");
-                      showDialog(
-                        context: context,
-                        builder: (_) => AlertDialog(
-                          title: const Text("Error"),
-                          content: Text(response.errorMsg?.toString() ??
-                              "Something went wrong"),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text("OK"),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-                  } catch (e, stacktrace) {
-                    debugPrint("❌ Exception: $e");
-                    debugPrint("📌 Stacktrace: $stacktrace");
+                  Navigator.pop(context);
+
+                  if (response.error == false || response.error == null) {
                     showDialog(
                       context: context,
                       builder: (_) => AlertDialog(
-                        title: const Text("Exception"),
-                        content: Text(e.toString()),
+                        title: const Text("Success"),
+                        content: Text("Customer registered successfully."),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              notifier.clearForm();
+                              Navigator.pop(context);
+                              ref.invalidate(getCustomerDataWithPagination);
+                              ref.read(bottomNavBarProvider.notifier).state =
+                                  4; // set to Vendor/Product index
+                              Navigator.pushNamedAndRemoveUntil(context,
+                                  RouteNames.homeScreen, (route) => false);
+                              Navigator.pushNamed(
+                                  context, RouteNames.customerScreen);
+                            },
+                            child: const Text("OK"),
+                          ),
+                        ],
+                      ),
+                    );
+                  } else {
+                    debugPrint("❌ API returned error: ${response.errorMsg}");
+                    showDialog(
+                      context: context,
+                      builder: (_) => AlertDialog(
+                        title: const Text("Error"),
+                        content: Text(response.errorMsg?.toString() ??
+                            "Something went wrong"),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context),
@@ -337,8 +388,35 @@ class _AddCustomerState extends ConsumerState<AddCustomer> {
                       ),
                     );
                   }
+                } catch (e, stacktrace) {
+                  debugPrint("❌ Exception: $e");
+                  debugPrint("📌 Stacktrace: $stacktrace");
+                  showDialog(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      title: const Text("Exception"),
+                      content: Text(e.toString()),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text("OK"),
+                        ),
+                      ],
+                    ),
+                  );
                 }
-              }),
+              } else {
+                // validation failed — UI will show errors from customerErrorsProvider
+                final errors = ref.read(customerErrorsProvider);
+                if (errors.keys.any((k) => k.startsWith('billing'))) {
+                  ref.read(billingTileExpandedProvider.notifier).state = true;
+                }
+                if (errors.keys.any((k) => k.startsWith('shipping'))) {
+                  ref.read(shippingTileExpandedProvider.notifier).state = true;
+                }
+              }
+            },
+          ),
         ),
       ),
     );
@@ -349,146 +427,278 @@ class _AddCustomerState extends ConsumerState<AddCustomer> {
     bool isBilling,
     bool enabled,
     Map<String, TextEditingController> controller,
-    AddCustomerModel state,
+    AddCustomerModel modelState, // renamed from `state` to avoid shadowing
     AsyncValue countryData,
     AsyncValue stateData,
   ) {
     final notifier = ref.read(customerFormProvider.notifier);
-    final sameAddress =
-        ref.read(customerSameAsBillingToggleProvider.notifier).state;
-    final address = isBilling ? state.billingAddress : state.shippingAddress;
+
+    // Typed addresses
+    final BillingAddress? billingAddr = modelState.billingAddress;
+    final ShippingAddress? shippingAddr = modelState.shippingAddress;
+
+    // UI labels come from the label providers first (they update immediately),
+    // fallback to model values if provider label is empty.
+    final String providerCountryLabel = isBilling
+        ? ref.watch(billingCountryLabelProvider)
+        : ref.watch(shippingCountryLabelProvider);
+
+    final String providerStateLabel = isBilling
+        ? ref.watch(billingStateLabelProvider)
+        : ref.watch(shippingStateLabelProvider);
+
+    final String fallbackCountry = (isBilling
+            ? billingAddr?.countryRegion
+            : shippingAddr?.countryRegion) ??
+        '';
+    final String fallbackState = (isBilling
+            ? billingAddr?.state?.toString()
+            : shippingAddr?.state?.toString()) ??
+        '';
+
+    final String countryLabel = providerCountryLabel.isNotEmpty
+        ? providerCountryLabel
+        : fallbackCountry;
+    final String stateLabel =
+        providerStateLabel.isNotEmpty ? providerStateLabel : fallbackState;
+
+    final errors = ref.watch(customerErrorsProvider);
+
     return ReusableColumn(
       children: [
+        // Country selector
         PayzoBottomsheetNavigator(
           enabled: enabled,
-          errorText:
-              state.errors['${isBilling ? 'billing' : 'shipping'}.country'],
+          errorText: errors['${isBilling ? 'billing' : 'shipping'}.country'],
           required: true,
           title: 'Country',
-          trailing: address['country']!.isEmpty
-              ? 'Tap to select'
-              : address['country']!,
+          trailing: countryLabel.isEmpty ? 'Tap to select' : countryLabel,
           isPayzoColor: true,
           onTap: () async {
             await ref.read(focusUtilsProvider).unfocusAndDelay();
+
+            // fetch country list (use .future)
+            final countryListResponse = await ref.read(getCountryList.future);
+
+            final itemNames = (countryListResponse.response ?? [])
+                .map((e) => e.countryName ?? '')
+                .where((s) => s.isNotEmpty)
+                .toSet()
+                .toList()
+                .cast<String>();
+
+            if (!context.mounted) return;
+
             showModalBottomSheet(
               context: context,
               isScrollControlled: true,
               backgroundColor: Colors.transparent,
-              builder: (_) => countryData.when(
-                data: (data) => ReusableCountryBottomSheet(
-                    title: 'Countries',
-                    items: data.response
-                            ?.map((e) => e.countryName ?? '')
-                            .toList()
-                            .cast<String>() ??
-                        [],
-                    onSelect: (selectedCountry) {
-                      final selected = data.response?.firstWhere(
-                        (element) => element.countryName == selectedCountry,
-                      );
+              builder: (_) => ReusableCountryBottomSheet(
+                title: 'Countries',
+                items: itemNames,
+                onSelect: (selectedCountry) {
+                  final List responseList = countryListResponse.response ?? [];
 
-                      if (selected != null) {
-                        if (isBilling) {
-                          notifier.updateBillingAddress(
-                              'country', selected.countryName ?? '');
+                  // safe search
+                  dynamic selected;
+                  for (final el in responseList) {
+                    if ((el.countryName ?? '').toString() == selectedCountry) {
+                      selected = el;
+                      break;
+                    }
+                  }
+                  selected ??=
+                      responseList.isNotEmpty ? responseList.first : null;
 
-                          // 🔁 Sync to shipping if toggle is ON
-                          if (ref.read(customerSameAsBillingToggleProvider)) {
-                            notifier.updateShippingAddress(
-                                'country', selected.countryName ?? '');
-                          }
-                        } else {
-                          notifier.updateShippingAddress(
-                              'country', selected.countryName ?? '');
-                        }
+                  if (selected == null) {
+                    Navigator.pop(context);
+                    return;
+                  }
+
+                  // readable name and possible id (repo Response has ccid as id)
+                  final selectedName = (selected.countryName ?? '').toString();
+                  final selectedId =
+                      (selected.ccid != null) ? selected.ccid.toString() : null;
+
+                  // update notifier with ID if exists else name
+                  final storedValue =
+                      (selectedId != null && selectedId.isNotEmpty)
+                          ? selectedId
+                          : selectedName;
+
+                  if (isBilling) {
+                    notifier.updateBillingAddress('country', storedValue);
+                    ref.read(billingCountryLabelProvider.notifier).state =
+                        selectedName;
+
+                    // also update country code provider so state list can refresh
+                    if (selectedId != null) {
+                      ref.read(state_repo.countryCodeProvider.notifier).state =
+                          selectedId;
+                    } else {
+                      // if no numeric id, clear countryCodeProvider to avoid accidental requests
+                      ref.read(state_repo.countryCodeProvider.notifier).state =
+                          '';
+                    }
+
+                    if (ref.read(customerSameAsBillingToggleProvider)) {
+                      notifier.updateShippingAddress('country', storedValue);
+                      ref.read(shippingCountryLabelProvider.notifier).state =
+                          selectedName;
+                      // mirror country code into shipping label provider as well
+                      if (selectedId != null) {
+                        ref
+                            .read(state_repo.countryCodeProvider.notifier)
+                            .state = selectedId;
                       }
-                    }),
-                error: (err, _) => const SizedBox(),
-                loading: () => const Center(child: CircularProgressIndicator()),
+                    }
+                  } else {
+                    notifier.updateShippingAddress('country', storedValue);
+                    ref.read(shippingCountryLabelProvider.notifier).state =
+                        selectedName;
+                    if (selectedId != null) {
+                      ref.read(state_repo.countryCodeProvider.notifier).state =
+                          selectedId;
+                    } else {
+                      ref.read(state_repo.countryCodeProvider.notifier).state =
+                          '';
+                    }
+                  }
+
+                  // close sheet
+                },
               ),
             );
           },
         ),
+
+        // State selector
         PayzoBottomsheetNavigator(
           enabled: enabled,
-          errorText:
-              state.errors['${isBilling ? 'billing' : 'shipping'}.state'],
+          errorText: errors['${isBilling ? 'billing' : 'shipping'}.state'],
           required: true,
           title: 'State',
-          trailing:
-              address['state']!.isEmpty ? 'Tap to select' : address['state']!,
+          trailing: stateLabel.isEmpty ? 'Tap to select' : stateLabel,
           isPayzoColor: true,
           onTap: () async {
             await ref.read(focusUtilsProvider).unfocusAndDelay();
+
+            // fetch state list (use .future) — note: GetStateListRepository uses countryCodeProvider internally
+            final stateListResponse = await ref.read(getStateList.future);
+
+            final itemNames = (stateListResponse.response ?? [])
+                .map((e) => e.rName ?? '')
+                .where((s) => s.isNotEmpty)
+                .toSet()
+                .toList()
+                .cast<String>();
+
+            if (!context.mounted) return;
+
             showModalBottomSheet(
               context: context,
               isScrollControlled: true,
               backgroundColor: Colors.transparent,
-              builder: (_) => stateData.when(
-                data: (data) => ReusableCountryBottomSheet(
-                    title: 'State',
-                    items: data.response
-                            ?.map((e) => e.rName ?? '')
-                            .toList()
-                            .cast<String>() ??
-                        [],
-                    onSelect: (selectedState) {
-                      if (isBilling) {
-                        notifier.updateBillingAddress('state', selectedState);
+              builder: (_) => ReusableCountryBottomSheet(
+                title: 'State',
+                items: itemNames,
+                onSelect: (selectedState) {
+                  final List responseList = stateListResponse.response ?? [];
 
-                        // 🔁 Sync to shipping if toggle is ON
-                        if (ref.read(customerSameAsBillingToggleProvider)) {
-                          notifier.updateShippingAddress(
-                              'state', selectedState);
-                        }
-                      } else {
-                        notifier.updateShippingAddress('state', selectedState);
-                      }
-                    }),
-                error: (err, _) => const SizedBox(),
-                loading: () => const Center(child: CircularProgressIndicator()),
+                  // safe search
+                  dynamic selected;
+                  for (final el in responseList) {
+                    if ((el.rName ?? '').toString() == selectedState) {
+                      selected = el;
+                      break;
+                    }
+                  }
+                  selected ??=
+                      responseList.isNotEmpty ? responseList.first : null;
+
+                  if (selected == null) {
+                    Navigator.pop(context);
+                    return;
+                  }
+
+                  final selectedName = (selected.rName ?? '').toString();
+                  // possible ids: rId or rCodeId
+                  final selectedId = (selected.rId != null)
+                      ? selected.rId.toString()
+                      : (selected.rCodeId != null)
+                          ? selected.rCodeId.toString()
+                          : null;
+
+                  final storedValue =
+                      (selectedId != null && selectedId.isNotEmpty)
+                          ? selectedId
+                          : selectedName;
+
+                  if (isBilling) {
+                    notifier.updateBillingAddress('state', storedValue);
+                    ref.read(billingStateLabelProvider.notifier).state =
+                        selectedName;
+
+                    if (ref.read(customerSameAsBillingToggleProvider)) {
+                      notifier.updateShippingAddress('state', storedValue);
+                      ref.read(shippingStateLabelProvider.notifier).state =
+                          selectedName;
+                    }
+                  } else {
+                    notifier.updateShippingAddress('state', storedValue);
+                    ref.read(shippingStateLabelProvider.notifier).state =
+                        selectedName;
+                  }
+                },
               ),
             );
           },
         ),
+
+        // Remaining address fields
         ...['building', 'street', 'streetArabic', 'city', 'cityArabic', 'zip']
             .map((fieldKey) {
           return PayzoInputField(
-              enabled: enabled,
-              required: true,
-              inputFormatters: fieldKey == 'building'
-                  ? PayzoInputFormatters.onlyDigits
-                  : fieldKey == 'street'
-                      ? PayzoInputFormatters.street
-                      : fieldKey == 'streetArabic'
-                      ? PayzoInputFormatters.street
-                      : fieldKey == 'city'
-                          ? PayzoInputFormatters.city
-                          :  fieldKey == 'cityArabic'
-                          ? PayzoInputFormatters.city
-                          : fieldKey == 'zip'
-                              ? PayzoInputFormatters.onlyFiveDigits
-                              : PayzoInputFormatters.alphanumeric,
-              label: fieldKey == 'building'
-                  ? 'Building Number'
-                  : fieldKey[0].toUpperCase() + fieldKey.substring(1),
-              controller: controller[fieldKey],
-              errorText: state
-                  .errors['${isBilling ? 'billing' : 'shipping'}.$fieldKey'],
-              onChanged: (value) {
-                if (isBilling) {
-                  notifier.updateBillingAddress(fieldKey, value);
-                  if (ref.read(customerSameAsBillingToggleProvider)) {
-                    notifier.updateShippingAddress(fieldKey, value);
-                    if (shippingController.containsKey(fieldKey)) {
-                      shippingController[fieldKey]?.text = value;
-                    }
-                  }
-                } else {
+            enabled: enabled,
+            required:
+                fieldKey == 'city' || fieldKey == 'cityArabic' ? true : false,
+            inputFormatters: fieldKey == 'building'
+                ? PayzoInputFormatters.onlyDigits
+                : fieldKey == 'street'
+                    ? PayzoInputFormatters.street
+                    : fieldKey == 'streetArabic'
+                        ? PayzoInputFormatters.street
+                        : fieldKey == 'city'
+                            ? PayzoInputFormatters.city
+                            : fieldKey == 'cityArabic'
+                                ? PayzoInputFormatters.city
+                                : fieldKey == 'zip'
+                                    ? PayzoInputFormatters.onlyFiveDigits
+                                    : PayzoInputFormatters.alphanumeric,
+            label: fieldKey == 'building'
+                ? 'Building Number'
+                : fieldKey == 'streetArabic'
+                    ? 'Street (Arabic)'
+                    : fieldKey == 'cityArabic'
+                        ? 'City (Arabic)'
+                        : fieldKey[0].toUpperCase() + fieldKey.substring(1),
+            controller: controller[fieldKey],
+            errorText:
+                errors['${isBilling ? 'billing' : 'shipping'}.$fieldKey'],
+            onChanged: (value) {
+              if (isBilling) {
+                notifier.updateBillingAddress(fieldKey, value);
+                if (ref.read(customerSameAsBillingToggleProvider)) {
                   notifier.updateShippingAddress(fieldKey, value);
+                  if (shippingController.containsKey(fieldKey)) {
+                    shippingController[fieldKey]?.text = value;
+                  }
                 }
-              });
+              } else {
+                notifier.updateShippingAddress(fieldKey, value);
+              }
+            },
+          );
         }).toList(),
       ],
     );

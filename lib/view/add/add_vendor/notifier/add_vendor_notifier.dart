@@ -39,10 +39,10 @@ class VendorFormNotifier extends StateNotifier<AddVendorModel> {
     contactPersons: [],
     sameAddressFlag: false,
     billingAddress: {
-      'country': '',        // UI display name
-      'countryRegion': '',  // API code (KSA)
-      'state': '',          // UI display name
-      'stateId': '',        // API ID
+      'country': '',
+      'countryRegion': '',
+      'state': '',
+      'stateId': '',
       'building': '',
       'street': '',
       'city': '',
@@ -152,45 +152,85 @@ class VendorFormNotifier extends StateNotifier<AddVendorModel> {
     }
   }
 
-  /// Validation logic
+  /// Private helper to validate an address map and populate errors map.
+  /// NOTE: uses underscore keys to match UI (e.g. 'billing_country', 'shipping_zip').
+  void _validateAddress(Map<String, dynamic> address, String prefix,
+      Map<String, String> errors) {
+    // Normalize values
+    final zip = (address['zip'] ?? '').toString().trim();
+    final country = (address['country'] ?? '').toString().trim();
+    final stateName = (address['state'] ?? '').toString().trim();
+    final stateId = (address['stateId'] ?? '').toString().trim();
+    final city = (address['city'] ?? '').toString().trim();
+    final cityArabic = (address['cityArabic'] ?? '').toString().trim();
+    final streetAddress = (address['streetAddress'] ?? '').toString().trim();
+    final building = (address['building'] ?? '').toString().trim();
+    final street = (address['street'] ?? '').toString().trim();
+
+    // country required
+    if (country.isEmpty) {
+      errors['${prefix}_country'] = 'Country is required.';
+    }
+
+    // state or stateId required
+    if (stateName.isEmpty && stateId.isEmpty) {
+      errors['${prefix}_state'] = 'State is required.';
+    }
+
+    // city required
+    if (city.isEmpty) {
+      errors['${prefix}_city'] = 'City is required.';
+    }
+    // city required
+    if (cityArabic.isEmpty) {
+      errors['${prefix}_cityArabic'] = 'City (Arabic) is required.';
+    }
+
+    // // require at least one of streetAddress / building / street
+    // if (streetAddress.isEmpty && building.isEmpty && street.isEmpty) {
+    //   errors['${prefix}_addressLine'] =
+    //   'Provide Street, Building or Street Address.';
+    // }
+
+    // zip if provided should be digits between 3 and 10
+    if (zip.isNotEmpty) {
+      final zipRegex = RegExp(r'^\d{3,10}$');
+      if (!zipRegex.hasMatch(zip)) {
+        errors['${prefix}_zip'] = 'Zip must be 3–10 digits.';
+      }
+    }
+  }
+
+  /// Validation logic — builds errors map using underscore keys.
   void validateFieldsAndUpdateState() {
     final Map<String, String> errors = {};
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     final phoneRegex = RegExp(r'^5\d{8}$');
 
-    if (state.firstName.trim().isEmpty) {
-      errors['firstName'] = 'First Name is required.';
-    }
-    if (state.secondName.trim().isEmpty) {
-      errors['secondName'] = 'Last Name is required.';
-    }
+    // Basic company validations
     if (state.companyName.trim().isEmpty) {
       errors['companyName'] = 'Company Name is required.';
-    }
-    if (state.firstNameArabic.trim().isEmpty) {
-      errors['firstNameArabic'] = 'First Name (Arabic) is required.';
-    }
-    if (state.secondNameArabic.trim().isEmpty) {
-      errors['secondNameArabic'] = 'Last Name (Arabic) is required.';
     }
     if (state.companyNameArabic.trim().isEmpty) {
       errors['companyNameArabic'] = 'Company Name (Arabic) is required.';
     }
-    if (state.email.trim().isEmpty) {
-      errors['email'] = 'Email is required.';
-    } else if (!emailRegex.hasMatch(state.email.trim())) {
-      errors['email'] = 'Invalid Email address.';
-    }
-    if (state.mobile.trim().isEmpty || !phoneRegex.hasMatch(state.mobile)) {
-      errors['mobile'] = 'Invalid Mobile number.';
-    }
-    if (state.crNum.trim().isEmpty) {
-      errors['crNum'] = 'CR Number is required.';
-    }
-    if (state.vatNumber.trim().isEmpty) {
-      errors['vatNumber'] = 'VAT Number is required.';
-    }
 
+    // (optional) uncomment/email/phone validation if needed
+    // if (state.email.trim().isEmpty) {
+    //   errors['email'] = 'Email is required.';
+    // } else if (!emailRegex.hasMatch(state.email.trim())) {
+    //   errors['email'] = 'Invalid Email address.';
+    // }
+    // if (state.mobile.trim().isEmpty || !phoneRegex.hasMatch(state.mobile)) {
+    //   errors['mobile'] = 'Invalid Mobile number.';
+    // }
+
+    // Validate billing address and shipping address.
+    // Use 'billing' / 'shipping' as prefix so keys match the UI: e.g. 'billing_city'
+    _validateAddress(state.billingAddress, 'billing', errors);
+    _validateAddress(state.shippingAddress, 'shipping', errors);
+
+    // Attach errors back to state
     state = state.copyWith(errors: errors);
   }
 

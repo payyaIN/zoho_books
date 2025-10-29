@@ -3,6 +3,7 @@ import 'package:payzo_books/data/repository/add_bills/get_price_currency_reposit
 import 'package:payzo_books/data/repository/add_customer/add_customer_repository.dart';
 import 'package:payzo_books/data/repository/add_vendor/add_vendor_repository.dart';
 import 'package:payzo_books/data/repository/add_vendor/get_state_list_repository.dart';
+import 'package:payzo_books/data/repository/vendor_api/vendor_listing/vendor_api.dart';
 import 'package:payzo_books/import_data.dart';
 import 'package:payzo_books/utils/app_data/input_formatters.dart';
 import 'package:payzo_books/view/add/add_vendor/notifier/add_vendor_notifier.dart';
@@ -59,7 +60,7 @@ class _AddVendorState extends ConsumerState<AddVendor> {
     'streetAddress': 'Street Address',
     'city': 'City',
     'streetAddressArabic': 'Street Address (Arabic)',
-    'cityArabic': 'City',
+    'cityArabic': 'City (Arabic)',
     'zip': 'Zip',
   };
   final shippingAddressLabels = <String, String>{
@@ -69,7 +70,7 @@ class _AddVendorState extends ConsumerState<AddVendor> {
     'streetAddress': 'Street Address',
     'city': 'City',
     'streetAddressArabic': 'Street Address (Arabic)',
-    'cityArabic': 'City',
+    'cityArabic': 'City (Arabic)',
     'zip': 'Zip',
   };
 
@@ -177,9 +178,11 @@ class _AddVendorState extends ConsumerState<AddVendor> {
                                     inputFormatters: entry.key == 'workPhone'
                                         ? PayzoInputFormatters.mobileNumber
                                         : entry.key == 'vatNumber'
-                                            ? PayzoInputFormatters.saudiVatNumber
+                                            ? PayzoInputFormatters
+                                                .saudiVatNumber
                                             : entry.key == 'crNumber'
-                                                ? PayzoInputFormatters.saudiCrNumber
+                                                ? PayzoInputFormatters
+                                                    .saudiCrNumber
                                                 : entry.key == 'mobile'
                                                     ? PayzoInputFormatters
                                                         .mobileNumber
@@ -196,8 +199,10 @@ class _AddVendorState extends ConsumerState<AddVendor> {
                                         : entry.key == 'email'
                                             ? TextInputType.emailAddress
                                             : TextInputType.text,
-                                    required:
-                                        entry.key == 'workPhone' || entry.key == 'vatNumber' || entry.key == 'crNumber' ? false : true,
+                                    required: entry.key == 'companyName' ||
+                                            entry.key == 'companyNameArabic'
+                                        ? true
+                                        : false,
                                     countryTap: entry.key == 'workPhone'
                                         ? () async {
                                             await ref
@@ -342,153 +347,153 @@ class _AddVendorState extends ConsumerState<AddVendor> {
                                   ))
                               .toList(),
                         ),
-                        PayzoBottomsheetNavigator(
-                          title: 'Opening Balance',
-                          isPayzoColor: true,
-                          trailing: branchName,
-                          // errorText: customer.errors['branchId'],
-                          onTap: () async {
-                            await ref
-                                .read(focusUtilsProvider)
-                                .unfocusAndDelay();
-
-                            showModalBottomSheet(
-                              context: context,
-                              isScrollControlled: true,
-                              backgroundColor: Colors.transparent,
-                              builder: (context) {
-                                return Consumer(
-                                  builder: (context, ref, _) {
-                                    final branchAsync =
-                                        ref.watch(fetchBranchListProvider);
-
-                                    return branchAsync.when(
-                                      data: (data) {
-                                        final branches = data.data
-                                                ?.map(
-                                                    (b) => b.namePrimary ?? '')
-                                                .where(
-                                                    (name) => name.isNotEmpty)
-                                                .toList() ??
-                                            [];
-
-                                        return ReusableCountryBottomSheet(
-                                          title: 'Select Opening Balance',
-                                          items: branches,
-                                          onSelect: (selectedName) {
-                                            final selectedBranch =
-                                                data.data?.firstWhere(
-                                              (b) =>
-                                                  b.namePrimary == selectedName,
-                                              orElse: () => data.data!.first,
-                                            );
-
-                                            if (selectedBranch != null) {
-                                              notifier
-                                                  .updateOpeningBalanceField(
-                                                      'branch',
-                                                      selectedBranch.branchId);
-                                              ref
-                                                      .read(
-                                                          openingAmountProvider
-                                                              .notifier)
-                                                      .state =
-                                                  selectedBranch.nameSecondary!;
-                                            }
-                                          },
-                                        );
-                                      },
-                                      loading: () => const Center(
-                                          child: CircularProgressIndicator()),
-                                      error: (err, _) => Center(
-                                          child: Text(
-                                              'Failed to load branches: $err')),
-                                    );
-                                  },
-                                );
-                              },
-                            );
-                          },
-                        ),
-                        PayzoInputField(
-                          leading: SarTextfield(
-                            title: () {
-                              final currencyId = vendorState
-                                      .openingBalance['currency']
-                                      ?.toString() ??
-                                  '';
-                              if (currencyId.isEmpty) return 'SAR';
-
-                              // Fetch currency list synchronously if already cached in provider
-                              final currencyListAsync =
-                                  ref.watch(fetchPriceCurrencyProvider);
-
-                              return currencyListAsync.when(
-                                data: (currencyList) {
-                                  final selected = currencyList.firstWhere(
-                                    (e) =>
-                                        e.currencyId.toString() == currencyId,
-                                    orElse: () => currencyList.first,
-                                  );
-                                  return selected.currencyValue ?? 'SAR';
-                                },
-                                loading: () => 'Loading...',
-                                error: (_, __) => 'SAR',
-                              );
-                            }(),
-                            onTap: () async {
-                              final currencyList = await ref
-                                  .read(fetchPriceCurrencyProvider.future);
-
-                              final currencyLabels = currencyList
-                                  .map((e) => e.currencyValue ?? '')
-                                  .where((e) => e.isNotEmpty)
-                                  .toSet()
-                                  .toList();
-
-
-                              if (context.mounted) {
-                                await ref
-                                    .read(focusUtilsProvider)
-                                    .unfocusAndDelay();
-                                showModalBottomSheet(
-                                  context: context,
-                                  isScrollControlled: true,
-                                  backgroundColor: Colors.transparent,
-                                  builder: (_) => ReusableCountryBottomSheet(
-                                    title: 'Select Currency',
-                                    items: currencyLabels,
-                                    onSelect: (selectedCurrency) {
-                                      final selected = currencyList.firstWhere(
-                                        (e) =>
-                                            e.currencyValue == selectedCurrency,
-                                        orElse: () => currencyList.first,
-                                      );
-                                      notifier.updateOpeningBalanceField(
-                                          'currency', selected.currencyId);
-                                      ref
-                                          .read(openingBalanceProvider.notifier)
-                                          .state = selected.currencyValue!;
-                                      debugPrint(
-                                          '✅ Selected Currency: ${selected.currencyValue}, ID: ${selected.currencyId}');
-                                    },
-                                  ),
-                                );
-                              }
-                            },
-                          ),
-                          label: 'Opening Amount',
-                          controller: openingAmount,
-                          errorText: customer.errors['currencyId'],
-                          keyboardType: TextInputType.number,
-                          onChanged: (val) {
-                            final parsed = double.tryParse(val);
-                            if (parsed != null) {
-                              notifier.updateOpeningBalanceField('amount', val);
-                              debugPrint('✅ Updated Opening Amount: $val');
-                            }
-                          },
-                        ),
+                        // PayzoBottomsheetNavigator(
+                        //   title: 'Opening Balance',
+                        //   isPayzoColor: true,
+                        //   trailing: branchName,
+                        //   // errorText: customer.errors['branchId'],
+                        //   onTap: () async {
+                        //     await ref
+                        //         .read(focusUtilsProvider)
+                        //         .unfocusAndDelay();
+                        //
+                        //     showModalBottomSheet(
+                        //       context: context,
+                        //       isScrollControlled: true,
+                        //       backgroundColor: Colors.transparent,
+                        //       builder: (context) {
+                        //         return Consumer(
+                        //           builder: (context, ref, _) {
+                        //             final branchAsync =
+                        //                 ref.watch(fetchBranchListProvider);
+                        //
+                        //             return branchAsync.when(
+                        //               data: (data) {
+                        //                 final branches = data.data
+                        //                         ?.map(
+                        //                             (b) => b.namePrimary ?? '')
+                        //                         .where(
+                        //                             (name) => name.isNotEmpty)
+                        //                         .toList() ??
+                        //                     [];
+                        //
+                        //                 return ReusableCountryBottomSheet(
+                        //                   title: 'Select Opening Balance',
+                        //                   items: branches,
+                        //                   onSelect: (selectedName) {
+                        //                     final selectedBranch =
+                        //                         data.data?.firstWhere(
+                        //                       (b) =>
+                        //                           b.namePrimary == selectedName,
+                        //                       orElse: () => data.data!.first,
+                        //                     );
+                        //
+                        //                     if (selectedBranch != null) {
+                        //                       notifier
+                        //                           .updateOpeningBalanceField(
+                        //                               'branch',
+                        //                               selectedBranch.branchId);
+                        //                       ref
+                        //                               .read(
+                        //                                   openingAmountProvider
+                        //                                       .notifier)
+                        //                               .state =
+                        //                           selectedBranch.nameSecondary!;
+                        //                     }
+                        //                   },
+                        //                 );
+                        //               },
+                        //               loading: () => const Center(
+                        //                   child: CircularProgressIndicator()),
+                        //               error: (err, _) => Center(
+                        //                   child: Text(
+                        //                       'Failed to load branches: $err')),
+                        //             );
+                        //           },
+                        //         );
+                        //       },
+                        //     );
+                        //   },
+                        // ),
+                        // PayzoInputField(
+                        //   leading: SarTextfield(
+                        //     title: () {
+                        //       final currencyId = vendorState
+                        //               .openingBalance['currency']
+                        //               ?.toString() ??
+                        //           '';
+                        //       if (currencyId.isEmpty) return 'SAR';
+                        //
+                        //       // Fetch currency list synchronously if already cached in provider
+                        //       final currencyListAsync =
+                        //           ref.watch(fetchPriceCurrencyProvider);
+                        //
+                        //       return currencyListAsync.when(
+                        //         data: (currencyList) {
+                        //           final selected = currencyList.firstWhere(
+                        //             (e) =>
+                        //                 e.currencyId.toString() == currencyId,
+                        //             orElse: () => currencyList.first,
+                        //           );
+                        //           return selected.currencyValue ?? 'SAR';
+                        //         },
+                        //         loading: () => 'Loading...',
+                        //         error: (_, __) => 'SAR',
+                        //       );
+                        //     }(),
+                        //     onTap: () async {
+                        //       final currencyList = await ref
+                        //           .read(fetchPriceCurrencyProvider.future);
+                        //
+                        //       final currencyLabels = currencyList
+                        //           .map((e) => e.currencyValue ?? '')
+                        //           .where((e) => e.isNotEmpty)
+                        //           .toSet()
+                        //           .toList();
+                        //
+                        //
+                        //       if (context.mounted) {
+                        //         await ref
+                        //             .read(focusUtilsProvider)
+                        //             .unfocusAndDelay();
+                        //         showModalBottomSheet(
+                        //           context: context,
+                        //           isScrollControlled: true,
+                        //           backgroundColor: Colors.transparent,
+                        //           builder: (_) => ReusableCountryBottomSheet(
+                        //             title: 'Select Currency',
+                        //             items: currencyLabels,
+                        //             onSelect: (selectedCurrency) {
+                        //               final selected = currencyList.firstWhere(
+                        //                 (e) =>
+                        //                     e.currencyValue == selectedCurrency,
+                        //                 orElse: () => currencyList.first,
+                        //               );
+                        //               notifier.updateOpeningBalanceField(
+                        //                   'currency', selected.currencyId);
+                        //               ref
+                        //                   .read(openingBalanceProvider.notifier)
+                        //                   .state = selected.currencyValue!;
+                        //               debugPrint(
+                        //                   '✅ Selected Currency: ${selected.currencyValue}, ID: ${selected.currencyId}');
+                        //             },
+                        //           ),
+                        //         );
+                        //       }
+                        //     },
+                        //   ),
+                        //   label: 'Opening Amount',
+                        //   controller: openingAmount,
+                        //   errorText: customer.errors['currencyId'],
+                        //   keyboardType: TextInputType.number,
+                        //   onChanged: (val) {
+                        //     final parsed = double.tryParse(val);
+                        //     if (parsed != null) {
+                        //       notifier.updateOpeningBalanceField('amount', val);
+                        //       debugPrint('✅ Updated Opening Amount: $val');
+                        //     }
+                        //   },
+                        // ),
                       ],
                     ),
                   ),
@@ -611,7 +616,8 @@ class _AddVendorState extends ConsumerState<AddVendor> {
                                         ? PayzoInputFormatters.street
                                         : PayzoInputFormatters.city,
                                 controller: entry.value,
-                                required: true,
+                                required: entry.key == 'city' ||
+                                    entry.key == 'cityArabic',
                                 errorText:
                                     vendorState.errors['billing_${entry.key}'],
                                 onChanged: (value) {
@@ -810,7 +816,8 @@ class _AddVendorState extends ConsumerState<AddVendor> {
                                   label: shippingAddressLabels[entry.key] ??
                                       entry.key,
                                   controller: entry.value,
-                                  required: true,
+                                  required: entry.key == 'city' ||
+                                      entry.key == 'cityArabic',
                                   errorText: vendorState
                                       .errors['shipping_${entry.key}'],
                                   // ✅ Match key pattern
@@ -832,7 +839,7 @@ class _AddVendorState extends ConsumerState<AddVendor> {
               cancelOnPressed: () {
                 ref.read(openingAmountProvider.notifier).state =
                     'Tap to Select';
-                openingAmount.text='';
+                openingAmount.text = '';
                 vendorControllers.values.forEach((c) => c.clear());
                 billingControllers.values.forEach((c) => c.clear());
                 shippingControllers.values.forEach((c) => c.clear());
@@ -868,6 +875,7 @@ class _AddVendorState extends ConsumerState<AddVendor> {
                               onPressed: () {
                                 notifier.clearForm();
                                 Navigator.pop(context); // close success dialog
+                                ref.invalidate(getVendorDataWithPagination);
                                 ref.read(bottomNavBarProvider.notifier).state =
                                     4; // 🔄 set to Vendor/Product index
                                 Navigator.pushNamedAndRemoveUntil(
