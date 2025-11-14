@@ -359,6 +359,7 @@ class _AddCustomerState extends ConsumerState<AddCustomer> {
                               notifier.clearForm();
                               Navigator.pop(context);
                               ref.invalidate(getCustomerDataWithPagination);
+                              // await Future.delayed(Duration(milliseconds: 50));
                               ref.read(bottomNavBarProvider.notifier).state =
                                   4; // set to Vendor/Product index
                               Navigator.pushNamedAndRemoveUntil(context,

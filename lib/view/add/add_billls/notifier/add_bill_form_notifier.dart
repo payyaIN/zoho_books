@@ -1,15 +1,32 @@
+// lib/view/add/add_billls/notifier/add_bill_form_notifier.dart
+
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/material.dart';
+
 import 'package:payzo_books/view/add/add_billls/model/add_bill_form_model.dart';
 import 'package:payzo_books/view/add/add_billls/model/item_details_model.dart';
 
+import '../../../../data/models/add_bills/get_branch_list_model.dart';
 import '../../../../data/models/add_bills/get_venor_list_model.dart';
+import '../../../../data/repository/add_bills/get_all_bills_repository.dart';
 import '../../../../data/repository/add_bills/get_price_currency_repository.dart';
+import '../../../../data/repository/add_invoice/get_tax_list_repo.dart';
 import '../../../../import_data.dart';
 import 'package:payzo_books/data/repository/add_bills/get_vendor_list_repository.dart';
-
 import '../../../../utils/common_widgets/reusable_bottom_sheet.dart';
 import 'add_bill_providers.dart';
+
+// add missing imports for repository & mapper & generate response
+import 'package:payzo_books/data/mapper/bill_mapper.dart';
+import 'package:payzo_books/data/models/add_bills/generate_bill_response.dart';
+import 'package:payzo_books/data/repository/add_bills/get_branch_list_repository.dart';
+import 'package:payzo_books/data/repository/add_bills/get_item_repository.dart';
+import 'package:payzo_books/data/repository/add_bills/shipping_method_repository.dart';
+import 'package:payzo_books/data/repository/add_bills/get_vendor_list_repository.dart';
+import 'package:payzo_books/data/repository/add_bills/get_price_currency_repository.dart';
+import 'package:payzo_books/data/repository/add_bills/generate_bill_repository.dart';
+
 class AddBillFormNotifier extends StateNotifier<AddBillFormModel> {
   AddBillFormNotifier() : super(const AddBillFormModel());
 
@@ -121,6 +138,80 @@ class AddBillFormNotifier extends StateNotifier<AddBillFormModel> {
     state = state.copyWith(subTotal: subTotal, tax: tax, total: total);
   }
 
+  // ---------- NEW: submitBill ----------
+  /// Submits the bill using the repository.
+  /// - Validates the form first.
+  /// - Loads all required lookup lists via the provided [ref].
+  /// - Builds the DTO with [buildBillDtoFromForm].
+  /// - Calls repository.submitBill and updates [billNameIdProvider] on success.
+  Future<BillResponse> submitBill(WidgetRef ref) async {
+    // Validate form locally first
+    validateForm();
+    if (state.errors.isNotEmpty) {
+      debugPrint('🚫 Validation failed: ${state.errors}');
+      throw Exception('Validation failed. Please check form fields.');
+    }
+
+    try {
+      // Load lookup lists required by mapper (use .future to wait for async providers)
+      final itemList = await ref.read(fetchItemListProvider.future);
+      final accountList = await ref.read(fetchAccountListProvider.future);
+      final taxList = await ref.read(fetchAllTaxesProvider.future);
+      final vendorList = (await ref.read(getVendorList.future)).response?.response ?? <VendorData>[];
+      final branchList = (await ref.read(fetchBranchListProvider.future)).data ?? <BranchData>[];
+      final currencyList = await ref.read(fetchPriceCurrencyProvider.future);
+      final shippingList = await ref.read(fetchShippingMethodsProvider.future);
+
+      // Build DTO using mapper
+      final dto = buildBillDtoFromForm(
+        state: state,
+        itemList: itemList,
+        accountList: accountList,
+        taxOthers: taxList.others,
+        taxDefaults: taxList.defaultTax,
+        vendorList: vendorList,
+        branchList: branchList,
+        currencyList: currencyList,
+        shippingList: shippingList,
+      );
+
+      debugPrint('🧩 Built bill DTO: ${dto.toString()}');
+
+      // Read token
+      final token = SharedPreferencesHelper.getString('access_token');
+      if (token == null || token.isEmpty) {
+        throw Exception('❌ Missing access token.');
+      }
+
+      // Prepare file (from form state)
+      final File? attachment = state.attachment;
+
+      // Call repository
+      final repo = ref.read(generateBillRepositoryProvider);
+      final resp = await repo.submitBill(
+        billDto: dto,
+        billAttach: attachment,
+        token: token,
+      );
+
+      // On success, write returned billId (if any) into billNameIdProvider
+      final firstDetail = resp.details != null && resp.details!.isNotEmpty ? resp.details!.first : null;
+      if (firstDetail != null) {
+        ref.read(billNameIdProvider.notifier).state = firstDetail.billId ?? 0;
+        debugPrint('✅ Bill generated with id: ${firstDetail.billId} invoice: ${firstDetail.billInvoiceNumber}');
+      } else {
+        debugPrint('⚠️ Bill generated but response.details empty');
+      }
+
+      return resp;
+    } catch (e, st) {
+      debugPrint('❌ submitBill error: $e\n$st');
+      // Surface error to UI by throwing — UI callers can catch and show snackbar/toast.
+      rethrow;
+    }
+  }
+
+  // ---------- existing UI helpers (kept unchanged) ----------
   Future<void> showAddBillCurrencySelector(BuildContext context, WidgetRef ref) async {
     // keep same unfocus / delay behaviour as your other selector
     await ref.read(focusUtilsProvider).unfocusAndDelay();
@@ -173,6 +264,7 @@ class AddBillFormNotifier extends StateNotifier<AddBillFormModel> {
       },
     );
   }
+
   Future<void> showAddBillItemCurrencySelector(BuildContext context, WidgetRef ref) async {
     await ref.read(focusUtilsProvider).unfocusAndDelay();
 
@@ -227,6 +319,7 @@ class AddBillFormNotifier extends StateNotifier<AddBillFormModel> {
       },
     );
   }
+
   void calculateItemAmount(int index, WidgetRef ref) {
     final discountState = ref.read(payzoDiscountProvider);
     final showItemDiscount =
@@ -235,8 +328,7 @@ class AddBillFormNotifier extends StateNotifier<AddBillFormModel> {
     final item = state.itemDetails[index];
 
     final quantity = (item.quantity ?? 0).toDouble();
-    final rate = double.tryParse(item.rateDate?.toString() ?? '') ??
-        (item.rateDate is num ? (item.rateDate as num).toDouble() : 0.0);
+    final rate = double.tryParse(item.rateDate ?? '') ?? 0.0;
 
     double amount = quantity * rate;
 
@@ -246,7 +338,9 @@ class AddBillFormNotifier extends StateNotifier<AddBillFormModel> {
       final isCurrency = item.discountIsCurrency ?? providerIsCurrency;
 
       final discountRaw = item.discountAmount;
-      final discountVal = double.tryParse(discountRaw?.toString() ?? '') ?? 0.0;
+      final discountVal = (discountRaw is String)
+          ? double.tryParse(discountRaw.toString()) ?? 0.0
+          : (discountRaw ?? 0.0);
 
       if (isCurrency) {
         amount -= discountVal;
@@ -258,14 +352,11 @@ class AddBillFormNotifier extends StateNotifier<AddBillFormModel> {
     if (amount < 0) amount = 0.0;
 
     updateItemField(index, 'amount', amount);
-    print('DEBUG calc idx=$index qty=$quantity rate=$rate '
+    debugPrint('DEBUG calc idx=$index qty=$quantity rate=$rate '
         'item.discountIsCurrency=${item.discountIsCurrency} '
         'providerIsCurrency=${ref.read(addBillItemDiscountCurrencyProvider)} '
         'discountVal=${item.discountAmount} -> amount=$amount');
   }
-
-
-
 
   void validateForm() {
     final Map<String, String?> errors = {};
@@ -297,12 +388,7 @@ class AddBillFormNotifier extends StateNotifier<AddBillFormModel> {
     if (state.currency == null || state.currency!.isEmpty) {
       errors['currency'] = 'Currency is required';
     }
-    // if (state.paymentTerms == null || state.paymentTerms!.isEmpty) {
-    //   errors['paymentTerms'] = 'Payment terms are required';
-    // }
-    // if (state.customerNotes == null || state.customerNotes!.isEmpty) {
-    //   errors['customerNotes'] = 'Customer notes are required';
-    // }
+
     for (var item in state.itemDetails) {
       if (item.quantity == null || item.quantity == 0) {
         errors['quantity'] = 'Quantity is required';
@@ -316,15 +402,15 @@ class AddBillFormNotifier extends StateNotifier<AddBillFormModel> {
       if (item.unitType == null || item.unitType!.isEmpty) {
         errors['unitType'] = 'Unit type is required';
       }
-      if (item.rateDate == null || item.rateDate == 0) {
+
+      final parsedRate = double.tryParse(item.rateDate ?? '');
+      if (item.rateDate == null || parsedRate == null || parsedRate == 0.0) {
         errors['rateDate'] = 'Rate is required';
       }
+
       if (item.taxType == null || item.taxType!.isEmpty) {
         errors['taxType'] = 'Tax type is required';
       }
-      // if (item.customerDate == null) {
-      //   errors['customerDate'] = 'Customer date is required';
-      // }
       if (item.amount == null || item.amount == 0.0) {
         errors['amount'] = 'Amount must be greater than 0';
       }
@@ -350,16 +436,15 @@ class AddBillFormNotifier extends StateNotifier<AddBillFormModel> {
     if (item.unitType == null || item.unitType!.isEmpty) {
       errors['unitType'] = 'Unit type is required';
     }
-    if (item.rateDate == null || item.rateDate == 0) {
+
+    final parsedRate = double.tryParse(item.rateDate ?? '');
+    if (item.rateDate == null || parsedRate == null || parsedRate == 0.0) {
       errors['rateDate'] = 'Rate is required';
     }
 
     if (item.taxType == null || item.taxType!.isEmpty) {
       errors['taxType'] = 'Tax type is required';
     }
-    // if (item.customerDate == null || item.customerDate.toString().isEmpty) {
-    //   errors['customerDate'] = 'Customer details are required';
-    // }
 
     if (item.amount == null || item.amount == 0.0) {
       errors['amount'] = 'Amount must be greater than 0';
@@ -379,13 +464,13 @@ class AddBillFormNotifier extends StateNotifier<AddBillFormModel> {
 }
 
 final addBillFormProvider =
-    StateNotifierProvider<AddBillFormNotifier, AddBillFormModel>(
-  (ref) => AddBillFormNotifier(),
+StateNotifierProvider<AddBillFormNotifier, AddBillFormModel>(
+      (ref) => AddBillFormNotifier(),
 );
 
 final addNewLineProvider = StateProvider<int>((ref) => 1);
-// utils/vendor_address_mapper.dart
 
+// utils/vendor_address_mapper.dart
 List<String> buildBillingAddressLines(VendorData v) {
   final a = v.billingAddress;
   return [

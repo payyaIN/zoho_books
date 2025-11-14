@@ -876,6 +876,8 @@ class _AddVendorState extends ConsumerState<AddVendor> {
                                 notifier.clearForm();
                                 Navigator.pop(context); // close success dialog
                                 ref.invalidate(getVendorDataWithPagination);
+                                // await Future.delayed(
+                                // Duration(milliseconds: 50));
                                 ref.read(bottomNavBarProvider.notifier).state =
                                     4; // 🔄 set to Vendor/Product index
                                 Navigator.pushNamedAndRemoveUntil(

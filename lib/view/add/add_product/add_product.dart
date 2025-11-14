@@ -152,6 +152,8 @@ class _AddProductState extends ConsumerState<AddProduct> {
                                   notifier.clearForm();
                                   Navigator.pop(context);
                                   ref.invalidate(getProductDataWithPagination);
+                                  // await Future.delayed(
+                                  //     Duration(milliseconds: 50));
                                   ref
                                           .read(bottomNavBarProvider.notifier)
                                           .state =
