@@ -72,30 +72,33 @@ class CustomerDetailPage extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       headerTextAndWidgets(
-                          headerText1: customer.companyName,
-                          headerText2: customer.emailAddress,
-                          imgName1: AppText.call,
-                          imgName2: AppText.mail,
-                          imgName3: AppText.msg,
-                          imgName4: AppText.more,
-                          img1: AppImages.call,
-                          img2: AppImages.mail,
-                          img3: AppImages.msg,
-                          img4: AppImages.more,
-                          isMailNeeded: true,
-                          isCallNeeded: true,
-                          callOnTap: () => urlLauncher.makePhoneCall(
-                              customer.phone?.toString() ??
-                                  customer.mobile?.toString() ??
-                                  AppText.vendorContact),
-                          mailOnTap: () =>
-                              urlLauncher.sendEmail(customer.emailAddress),
-                          msgOnTap: () => urlLauncher.sendSms(
-                              customer.phone?.toString() ??
-                                  customer.mobile?.toString() ??
-                                  AppText.vendorContact),
-                          moreOnTap: () {},
-                          isMoreNeeded: false),
+                        headerText1: customer.companyName,
+                        headerText2: customer.emailAddress,
+                        imgName1: AppText.call,
+                        imgName2: AppText.mail,
+                        imgName3: AppText.msg,
+                        imgName4: AppText.edit,
+                        img1: AppImages.call,
+                        img2: AppImages.mail,
+                        img3: AppImages.msg,
+                        img4: AppImages.editWhite,
+                        isMailNeeded: true,
+                        isCallNeeded: true,
+                        isEditNeeded: true,
+                        callOnTap: () => urlLauncher.makePhoneCall(
+                            customer.phone?.toString() ??
+                                customer.mobile?.toString() ??
+                                AppText.vendorContact),
+                        mailOnTap: () =>
+                            urlLauncher.sendEmail(customer.emailAddress),
+                        msgOnTap: () => urlLauncher.sendSms(
+                            customer.phone?.toString() ??
+                                customer.mobile?.toString() ??
+                                AppText.vendorContact),
+                        editOnTap: () {
+                          pushNavigate(context, AddCustomer());
+                        },
+                      ),
                       GapSpace.height35,
                       financialCard(
                         state: stateValue,

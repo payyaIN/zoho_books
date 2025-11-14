@@ -68,6 +68,9 @@ class AddBillFormModel {
   final String? taxMethod; // 'TAX_EXCLUSIVE' / 'TAX_INCLUSIVE'
   final bool? isTaxInclusive;
 
+  // NEW: controls whether modal (legacy) shown; backend examples used this field
+  final int? isModalShown;
+
   const AddBillFormModel({
     this.vendor,
     this.vendorId,
@@ -103,6 +106,7 @@ class AddBillFormModel {
     this.discountMethod,
     this.taxMethod,
     this.isTaxInclusive,
+    this.isModalShown,
   });
 
   AddBillFormModel copyWith({
@@ -140,6 +144,7 @@ class AddBillFormModel {
     String? discountMethod,
     String? taxMethod,
     bool? isTaxInclusive,
+    int? isModalShown,
   }) {
     return AddBillFormModel(
       vendor: vendor ?? this.vendor,
@@ -176,6 +181,7 @@ class AddBillFormModel {
       discountMethod: discountMethod ?? this.discountMethod,
       taxMethod: taxMethod ?? this.taxMethod,
       isTaxInclusive: isTaxInclusive ?? this.isTaxInclusive,
+      isModalShown: isModalShown ?? this.isModalShown,
     );
   }
 }

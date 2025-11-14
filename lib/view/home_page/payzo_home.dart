@@ -33,6 +33,7 @@ class _PayzoHomeState extends ConsumerState<PayzoHome> with RouteAware {
     routeObserver.unsubscribe(this);
     super.dispose();
   }
+
   @override
   void didPopNext() {
     ref.read(speedDialProvider.notifier).close();

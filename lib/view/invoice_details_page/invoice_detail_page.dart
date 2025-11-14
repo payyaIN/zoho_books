@@ -69,8 +69,8 @@ class InvoiceDetailPage extends ConsumerWidget {
                             downloadInvoicePdf(
                                 ref, context, invoiceDetail.invoiceId);
                           },
-                          moreOnTap: () {},
-                          isMoreNeeded: false),
+                          editOnTap: () {},
+                          isEditNeeded: false),
                       invoiceAndBillInformationWidget(
                         isBill: false,
                         invoiceCreatedByName:

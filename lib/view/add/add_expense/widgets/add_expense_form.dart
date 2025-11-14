@@ -54,8 +54,11 @@ class _AddExpenseFormState extends ConsumerState<AddExpenseForm> {
       child: ReusableColumn(
         children: [
           PayzoBottomsheetNavigator(
+            onUnselect: () {
+              ref.invalidate(branchProvider);
+            },
             title: 'Branch',
-            trailing: ref.watch(branchProvider) ?? 'Tap to select',
+            trailing: ref.watch(branchProvider) ?? 'Tap to Select',
             onTap: () {
               ref.read(addExpenseProvider.notifier).showBranchSelector(context, ref);
             },
@@ -74,8 +77,11 @@ class _AddExpenseFormState extends ConsumerState<AddExpenseForm> {
             errorText: ref.watch(dateErrorProvider),
           ),
           PayzoBottomsheetNavigator(
+            onUnselect: () {
+              ref.invalidate(expenseAccountProvider);
+            },
             title: 'Expense Account',
-            trailing: ref.watch(expenseAccountProvider) ?? 'Tap to select',
+            trailing: ref.watch(expenseAccountProvider) ?? 'Tap to Select',
             onTap: () => ref.read(addExpenseProvider.notifier).showExpenseAccountSelector(context, ref),
             required: true,
             isPayzoColor: true,
@@ -113,22 +119,31 @@ class _AddExpenseFormState extends ConsumerState<AddExpenseForm> {
           ),
 
           PayzoBottomsheetNavigator(
+            onUnselect: () {
+              ref.invalidate(paidThroughProvider);
+            },
             title: 'Paid Through',
-            trailing: ref.watch(paidThroughProvider) ?? 'Tap to select',
+            trailing: ref.watch(paidThroughProvider) ?? 'Tap to Select',
             onTap: () => ref.read(addExpenseProvider.notifier).showPaidThroughSelector(context, ref),
             required: true,
             isPayzoColor: true,
             errorText: ref.watch(paidThroughErrorProvider),
           ),
           PayzoBottomsheetNavigator(
+            onUnselect: () {
+              ref.invalidate(vendorProvider);
+            },
             title: 'Vendor',
-            trailing: ref.watch(vendorProvider) ?? 'Tap to select',
+            trailing: ref.watch(vendorProvider) ?? 'Tap to Select',
             onTap: () => ref.read(addExpenseProvider.notifier).showVendorSelector(context, ref),
             isPayzoColor: true,
           ),
           PayzoBottomsheetNavigator(
+            onUnselect: () {
+              ref.invalidate(taxProvider);
+            },
             title: 'Tax',
-            trailing: ref.watch(taxProvider) ?? 'Tap to select',
+            trailing: ref.watch(taxProvider) ?? 'Tap to Select',
             onTap: () {
               ref.read(addExpenseProvider.notifier).showTaxSelector(context, ref);
             },
@@ -146,8 +161,12 @@ class _AddExpenseFormState extends ConsumerState<AddExpenseForm> {
             controller: referenceController,
           ),
           PayzoBottomsheetNavigator(
+            onUnselect: () {
+              ref.invalidate(customerProvider);
+              ref.read(customerProvider.notifier).state='Tap to Select';
+            },
             title: 'Customer',
-            trailing: ref.watch(customerProvider) ?? 'Tap to select',
+            trailing: ref.watch(customerProvider) ?? 'Tap to Select',
             onTap: () => ref.read(addExpenseProvider.notifier).showCustomerSelector(context, ref),
             isPayzoColor: true,
           ),

@@ -131,6 +131,7 @@ class PayzoInputField extends StatelessWidget {
             fontSize: 14,
             color: Color.fromRGBO(51, 51, 51, 1),
           ),
+          errorMaxLines: 3,
           errorText: errorText?.isNotEmpty == true ? errorText : null,
           enabledBorder: const UnderlineInputBorder(
             borderSide: BorderSide(color: Color.fromRGBO(228, 228, 228, 1)),

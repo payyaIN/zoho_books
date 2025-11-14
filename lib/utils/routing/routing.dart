@@ -1,5 +1,6 @@
 import 'package:payzo_books/import_data.dart';
 import 'package:payzo_books/view/add/add_expense/add_expense.dart';
+import 'package:payzo_books/view/add/add_invoice/views/add_invoice_new.dart';
 import 'package:payzo_books/view/expenses/expenses_listing_screen.dart';
 import 'package:payzo_books/view/login_screen/mfa_otp_screen.dart';
 import 'package:payzo_books/view/two_step_verification/two_step_verification_screen.dart';
@@ -54,7 +55,7 @@ class AppRouter {
 
       case RouteNames.addInvoice:
         return MaterialPageRoute(
-            builder: (_) => AddInvoice(), settings: routeSettings);
+            builder: (_) => AddInvoiceNew(), settings: routeSettings);
       case RouteNames.editProduct:
         return MaterialPageRoute(
             builder: (_) => ProductDetailPage(), settings: routeSettings);

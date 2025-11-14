@@ -43,8 +43,8 @@ class _ExpenseDetailHeaderDataState
             print("Message icon tapped, initiating expense PDF download...");
             // downloadExpensePdf(ref, context, data.transactionId?.toInt() ?? 0);
           },
-          moreOnTap: () {},
-          isMoreNeeded: false,
+          editOnTap: () {},
+          isEditNeeded: false,
         );
       },
       loading: () => const Center(

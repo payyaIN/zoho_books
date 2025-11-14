@@ -39,8 +39,8 @@ class _BillDetailHeaderDataHeaderState
                 print("Message icon tapped, initiating download...");
                 downloadBillPdf(ref, context, billDetail.billId);
               },
-              moreOnTap: () {},
-              isMoreNeeded: false);
+              editOnTap: () {},
+              isEditNeeded: false);
         },
         loading: () => const Center(
               child: CircularProgressIndicator(

@@ -44,29 +44,61 @@ class GenerateBillRepository {
   }) async {
     final uri = Uri.parse('http://81.208.173.149/pb-process-service/bill/generateBillWf');
 
-    final request = http.MultipartRequest('POST', uri)
-      ..headers.addAll({
-        'authorization': 'Bearer $token',
-        'company-id': '1',
-        'locale': 'en',
-      })
-      ..files.add(http.MultipartFile.fromString(
+    // Build multipart request
+    final request = http.MultipartRequest('POST', uri);
+
+    // Important: DO NOT set Content-Type header here; MultipartRequest will set it with boundary.
+    request.headers.addAll({
+      'authorization': 'Bearer $token',
+      'company-id': '1',
+      'locale': 'en',
+    });
+
+    // Add billDto JSON as a part named 'billDto' with filename 'blob'
+    request.files.add(
+      http.MultipartFile.fromString(
         'billDto',
         jsonEncode(billDto),
         contentType: MediaType('application', 'json'),
         filename: 'blob',
-      ));
+      ),
+    );
 
-    if (billAttach != null) {
-      // attempt to detect mime-type by extension; fallback to jpeg
+    // If there's an attachment, add it using BOTH common field names to maximize backend compatibility:
+    // - 'billAttach' (used in some examples)
+    // - 'file' (common generic name)
+    if (billAttach != null && await billAttach.exists()) {
       final ext = billAttach.path.split('.').last.toLowerCase();
-      final mimeType = (ext == 'png') ? MediaType('image', 'png') : MediaType('image', 'jpeg');
+      final MediaType contentType;
+      if (ext == 'pdf') {
+        contentType = MediaType('application', 'pdf');
+      } else if (ext == 'png') {
+        contentType = MediaType('image', 'png');
+      } else if (ext == 'jpg' || ext == 'jpeg') {
+        contentType = MediaType('image', 'jpeg');
+      } else {
+        contentType = MediaType('application', 'octet-stream');
+      }
 
-      request.files.add(await http.MultipartFile.fromPath(
-        'billAttach',
-        billAttach.path,
-        contentType: mimeType,
-      ));
+      // Add as 'billAttach'
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'billAttach',
+          billAttach.path,
+          contentType: contentType,
+          filename: billAttach.path.split(Platform.pathSeparator).last,
+        ),
+      );
+
+      // Also add as 'file' (some backends expect this field name)
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'file',
+          billAttach.path,
+          contentType: contentType,
+          filename: billAttach.path.split(Platform.pathSeparator).last,
+        ),
+      );
     }
 
     debugPrint('📤 Submitting Bill DTO: ${jsonEncode(billDto)}');
@@ -74,20 +106,22 @@ class GenerateBillRepository {
     final streamedResponse = await request.send();
     final response = await http.Response.fromStream(streamedResponse);
 
-    // If server responds non-200, still try to parse body for a message
+    debugPrint('📥 HTTP ${response.statusCode} ${response.reasonPhrase}');
+    debugPrint('📥 Body: ${response.body}');
+
+    // Handle non-2xx responses with attempt to parse body for helpful message
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      debugPrint('❌ HTTP status ${response.statusCode} when submitting bill. Body: ${response.body}');
-      // try to extract server message if possible
       try {
-        final maybeJson = jsonDecode(response.body);
-        final msg = (maybeJson is Map && maybeJson['message'] != null) ? maybeJson['message'].toString() : null;
-        throw Exception(msg ?? 'Server returned status ${response.statusCode}');
-      } catch (_) {
-        throw Exception('Server returned status ${response.statusCode}');
+        final parsed = jsonDecode(response.body);
+        final serverMsg = parsed is Map && parsed['message'] != null ? parsed['message'].toString() : response.body;
+        throw Exception('Server error (${response.statusCode}): $serverMsg');
+      } catch (e) {
+        // If parsing fails, throw raw body
+        throw Exception('Server returned status ${response.statusCode}: ${response.body}');
       }
     }
 
-    // Safely decode JSON
+    // Parse JSON response
     Map<String, dynamic> jsonResponse;
     try {
       jsonResponse = jsonDecode(response.body) as Map<String, dynamic>;
@@ -96,20 +130,17 @@ class GenerateBillRepository {
       throw Exception('Invalid JSON response from server (status: ${response.statusCode})');
     }
 
-    // Business-level failure handling (some backends use 'code' field)
+    // Business-level error handling (optional)
     final serverCode = (jsonResponse['code'] ?? '').toString().toUpperCase();
     if (serverCode.isNotEmpty && serverCode != 'SUCCESS') {
       final msg = jsonResponse['message']?.toString() ?? 'Bill generation failed.';
       throw Exception(msg);
     }
 
-    // Normalize details to empty list if null or not a list (prevents null -> List cast errors)
+    // Normalize details to empty list if null or not a list
     if (jsonResponse['details'] == null || jsonResponse['details'] is! List) {
       jsonResponse['details'] = <dynamic>[];
     }
-
-    // Also normalize any other known list fields that the model expects (defensive)
-    // e.g. if your model expects 'errors' or similar lists, normalize them here.
 
     final billResponse = BillResponse.fromJson(jsonResponse);
 
@@ -151,7 +182,7 @@ final generateBillProvider = FutureProvider.family<BillResponse, File?>((ref, fi
   );
 
   final token = SharedPreferencesHelper.getString('access_token');
-  if (token == null) throw Exception('❌ Missing access token.');
+  if (token == null || token.isEmpty) throw Exception('❌ Missing access token.');
 
   return ref.read(generateBillRepositoryProvider).submitBill(
     billDto: dto,

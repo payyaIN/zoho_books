@@ -1,11 +1,5 @@
-import 'package:payzo_books/data/repository/document_type/get_doc_type_api.dart';
-import 'package:payzo_books/data/repository/event_api/get_event_api.dart';
-import 'package:payzo_books/data/repository/price_currency/price_currency_api.dart';
 import 'package:payzo_books/data/repository/vendor_api/vendor_details/vendor_detail_api.dart';
-import 'package:payzo_books/data/repository/view_party/view_party_api.dart';
 import 'package:payzo_books/import_data.dart';
-import 'package:payzo_books/view/customer_detail_page/provider/country_list_provider.dart';
-import 'package:payzo_books/view/vendor_details/components/formatr_fn_vndr.dart';
 import 'package:payzo_books/view/vendor_details/components/no_vendor_detail_found_page.dart';
 
 class VendorDetailPage extends ConsumerStatefulWidget {
@@ -115,25 +109,28 @@ class _VendorDetailsPageState extends ConsumerState<VendorDetailPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       headerTextAndWidgets(
-                          headerText1: vendor.companyName,
-                          headerText2: vendor.emailAddress,
-                          imgName1: AppText.call,
-                          imgName2: AppText.mail,
-                          imgName3: AppText.msg,
-                          imgName4: AppText.more,
-                          img1: AppImages.call,
-                          img2: AppImages.mail,
-                          img3: AppImages.msg,
-                          img4: AppImages.more,
-                          isMailNeeded: true,
-                          isCallNeeded: true,
-                          callOnTap: () =>
-                              urlLauncher.makePhoneCall(validPhoneNumber),
-                          mailOnTap: () =>
-                              urlLauncher.sendEmail(vendor.emailAddress),
-                          msgOnTap: () => urlLauncher.sendSms(validPhoneNumber),
-                          moreOnTap: () {},
-                          isMoreNeeded: false),
+                        headerText1: vendor.companyName,
+                        headerText2: vendor.emailAddress,
+                        imgName1: AppText.call,
+                        imgName2: AppText.mail,
+                        imgName3: AppText.msg,
+                        imgName4: AppText.edit,
+                        img1: AppImages.call,
+                        img2: AppImages.mail,
+                        img3: AppImages.msg,
+                        img4: AppImages.editWhite,
+                        isMailNeeded: true,
+                        isCallNeeded: true,
+                        isEditNeeded: true,
+                        callOnTap: () =>
+                            urlLauncher.makePhoneCall(validPhoneNumber),
+                        mailOnTap: () =>
+                            urlLauncher.sendEmail(vendor.emailAddress),
+                        msgOnTap: () => urlLauncher.sendSms(validPhoneNumber),
+                        editOnTap: () {
+                          pushNavigate(context, AddVendor());
+                        },
+                      ),
                       GapSpace.height35,
                       financialCard(
                         state: stateValue,

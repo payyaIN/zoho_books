@@ -16,9 +16,9 @@ import '../providers/add_customer_providers.dart';
 
 class CustomerTypeWidget extends ConsumerWidget {
   final Map<String, TextEditingController> controller;
-  final TextEditingController openingAmountController;
+  // final TextEditingController openingAmountController;
 
-  const CustomerTypeWidget(this.controller, this.openingAmountController, {super.key});
+  const CustomerTypeWidget(this.controller, {super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -37,8 +37,8 @@ class CustomerTypeWidget extends ConsumerWidget {
       {'label': 'First Name (Arabic)', 'key': 'firstNameArabic'},
       {'label': 'Last Name', 'key': 'secondName'},
       {'label': 'Last Name (Arabic)', 'key': 'secondNameArabic'},
-      {'label': 'Company Name*', 'key': 'companyName'},
-      {'label': 'Company Name (Arabic)*', 'key': 'companyNameArabic'},
+      {'label': 'Company Name', 'key': 'companyName'},
+      {'label': 'Company Name (Arabic)', 'key': 'companyNameArabic'},
       {'label': 'Email Address', 'key': 'email'},
       {'label': 'Mobile Number', 'key': 'mobile'},
       {'label': 'Work Phone Number', 'key': 'workPhone'},
@@ -90,18 +90,22 @@ class CustomerTypeWidget extends ConsumerWidget {
                 final label = m['label']!;
                 final key = m['key']!;
                 final isPhoneField = key == 'workPhone' || key == 'mobile';
+                final isVatNumber= key == 'vatNumber';
+                final isCrNumber= key == 'crNum';
+                final isArabic = key == 'firstNameArabic' ||
+                    key == 'secondNameArabic' ||
+                    key == 'companyNameArabic';
 
                 final keyboardType = isPhoneField ? TextInputType.numberWithOptions() : TextInputType.text;
 
                 final inputFormatter = (key == 'firstName' ||
                     key == 'secondName' ||
-                    key == 'companyName' ||
-                    key == 'firstNameArabic' ||
-                    key == 'secondNameArabic' ||
-                    key == 'companyNameArabic')
+                    key == 'companyName')
                     ? PayzoInputFormatters.onlyAlphabets
                     : isPhoneField
-                    ? PayzoInputFormatters.mobileNumber
+                    ? PayzoInputFormatters.mobileNumber: isVatNumber
+                    ? PayzoInputFormatters.saudiVatNumber: isCrNumber
+                    ? PayzoInputFormatters.saudiCrNumber:isArabic? PayzoInputFormatters.onlyArabic
                     : PayzoInputFormatters.email;
 
                 return PayzoInputField(
@@ -189,57 +193,57 @@ class CustomerTypeWidget extends ConsumerWidget {
             const SizedBox(height: 12),
 
             // Opening amount selector
-            PayzoInputField(
-              leading: SarTextfield(
-                title: (customer.openingBalance?.currency == null)
-                    ? 'SAR'
-                    : currencyName,
-                onTap: () async {
-                  final currencyList =
-                  await ref.read(fetchPriceCurrencyProvider.future);
-
-                  final currencyLabels = currencyList
-                      .map((e) => e.currencyValue ?? '')
-                      .where((e) => e.isNotEmpty)
-                      .toSet()
-                      .toList();
-
-                  if (!context.mounted) return;
-                  await ref.read(focusUtilsProvider).unfocusAndDelay();
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (ctx) => ReusableCountryBottomSheet(
-                      title: 'Select Currency',
-                      items: currencyLabels,
-                      onSelect: (selectedCurrency) {
-                        final selected = currencyList.firstWhere(
-                              (e) => e.currencyValue == selectedCurrency,
-                          orElse: () => currencyList.first,
-                        );
-                        notifier.updateField(
-                            'currencyId', (selected.currencyId ?? '').toString());
-                        ref
-                            .read(openingBalanceProvider.notifier)
-                            .state = selected.currencyValue ?? 'SAR';
-                        debugPrint(
-                            '✅ Selected Currency: ${selected.currencyValue}, ID: ${selected.currencyId}');
-                      },
-                    ),
-                  );
-                },
-              ),
-              label: 'Opening Amount',
-              keyboardType: TextInputType.number,
-              controller: openingAmountController,
-              onChanged: (val) {
-                final parsed = double.tryParse(val);
-                if (parsed != null) {
-                  notifier.updateField('openingAmount', val);
-                }
-              },
-            ),
+            // PayzoInputField(
+            //   leading: SarTextfield(
+            //     title: (customer.openingBalance?.currency == null)
+            //         ? 'SAR'
+            //         : currencyName,
+            //     onTap: () async {
+            //       final currencyList =
+            //       await ref.read(fetchPriceCurrencyProvider.future);
+            //
+            //       final currencyLabels = currencyList
+            //           .map((e) => e.currencyValue ?? '')
+            //           .where((e) => e.isNotEmpty)
+            //           .toSet()
+            //           .toList();
+            //
+            //       if (!context.mounted) return;
+            //       await ref.read(focusUtilsProvider).unfocusAndDelay();
+            //       showModalBottomSheet(
+            //         context: context,
+            //         isScrollControlled: true,
+            //         backgroundColor: Colors.transparent,
+            //         builder: (ctx) => ReusableCountryBottomSheet(
+            //           title: 'Select Currency',
+            //           items: currencyLabels,
+            //           onSelect: (selectedCurrency) {
+            //             final selected = currencyList.firstWhere(
+            //                   (e) => e.currencyValue == selectedCurrency,
+            //               orElse: () => currencyList.first,
+            //             );
+            //             notifier.updateField(
+            //                 'currencyId', (selected.currencyId ?? '').toString());
+            //             ref
+            //                 .read(openingBalanceProvider.notifier)
+            //                 .state = selected.currencyValue ?? 'SAR';
+            //             debugPrint(
+            //                 '✅ Selected Currency: ${selected.currencyValue}, ID: ${selected.currencyId}');
+            //           },
+            //         ),
+            //       );
+            //     },
+            //   ),
+            //   label: 'Opening Amount',
+            //   keyboardType: TextInputType.number,
+            //   controller: openingAmountController,
+            //   onChanged: (val) {
+            //     final parsed = double.tryParse(val);
+            //     if (parsed != null) {
+            //       notifier.updateField('openingAmount', val);
+            //     }
+            //   },
+            // ),
           ],
         ),
       ),

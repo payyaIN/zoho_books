@@ -23,8 +23,8 @@ Widget noVendorDetailFoundPage({required BuildContext context}) {
               msgOnTap: () {},
               callOnTap: () {},
               mailOnTap: () {},
-              moreOnTap: () {},
-              isMoreNeeded: false),
+              editOnTap: () {},
+              isEditNeeded: false),
           GapSpace.height35,
           financialCard(
             state: '',
@@ -71,10 +71,10 @@ Widget noVendorDetailFoundPage({required BuildContext context}) {
             title: AppText.otherDetails,
             isContentTypeString: false,
             contentWidget: vendorDetailsContent(
-                // partyId: vendor.partyId,
-                partyType: '',
-                // transactionId: ''
-                ),
+              // partyId: vendor.partyId,
+              partyType: '',
+              // transactionId: ''
+            ),
             isPrefixIconNeeded: false,
           ),
           GapSpace.height40,

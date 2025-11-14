@@ -11,7 +11,7 @@ class AddressShowerSubtitleText extends ConsumerWidget {
       fontSize: 12,
       overflow: TextOverflow.ellipsis,
       color: AppColors.appBlackColor,
-      maxLines: 1,
+      maxLines: 10,
       fontWeight: FontWeight.normal,
     );
   }

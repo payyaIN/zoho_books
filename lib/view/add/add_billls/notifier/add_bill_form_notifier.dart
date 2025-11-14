@@ -9,103 +9,164 @@ import 'package:payzo_books/view/add/add_billls/model/item_details_model.dart';
 
 import '../../../../data/models/add_bills/get_branch_list_model.dart';
 import '../../../../data/models/add_bills/get_venor_list_model.dart';
+import '../../../../data/repository/add_bills/add_bills_repository.dart';
 import '../../../../data/repository/add_bills/get_all_bills_repository.dart';
 import '../../../../data/repository/add_bills/get_price_currency_repository.dart';
 import '../../../../data/repository/add_invoice/get_tax_list_repo.dart';
 import '../../../../import_data.dart';
-import 'package:payzo_books/data/repository/add_bills/get_vendor_list_repository.dart';
 import '../../../../utils/common_widgets/reusable_bottom_sheet.dart';
-import 'add_bill_providers.dart';
 
 // add missing imports for repository & mapper & generate response
-import 'package:payzo_books/data/mapper/bill_mapper.dart';
-import 'package:payzo_books/data/models/add_bills/generate_bill_response.dart';
-import 'package:payzo_books/data/repository/add_bills/get_branch_list_repository.dart';
-import 'package:payzo_books/data/repository/add_bills/get_item_repository.dart';
-import 'package:payzo_books/data/repository/add_bills/shipping_method_repository.dart';
-import 'package:payzo_books/data/repository/add_bills/get_vendor_list_repository.dart';
-import 'package:payzo_books/data/repository/add_bills/get_price_currency_repository.dart';
-import 'package:payzo_books/data/repository/add_bills/generate_bill_repository.dart';
+// import 'package:payzo_books/data/mapper/bill_mapper.dart'; //This is now inside generate_bill_providers.dart
+import 'package:payzo_books/data/models/add_bills/generate_bill_response.dart'; // used by submitBill
+import 'package:payzo_books/data/repository/add_bills/get_branch_list_repository.dart'; // used by submitBill
+import 'package:payzo_books/data/repository/add_bills/get_item_repository.dart'; // used by submitBill
+import 'package:payzo_books/data/repository/add_bills/shipping_method_repository.dart'; // used by submitBill
+import 'package:payzo_books/data/repository/add_bills/get_vendor_list_repository.dart'; // used by submitBill
+
+// These are now provided by generate_bill_providers.dart
+// import 'package:payzo_books/data/repository/add_bills/generate_bill_repository.dart';
+// import 'package:payzo_books/data/providers/add_bill_providers.dart'; // Old provider file
+
 
 class AddBillFormNotifier extends StateNotifier<AddBillFormModel> {
   AddBillFormNotifier() : super(const AddBillFormModel());
 
+  // ------------------------------
+  // Field updaters
+  // ------------------------------
   void updateField(String key, dynamic value) {
     switch (key) {
       case 'vendor':
-        state = state.copyWith(vendor: value);
+        state = state.copyWith(vendor: value as String?);
         break;
       case 'vendorId':
-        state = state.copyWith(vendorId: value);
+        state = state.copyWith(vendorId: value as int?);
         break;
       case 'branch':
-        state = state.copyWith(branch: value);
+        state = state.copyWith(branch: value as String?);
         break;
       case 'billRefNo':
-        state = state.copyWith(billRefNo: value);
+        state = state.copyWith(billRefNo: value as String?);
         break;
       case 'orderNo':
-        state = state.copyWith(orderNo: value);
+        state = state.copyWith(orderNo: value as String?);
         break;
       case 'billDate':
-        state = state.copyWith(billDate: value);
+        state = state.copyWith(billDate: value as DateTime?);
         break;
       case 'dueDate':
-        state = state.copyWith(dueDate: value);
+        state = state.copyWith(dueDate: value as DateTime?);
         break;
       case 'shippingMethod':
-        state = state.copyWith(shippingMethod: value);
+        state = state.copyWith(shippingMethod: value as String?);
         break;
       case 'currency':
-        state = state.copyWith(currency: value);
+        state = state.copyWith(currency: value as String?);
         break;
       case 'paymentTerms':
-        state = state.copyWith(paymentTerms: value);
+        state = state.copyWith(paymentTerms: value as String?);
         break;
       case 'customerNotes':
-        state = state.copyWith(customerNotes: value);
+        state = state.copyWith(customerNotes: value as String?);
         break;
       case 'terms':
-        state = state.copyWith(terms: value);
+        state = state.copyWith(terms: value as String?);
         break;
+
+    // ✅ Accept nullable File for 'attachment' so `updateField('attachment', null)` clears it
       case 'attachment':
-        state = state.copyWith(attachment: value as File);
+        final file = value as File?;
+        state = state.copyWith(attachment: file);
         break;
+
       case 'customerId':
-        state = state.copyWith(customerId: value);
+        state = state.copyWith(customerId: value as int?);
         break;
       case 'orgId':
-        state = state.copyWith(orgId: value);
+        state = state.copyWith(orgId: value as int?);
         break;
       case 'cmpCr':
-        state = state.copyWith(cmpCr: value);
+        state = state.copyWith(cmpCr: value as int?);
         break;
+
+    // additional optional fields
+      case 'paidThroughAccount':
+        state = state.copyWith(paidThroughAccount: value as int?);
+        break;
+      case 'discountType':
+        state = state.copyWith(discountType: value as String?);
+        break;
+      case 'discountAmount':
+        state = state.copyWith(discountAmount: value as double?);
+        break;
+      case 'discountPercentage':
+        state = state.copyWith(discountPercentage: value as double?);
+        break;
+      case 'billType':
+        state = state.copyWith(billType: value as int?);
+        break;
+      case 'billAdvance':
+        state = state.copyWith(billAdvance: value as bool?);
+        break;
+      case 'billDelivery':
+        state = state.copyWith(billDelivery: value as bool?);
+        break;
+      case 'isIncoming':
+        state = state.copyWith(isIncoming: value as int?);
+        break;
+      case 'billStatus':
+        state = state.copyWith(billStatus: value as int?);
+        break;
+      case 'billInfo':
+        state = state.copyWith(billInfo: value as String?);
+        break;
+      case 'discountMethod':
+        state = state.copyWith(discountMethod: value as String?);
+        break;
+      case 'taxMethod':
+        state = state.copyWith(taxMethod: value as String?);
+        break;
+      case 'isTaxInclusive':
+        state = state.copyWith(isTaxInclusive: value as bool?);
+        break;
+
+      default:
+      // Optionally handle or log unknown keys
+        debugPrint('Unknown updateField key: $key');
     }
   }
 
+  // ------------------------------
+  // Item-level updaters
+  // ------------------------------
   void updateItemField(int index, String key, dynamic value) {
     final updatedList = [...state.itemDetails];
+    if (index < 0 || index >= updatedList.length) return;
     final current = updatedList[index];
 
     final updated = switch (key) {
-      'itemName' => current.copyWith(itemName: value),
-      'account' => current.copyWith(account: value),
-      'quantity' => current.copyWith(quantity: value),
-      'unitType' => current.copyWith(unitType: value),
-      'rateDate' => current.copyWith(rateDate: value),
-      'taxType' => current.copyWith(taxType: value),
-      'customerDate' => current.copyWith(customerDate: value),
-      'amount' => current.copyWith(amount: value),
+      'itemName' => current.copyWith(itemName: value as String?),
+      'account' => current.copyWith(account: value as String?),
+      'quantity' => current.copyWith(quantity: value as int?),
+      'unitType' => current.copyWith(unitType: value as String?),
+      'rateDate' => current.copyWith(rateDate: value as String?),
+      'taxType' => current.copyWith(taxType: value as String?),
+      'customerDate' => current.copyWith(customerDate: value as String?),
+      'amount' => current.copyWith(amount: value as double?),
       'discountAmount' => current.copyWith(discountAmount: value),
-      'discountPercentage' => current.copyWith(discountPercentage: value),
-      'exemptionReason' => current.copyWith(exemptionReason: value),
-      'taxDescription' => current.copyWith(taxDescription: value),
-      'othersDescription' => current.copyWith(othersDescription: value),
-      'othersAmount' => current.copyWith(othersAmount: value),
-      'discountIsCurrency' => current.copyWith(discountIsCurrency: value as bool),
-      'unitId' => current.copyWith(unitId: value),
-      'customerId' => current.copyWith(customerId: value),
-      'taxAmount' => current.copyWith(taxAmount: value),
+      'discountPercentage' => current.copyWith(discountPercentage: value as double?),
+      'exemptionReason' => current.copyWith(exemptionReason: value as String?),
+      'taxDescription' => current.copyWith(taxDescription: value as String?),
+      'othersDescription' => current.copyWith(othersDescription: value as String?),
+      'othersAmount' => current.copyWith(othersAmount: value as double?),
+      'discountIsCurrency' => current.copyWith(discountIsCurrency: value as bool?),
+      'unitId' => current.copyWith(unitId: value as int?),
+      'customerId' => current.copyWith(customerId: value as int?),
+      'taxAmount' => current.copyWith(taxAmount: value as double?),
+      'prodId' => current.copyWith(prodId: value as int?),
+      'prodCatId' => current.copyWith(prodCatId: value as int?),
+      'description' => current.copyWith(description: value as String?),
       _ => current,
     };
 
@@ -121,81 +182,55 @@ class AddBillFormNotifier extends StateNotifier<AddBillFormModel> {
   }
 
   void removeItem(int index) {
+    if (index < 0 || index >= state.itemDetails.length) return;
     final updatedList = [...state.itemDetails]..removeAt(index);
     state = state.copyWith(itemDetails: updatedList);
     _recalculateTotal();
   }
 
   void _recalculateTotal() {
-    // item.amount already includes quantity (we set amount = qty * rate above),
-    // so just sum the line amounts directly.
+    // item.amount already includes quantity if you set it that way;
+    // We'll sum amounts defensively.
     final subTotal = state.itemDetails.fold<double>(
       0.0,
-          (sum, item) => sum + (item.amount ?? 0.0),
+          (sum, item) {
+        final amt = item.amount ?? 0.0;
+        return sum + amt;
+      },
     );
-    final tax = 0.0; // compute tax if needed
+    final tax = 0.0; // compute tax when tax rules are available
     final total = subTotal + tax;
     state = state.copyWith(subTotal: subTotal, tax: tax, total: total);
   }
 
-  // ---------- NEW: submitBill ----------
+  // ------------------------------
+  // Submit bill (new behavior)
+  // ------------------------------
   /// Submits the bill using the repository.
   /// - Validates the form first.
   /// - Loads all required lookup lists via the provided [ref].
   /// - Builds the DTO with [buildBillDtoFromForm].
   /// - Calls repository.submitBill and updates [billNameIdProvider] on success.
   Future<BillResponse> submitBill(WidgetRef ref) async {
-    // Validate form locally first
+    // Validate locally
     validateForm();
     if (state.errors.isNotEmpty) {
       debugPrint('🚫 Validation failed: ${state.errors}');
       throw Exception('Validation failed. Please check form fields.');
     }
 
+    // Prepare file (from form state)
+    final File? attachment = state.attachment;
+
+    // The generateBillProvider now handles all logic internally.
+    // We just need to read it with the attachment as a family parameter.
     try {
-      // Load lookup lists required by mapper (use .future to wait for async providers)
-      final itemList = await ref.read(fetchItemListProvider.future);
-      final accountList = await ref.read(fetchAccountListProvider.future);
-      final taxList = await ref.read(fetchAllTaxesProvider.future);
-      final vendorList = (await ref.read(getVendorList.future)).response?.response ?? <VendorData>[];
-      final branchList = (await ref.read(fetchBranchListProvider.future)).data ?? <BranchData>[];
-      final currencyList = await ref.read(fetchPriceCurrencyProvider.future);
-      final shippingList = await ref.read(fetchShippingMethodsProvider.future);
-
-      // Build DTO using mapper
-      final dto = buildBillDtoFromForm(
-        state: state,
-        itemList: itemList,
-        accountList: accountList,
-        taxOthers: taxList.others,
-        taxDefaults: taxList.defaultTax,
-        vendorList: vendorList,
-        branchList: branchList,
-        currencyList: currencyList,
-        shippingList: shippingList,
-      );
-
-      debugPrint('🧩 Built bill DTO: ${dto.toString()}');
-
-      // Read token
-      final token = SharedPreferencesHelper.getString('access_token');
-      if (token == null || token.isEmpty) {
-        throw Exception('❌ Missing access token.');
-      }
-
-      // Prepare file (from form state)
-      final File? attachment = state.attachment;
-
-      // Call repository
-      final repo = ref.read(generateBillRepositoryProvider);
-      final resp = await repo.submitBill(
-        billDto: dto,
-        billAttach: attachment,
-        token: token,
-      );
+      // By reading the future, we trigger the provider to execute.
+      final resp = await ref.read(generateBillProvider(attachment).future);
 
       // On success, write returned billId (if any) into billNameIdProvider
-      final firstDetail = resp.details != null && resp.details!.isNotEmpty ? resp.details!.first : null;
+      final firstDetail =
+          resp.details != null && resp.details!.isNotEmpty ? resp.details!.first : null;
       if (firstDetail != null) {
         ref.read(billNameIdProvider.notifier).state = firstDetail.billId ?? 0;
         debugPrint('✅ Bill generated with id: ${firstDetail.billId} invoice: ${firstDetail.billInvoiceNumber}');
@@ -206,14 +241,14 @@ class AddBillFormNotifier extends StateNotifier<AddBillFormModel> {
       return resp;
     } catch (e, st) {
       debugPrint('❌ submitBill error: $e\n$st');
-      // Surface error to UI by throwing — UI callers can catch and show snackbar/toast.
       rethrow;
     }
   }
 
-  // ---------- existing UI helpers (kept unchanged) ----------
+  // ------------------------------
+  // UI helpers: currency selectors / item currency selector
+  // ------------------------------
   Future<void> showAddBillCurrencySelector(BuildContext context, WidgetRef ref) async {
-    // keep same unfocus / delay behaviour as your other selector
     await ref.read(focusUtilsProvider).unfocusAndDelay();
 
     await showModalBottomSheet<void>(
@@ -240,24 +275,13 @@ class AddBillFormNotifier extends StateNotifier<AddBillFormModel> {
                           (c) => c.currencyValue == selectedCurrency,
                       orElse: () => currencyList.first,
                     );
-
-                    // write into new providers
-                    ref.read(addBillGlobalDiscountCurrencyProvider.notifier).state =
-                        selected.currencyValue ?? 'SAR';
-                    ref.read(addBillGlobalDiscountCurrencyIdProvider.notifier).state =
-                        selected.currencyId?.toInt();
-
-                    // optional: also update AddBillFormModel state if you want it reflected in the form model
-                    final formNotifier = ref.read(addBillFormProvider.notifier);
-                    formNotifier.updateField('currency', selected.currencyValue ?? 'SAR');
-                    // debug log
-                    print("💱 Selected AddBill Currency: ${selected.currencyValue} (id: ${selected.currencyId})");
+                    ref.read(addBillFormProvider.notifier).updateField('currency', selected.currencyValue ?? 'SAR');
+                    debugPrint("💱 Selected AddBill Currency: ${selected.currencyValue} (id: ${selected.currencyId})");
                   },
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, _) =>
-                  Center(child: Text('Failed to load currencies: $err')),
+              error: (err, _) => Center(child: Text('Failed to load currencies: $err')),
             );
           },
         );
@@ -292,27 +316,17 @@ class AddBillFormNotifier extends StateNotifier<AddBillFormModel> {
                           (c) => c.currencyValue == selectedCurrency,
                       orElse: () => currencyList.first,
                     );
-
-                    // write into new providers for item-level currency
-                    ref.read(addBillItemCurrencySelector.notifier).state =
-                        selected.currencyValue ?? 'SAR';
-                    ref.read(addBillItemCurrencySelectorId.notifier).state =
-                        selected.currencyId?.toInt();
-
-                    // optional: also update AddBillFormModel state if you want
-                    // e.g. ref.read(addBillFormProvider.notifier).updateField('itemCurrency', selected.currencyValue ?? 'SAR');
-
+                    // This selector's state can be handled locally or via a simple StateProvider if needed elsewhere.
+                    // For now, it just closes the sheet.
                     // close sheet
                     Navigator.of(context).pop();
 
-                    // debug log
-                    print("💱 Selected AddBill Item Currency: ${selected.currencyValue} (id: ${selected.currencyId})");
+                    debugPrint("💱 Selected AddBill Item Currency: ${selected.currencyValue} (id: ${selected.currencyId})");
                   },
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, _) =>
-                  Center(child: Text('Failed to load currencies: $err')),
+              error: (err, _) => Center(child: Text('Failed to load currencies: $err')),
             );
           },
         );
@@ -320,10 +334,11 @@ class AddBillFormNotifier extends StateNotifier<AddBillFormModel> {
     );
   }
 
+  // ------------------------------
+  // Item amount calculation
+  // ------------------------------
   void calculateItemAmount(int index, WidgetRef ref) {
-    final discountState = ref.read(payzoDiscountProvider);
-    final showItemDiscount =
-        discountState.apply && discountState.level == PayzoDiscountLevel.item;
+    if (index < 0 || index >= state.itemDetails.length) return;
 
     final item = state.itemDetails[index];
 
@@ -332,32 +347,35 @@ class AddBillFormNotifier extends StateNotifier<AddBillFormModel> {
 
     double amount = quantity * rate;
 
-    if (showItemDiscount) {
-      // prefer item-level flag, fallback to provider; default to percentage (false) if both null
-      final providerIsCurrency = ref.read(addBillItemDiscountCurrencyProvider) == true;
-      final isCurrency = item.discountIsCurrency ?? providerIsCurrency;
-
+    // Simplified discount logic based on item-level flags.
+    // Assuming a discount value is present.
+    if ((item.discountAmount ?? 0) > 0 || (item.discountPercentage ?? 0) > 0) {
+      final isCurrency = item.discountIsCurrency ?? false; // Default to percentage
       final discountRaw = item.discountAmount;
       final discountVal = (discountRaw is String)
           ? double.tryParse(discountRaw.toString()) ?? 0.0
-          : (discountRaw ?? 0.0);
+          : (discountRaw is double
+          ? discountRaw
+          : (double.tryParse(discountRaw?.toString() ?? '') ?? 0.0));
 
       if (isCurrency) {
         amount -= discountVal;
       } else {
-        amount -= (amount * discountVal / 100.0);
+        // If not currency, use percentage field
+        final discPerc = item.discountPercentage ?? 0.0;
+        amount -= (amount * discPerc / 100.0);
       }
     }
 
     if (amount < 0) amount = 0.0;
 
     updateItemField(index, 'amount', amount);
-    debugPrint('DEBUG calc idx=$index qty=$quantity rate=$rate '
-        'item.discountIsCurrency=${item.discountIsCurrency} '
-        'providerIsCurrency=${ref.read(addBillItemDiscountCurrencyProvider)} '
-        'discountVal=${item.discountAmount} -> amount=$amount');
+    debugPrint('DEBUG calc idx=$index qty=$quantity rate=$rate -> amount=$amount');
   }
 
+  // ------------------------------
+  // Validation (keeps your validations)
+  // ------------------------------
   void validateForm() {
     final Map<String, String?> errors = {};
 
@@ -463,6 +481,7 @@ class AddBillFormNotifier extends StateNotifier<AddBillFormModel> {
   }
 }
 
+// Providers
 final addBillFormProvider =
 StateNotifierProvider<AddBillFormNotifier, AddBillFormModel>(
       (ref) => AddBillFormNotifier(),
@@ -470,7 +489,7 @@ StateNotifierProvider<AddBillFormNotifier, AddBillFormModel>(
 
 final addNewLineProvider = StateProvider<int>((ref) => 1);
 
-// utils/vendor_address_mapper.dart
+// Utility mappers (copied over for convenience if used nearby)
 List<String> buildBillingAddressLines(VendorData v) {
   final a = v.billingAddress;
   return [

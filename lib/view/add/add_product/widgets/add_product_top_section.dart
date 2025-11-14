@@ -5,6 +5,7 @@ import 'package:payzo_books/view/add/add_product/notifier/add_item_notifier.dart
 import 'package:payzo_books/view/add/add_product/widgets/tax_showing_widget.dart';
 import 'package:payzo_books/utils/common_widgets/reusable_bottom_sheet.dart';
 import '../../../../import_data.dart';
+import '../../../../utils/common_widgets/reusable_snackbar.dart';
 
 final exemptionReasonControllerProvider =
     Provider<TextEditingController>((ref) {
@@ -55,6 +56,7 @@ class AddProductTopSection extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+
             /// ✅ Item Name Field
             PayzoInputField(
               inputFormatters: PayzoInputFormatters.onlyAlphabets,
@@ -67,9 +69,10 @@ class AddProductTopSection extends ConsumerWidget {
                 notifier.updateField('itemName', val);
               },
             ),
+
             /// ✅ Item Name arabic Field
             PayzoInputField(
-              inputFormatters: PayzoInputFormatters.onlyAlphabets,
+              inputFormatters: PayzoInputFormatters.onlyArabic,
               required: true,
               label: 'Item Name(Arabic)',
               controller: controllers['itemNameArabic'],
@@ -82,17 +85,31 @@ class AddProductTopSection extends ConsumerWidget {
             const ReusableSizedBox(height: 8),
 
             /// ✅ Unit Dropdown
+            /// ✅ Unit Dropdown
             PayzoBottomsheetNavigator(
               required: true,
               title: 'Unit',
               isPayzoColor: true,
               trailing: product.unit,
               errorText: product.errors?['unitId'],
-              // ✅ Note: use 'unitId'
+              enabled: true,
+
+              // Call the new clearUnit method
+              onUnselect: () {
+                notifier.clearUnit();
+                // optional: show feedback
+                showPayzoSnackBar(
+                  type: PayzoSnackType.success,
+                  context: context,
+                  ref: ref,
+                  message: 'Unit cleared',
+                );
+              },
+
+              // Note: use 'unitId'
               onTap: () async {
                 await ref.read(focusUtilsProvider).unfocusAndDelay();
                 final itemList = await ref.read(fetchUnitListProvider.future);
-                // 👇 Forcefully unfocus any text field
 
                 final itemNames = itemList
                     .map((e) => e.displayUnit ?? '')
@@ -110,7 +127,7 @@ class AddProductTopSection extends ConsumerWidget {
                       items: itemNames,
                       onSelect: (selectedItem) {
                         final selected = itemList.firstWhere(
-                          (e) => e.displayUnit == selectedItem,
+                              (e) => e.displayUnit == selectedItem,
                         );
 
                         notifier.updateField('unit', selected.displayUnit);
@@ -176,7 +193,10 @@ class AddProductTopSection extends ConsumerWidget {
               title: 'Tax Preference',
               isPayzoColor: true,
               trailing: product.taxPreference,
-              errorText: product.errors?['taxPreference'],
+              errorText: product.errors?['taxPreference'],onUnselect: () {
+                notifier.clearTaxPreference();
+                showPayzoSnackBar(context: context, ref: ref, message: 'Tax Preference cleared',type: PayzoSnackType.success);
+                },
               onTap: () async {
                 await ref.read(focusUtilsProvider).unfocusAndDelay();
                 final taxData = await ref.read(fetchAllTaxesProvider.future);
@@ -247,7 +267,6 @@ class AddProductTopSection extends ConsumerWidget {
                     '${selectedDefaultTax.taxName} (${selectedDefaultTax.tcdTaxRate.toStringAsFixed(2)}%)',
               ),
             ],
-            PayzoDivider(),
             ExpansionToggleButtons(
               'Category',
               true,

@@ -6,6 +6,7 @@ import 'package:payzo_books/data/repository/add_vendor/get_state_list_repository
 import 'package:payzo_books/data/repository/vendor_api/vendor_listing/vendor_api.dart';
 import 'package:payzo_books/import_data.dart';
 import 'package:payzo_books/utils/app_data/input_formatters.dart';
+import 'package:payzo_books/utils/common_widgets/reusable_snackbar.dart';
 import 'package:payzo_books/view/add/add_vendor/notifier/add_vendor_notifier.dart';
 import 'package:payzo_books/utils/common_widgets/payzo_progress.dart';
 import 'package:payzo_books/utils/common_widgets/reusable_bottom_sheet.dart';
@@ -56,7 +57,6 @@ class _AddVendorState extends ConsumerState<AddVendor> {
   final billingAddressLabels = <String, String>{
     'building': 'Building Number',
     // 'street': 'Street',
-    'streetArabic': 'Street',
     'streetAddress': 'Street Address',
     'city': 'City',
     'streetAddressArabic': 'Street Address (Arabic)',
@@ -66,7 +66,6 @@ class _AddVendorState extends ConsumerState<AddVendor> {
   final shippingAddressLabels = <String, String>{
     'building': 'Building Number',
     // 'street': 'Street',
-    'streetArabic': 'Street',
     'streetAddress': 'Street Address',
     'city': 'City',
     'streetAddressArabic': 'Street Address (Arabic)',
@@ -79,7 +78,6 @@ class _AddVendorState extends ConsumerState<AddVendor> {
     // 'state': TextEditingController(),
     'building': TextEditingController(),
     // 'street': TextEditingController(),
-    'streetArabic': TextEditingController(),
     'streetAddress': TextEditingController(),
     'streetAddressArabic': TextEditingController(),
     'city': TextEditingController(),
@@ -92,7 +90,6 @@ class _AddVendorState extends ConsumerState<AddVendor> {
     // 'state': TextEditingController(),
     'building': TextEditingController(),
     // 'street': TextEditingController(),
-    'streetArabic': TextEditingController(),
     'streetAddress': TextEditingController(),
     'streetAddressArabic': TextEditingController(),
     'city': TextEditingController(),
@@ -189,8 +186,16 @@ class _AddVendorState extends ConsumerState<AddVendor> {
                                                     : entry.key == 'email'
                                                         ? PayzoInputFormatters
                                                             .email
-                                                        : PayzoInputFormatters
-                                                            .onlyAlphabets,
+                                                        : entry.key ==
+                                                                    'firstNameArabic' ||
+                                                                entry.key ==
+                                                                    'secondNameArabic' ||
+                                                                entry.key ==
+                                                                    'companyNameArabic'
+                                                            ? PayzoInputFormatters
+                                                                .onlyArabic
+                                                            : PayzoInputFormatters
+                                                                .onlyAlphabets,
                                     keyboardType: entry.key == 'workPhone' ||
                                             entry.key == 'mobile' ||
                                             entry.key == 'vatNumber' ||
@@ -509,12 +514,20 @@ class _AddVendorState extends ConsumerState<AddVendor> {
                   child: ReusableColumn(
                     children: [
                       PayzoBottomsheetNavigator(
+                        onUnselect: () {
+                          notifier.clearBillingCountry();
+                          showPayzoSnackBar(
+                              context: context,
+                              ref: ref,
+                              message: 'Billing Country cleared',
+                              type: PayzoSnackType.success);
+                        },
                         required: true,
                         title: 'Country',
                         errorText: vendorState.errors['billing_country'],
                         trailing: state.billingAddress['country']!.isEmpty ||
                                 state.billingAddress['country'] == ''
-                            ? 'Tap to select'
+                            ? 'Tap to Select'
                             : '${state.billingAddress['country']}',
                         isPayzoColor: true,
                         onTap: () async {
@@ -566,9 +579,17 @@ class _AddVendorState extends ConsumerState<AddVendor> {
                         errorText: vendorState.errors['billing_state'],
                         trailing: state.billingAddress['state']!.isEmpty ||
                                 state.billingAddress['state'] == ''
-                            ? 'Tap to select'
+                            ? 'Tap to Select'
                             : '${state.billingAddress['state']}',
                         isPayzoColor: true,
+                        onUnselect: () {
+                          notifier.clearBillingState();
+                          showPayzoSnackBar(
+                              context: context,
+                              ref: ref,
+                              message: 'Billing state cleared',
+                              type: PayzoSnackType.success);
+                        },
                         onTap: () async {
                           await ref.read(focusUtilsProvider).unfocusAndDelay();
 
@@ -684,7 +705,6 @@ class _AddVendorState extends ConsumerState<AddVendor> {
                               'building': '',
                               'streetAddress': '',
                               'streetAddressArabic': '',
-                              'street': '',
                               'city': '',
                               'zip': '',
                             },
@@ -706,13 +726,20 @@ class _AddVendorState extends ConsumerState<AddVendor> {
                   child: Column(
                     children: [
                       PayzoBottomsheetNavigator(
+                        onUnselect: () {
+                          notifier.clearShippingCountry();
+                          showPayzoSnackBar(
+                              context: context,
+                              ref: ref,
+                              message: 'Shipping country cleared',type: PayzoSnackType.success);
+                        },
                         enabled: sameAddress == true ? false : true,
                         errorText: vendorState.errors['shipping_country'],
                         required: true,
                         title: 'Country',
                         trailing: state.shippingAddress['country']!.isEmpty ||
                                 state.shippingAddress['country'] == ''
-                            ? 'Tap to select'
+                            ? 'Tap to Select'
                             : '${state.shippingAddress['country']}',
                         isPayzoColor: true,
                         onTap: () async {
@@ -759,13 +786,20 @@ class _AddVendorState extends ConsumerState<AddVendor> {
                         },
                       ),
                       PayzoBottomsheetNavigator(
+                        onUnselect: () {
+                          notifier.clearShippingState();
+                          showPayzoSnackBar(
+                              context: context,
+                              ref: ref,
+                              message: 'Shipping state cleared',type: PayzoSnackType.success);
+                        },
                         enabled: sameAddress == true ? false : true,
                         required: true,
                         title: 'State',
                         errorText: vendorState.errors['shipping_state'],
                         trailing: state.shippingAddress['state']!.isEmpty ||
                                 state.shippingAddress['state'] == ''
-                            ? 'Tap to select'
+                            ? 'Tap to Select'
                             : '${state.shippingAddress['state']}',
                         isPayzoColor: true,
                         onTap: () async {
@@ -807,12 +841,16 @@ class _AddVendorState extends ConsumerState<AddVendor> {
                                           entry.key == 'zip'
                                       ? TextInputType.numberWithOptions()
                                       : TextInputType.text,
-                                  inputFormatters: entry.key == 'building' ||
-                                          entry.key == 'zip'
-                                      ? PayzoInputFormatters.onlyFiveDigits
-                                      : entry.key == 'street'
-                                          ? PayzoInputFormatters.street
-                                          : PayzoInputFormatters.city,
+                                  inputFormatters: entry.key ==
+                                              'streetAddressArabic' ||
+                                          entry.key == 'cityArabic'
+                                      ? PayzoInputFormatters.onlyArabic
+                                      : entry.key == 'building' ||
+                                              entry.key == 'zip'
+                                          ? PayzoInputFormatters.onlyFiveDigits
+                                          : entry.key == 'street'
+                                              ? PayzoInputFormatters.street
+                                              : PayzoInputFormatters.city,
                                   label: shippingAddressLabels[entry.key] ??
                                       entry.key,
                                   controller: entry.value,

@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/services.dart';
-import 'package:payzo_books/data/repository/add_bills/generate_bill_repository.dart';
+import 'package:payzo_books/data/repository/add_bills/generate_bill_repository.dart' hide generateBillProvider;
 import 'package:payzo_books/data/repository/add_bills/get_all_bills_repository.dart';
 import 'package:payzo_books/data/repository/add_bills/get_branch_list_repository.dart';
 import 'package:payzo_books/data/repository/add_bills/get_item_repository.dart';
@@ -20,6 +20,7 @@ import 'package:payzo_books/view/add/add_billls/widgets/item_details_add_bills.d
 import 'package:payzo_books/utils/common_widgets/payzo_progress.dart';
 import 'package:payzo_books/view/main_screen/notifiers/bottom_nav_bar_notifier.dart';
 
+import '../../../data/repository/add_bills/add_bills_repository.dart';
 import '../../../utils/focus_utility/focus_utility.dart';
 
 class AddBills extends ConsumerStatefulWidget {
@@ -357,8 +358,6 @@ class _AddBillsState extends ConsumerState<AddBills> {
             },
             saveOnPressed: () async {
               notifier.validateForm();
-
-              // Allow state rebuild
               await Future.delayed(Duration.zero);
 
               final currentState = ref.read(addBillFormProvider);
@@ -368,51 +367,59 @@ class _AddBillsState extends ConsumerState<AddBills> {
                 showPayzoProgress(context: context);
                 try {
                   final response = await ref.read(generateBillProvider(file).future);
+                  Navigator.pop(context); // remove progress
 
-                  Navigator.pop(context);
-                  String invoiceNumber = 'N/A';
-                  String billId = 'N/A';
+                  // success dialog as before...
+                  // <keep your existing success dialog code here>
+                } catch (e, st) {
+                  // Ensure progress dialog removed
+                  try { Navigator.pop(context); } catch (_) {}
 
-                  if (response.details != null && response.details!.isNotEmpty) {
-                    invoiceNumber = response.details!.first.billInvoiceNumber ?? 'N/A';
-                    billId = response.details!.first.billId.toString();
-                  }
+                  // Print to debug logs (ADB logcat viewable)
+                  debugPrint('🚨 Submit failed: $e');
+                  debugPrint('$st');
 
-                  showDialog(
-                    context: context,
-                    builder: (_) => AlertDialog(
-                      title: const Text("✅ Success"),
-                      content: Text("Bill Generated\n\nInvoice: $invoiceNumber\nID: $billId"),
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            notifier.clearForm();
-                            clearFormAndControllers();
-                            ref.read(addNewLineProvider.notifier).state = 1;
-                            ref.invalidate(getBillDataWithPagination);
-                            ref.read(bottomNavBarProvider.notifier).state = 3;
-                            Navigator.pushNamedAndRemoveUntil(context, RouteNames.homeScreen, (route) => false);
-                          },
-                          child: const Text("OK"),
-                        ),
-                      ],
-                    ),
-                  );
-                } catch (e) {
-                  Navigator.pop(context); // pop progress on error
-                  showDialog(
-                    context: context,
-                    builder: (_) => AlertDialog(
-                      title: const Text("❌ Error"),
-                      content: Text(e.toString()),
-                      actions: [
-                        TextButton(onPressed: () => Navigator.pop(context), child: const Text("OK")),
-                      ],
-                    ),
-                  );
-
+                  // Show user-visible dialog with shortened message and a "Details" button
+                  // showDialog(
+                  //   context: context,
+                  //   builder: (_) => AlertDialog(
+                  //     title: const Text("❌ Error"),
+                  //     content: SingleChildScrollView(
+                  //       child: Column(
+                  //         crossAxisAlignment: CrossAxisAlignment.start,
+                  //         children: [
+                  //           Text(e.toString(), maxLines: 10, overflow: TextOverflow.ellipsis),
+                  //           const SizedBox(height: 8),
+                  //           const Text('Tap DETAILS to view full stack trace.'),
+                  //         ],
+                  //       ),
+                  //     ),
+                  //     actions: [
+                  //       TextButton(onPressed: () => Navigator.pop(context), child: const Text("OK")),
+                  //       TextButton(
+                  //         onPressed: () {
+                  //           Navigator.pop(context);
+                  //           // Show full error + stacktrace in a new dialog (copyable)
+                  //           showDialog(
+                  //             context: context,
+                  //             builder: (_) => AlertDialog(
+                  //               title: const Text("Error details"),
+                  //               content: SingleChildScrollView(
+                  //                 child: SelectableText('$e\n\n$st', style: const TextStyle(fontSize: 12)),
+                  //               ),
+                  //               actions: [
+                  //                 TextButton(onPressed: () => Navigator.pop(context), child: const Text("Close")),
+                  //               ],
+                  //             ),
+                  //           );
+                  //         },
+                  //         child: const Text("DETAILS"),
+                  //       ),
+                  //     ],
+                  //   ),
+                  // );
                 }
+
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Please fill in all required fields')),

@@ -1,6 +1,7 @@
 import 'package:payzo_books/data/repository/add_bills/get_price_currency_repository.dart';
 import 'package:payzo_books/data/repository/add_product/get_all_account_list_repository.dart';
 import 'package:payzo_books/import_data.dart';
+import 'package:payzo_books/utils/common_widgets/reusable_snackbar.dart';
 import 'package:payzo_books/utils/focus_utility/focus_utility.dart';
 import 'package:payzo_books/view/add/add_product/notifier/add_item_notifier.dart';
 import 'package:payzo_books/utils/common_widgets/reusable_bottom_sheet.dart';
@@ -108,6 +109,11 @@ class SalesInformationAddProducts extends ConsumerWidget {
 
                   /// ✅ Sales Account using prefetched data
                   PayzoBottomsheetNavigator(
+                    onUnselect: () {
+                      notifier.clearSalesAccount();
+                      showPayzoSnackBar(context: context, ref: ref, message: 'Sales Account cleared',type: PayzoSnackType.success);
+                      debugPrint('✅ Sales Account cleared: ${notifier.state.saleInformation.toJson()}');
+                    },
                     required: true,
                     errorText: product.errors?['sellingAccount'],
                     title: 'Account',

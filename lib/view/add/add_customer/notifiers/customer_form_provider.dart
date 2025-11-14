@@ -198,6 +198,168 @@ class CustomerFormNotifier extends StateNotifier<AddCustomerModel> {
     }
     state = state.copyWith(billingAddress: updated);
   }
+  /// Clear billing country (and reset related fields). When sameAddressFlag is true,
+  /// shipping will be updated to match billing (cleared too). Also removes related errors
+  /// and resets UI labels to "Tap to Select".
+  void clearBillingCountry() {
+    final clearedBilling = (state.billingAddress ?? BillingAddress()).copyWith(
+      countryRegion: '',
+      state: null,
+    );
+
+    // remove billing related errors (dot-notation keys used in this notifier)
+    final newErrors = Map<String, String>.from(ref.read(customerErrorsProvider));
+    newErrors.remove('billing.country');
+    newErrors.remove('billing.state');
+    ref.read(customerErrorsProvider.notifier).state = newErrors;
+
+    // Reset UI label providers to default text
+    ref.read(billingCountryLabelProvider.notifier).state = 'Tap to Select';
+    ref.read(billingStateLabelProvider.notifier).state = 'Tap to Select';
+
+    if (state.sameAddressFlag == true) {
+      // Build an equivalent ShippingAddress cleared object
+      final clearedShipping = ShippingAddress(
+        countryRegion: clearedBilling.countryRegion,
+        buildingNumber: clearedBilling.buildingNumber ?? '',
+        streetName: clearedBilling.streetName,
+        streetAddress: clearedBilling.streetAddress ?? '',
+        streetAddressArabic: clearedBilling.streetAddressArabic ?? '',
+        city: clearedBilling.city ?? '',
+        cityArabic: clearedBilling.cityArabic ?? '',
+        state: clearedBilling.state,
+        zipCode: clearedBilling.zipCode ?? '',
+      );
+
+      state = state.copyWith(
+        billingAddress: clearedBilling,
+        shippingAddress: clearedShipping,
+      );
+
+      // Reset shipping UI labels as well when same-as-billing is enabled
+      ref.read(shippingCountryLabelProvider.notifier).state = 'Tap to Select';
+      ref.read(shippingStateLabelProvider.notifier).state = 'Tap to Select';
+    } else {
+      state = state.copyWith(billingAddress: clearedBilling);
+    }
+  }
+
+  /// Clear billing state only (keep country). If sameAddressFlag is true, also clear shipping state.
+  /// Also resets the state label provider to "Tap to Select".
+  void clearBillingState() {
+    final updatedBilling = (state.billingAddress ?? BillingAddress()).copyWith(
+      state: null,
+    );
+
+    final newErrors = Map<String, String>.from(ref.read(customerErrorsProvider));
+    newErrors.remove('billing.state');
+    ref.read(customerErrorsProvider.notifier).state = newErrors;
+
+    // Reset UI state label provider
+    ref.read(billingStateLabelProvider.notifier).state = 'Tap to Select';
+
+    if (state.sameAddressFlag == true) {
+      final updatedShipping = (state.shippingAddress ?? ShippingAddress()).copyWith(
+        state: null,
+      );
+      state = state.copyWith(
+        billingAddress: updatedBilling,
+        shippingAddress: updatedShipping,
+      );
+
+      // Mirror reset to shipping label
+      ref.read(shippingStateLabelProvider.notifier).state = 'Tap to Select';
+    } else {
+      state = state.copyWith(billingAddress: updatedBilling);
+    }
+  }
+
+  /// Clear shipping country (and reset related fields). When sameAddressFlag is true,
+  /// billing will be cleared to match shipping. Also removes related errors and resets UI labels
+  /// to "Tap to Select".
+  void clearShippingCountry() {
+    final clearedShipping = (state.shippingAddress ?? ShippingAddress()).copyWith(
+      countryRegion: '',
+      state: null,
+    );
+
+    final newErrors = Map<String, String>.from(ref.read(customerErrorsProvider));
+    newErrors.remove('shipping.country');
+    newErrors.remove('shipping.state');
+    ref.read(customerErrorsProvider.notifier).state = newErrors;
+
+    // Reset UI label providers to default text
+    ref.read(shippingCountryLabelProvider.notifier).state = 'Tap to Select';
+    ref.read(shippingStateLabelProvider.notifier).state = 'Tap to Select';
+
+    if (state.sameAddressFlag == true) {
+      final clearedBilling = BillingAddress(
+        countryRegion: clearedShipping.countryRegion,
+        buildingNumber: clearedShipping.buildingNumber ?? '',
+        streetName: clearedShipping.streetName,
+        streetAddress: clearedShipping.streetAddress ?? '',
+        streetAddressArabic: clearedShipping.streetAddressArabic ?? '',
+        city: clearedShipping.city ?? '',
+        cityArabic: clearedShipping.cityArabic ?? '',
+        state: clearedShipping.state,
+        zipCode: clearedShipping.zipCode ?? '',
+      );
+
+      state = state.copyWith(
+        shippingAddress: clearedShipping,
+        billingAddress: clearedBilling,
+      );
+
+      // Reset billing UI labels as well when same-as-billing is enabled
+      ref.read(billingCountryLabelProvider.notifier).state = 'Tap to Select';
+      ref.read(billingStateLabelProvider.notifier).state = 'Tap to Select';
+    } else {
+      state = state.copyWith(shippingAddress: clearedShipping);
+    }
+  }
+
+  /// Clear shipping state only (keep country). If sameAddressFlag is true, also clear billing state.
+  /// Also resets the state label provider to "Tap to Select".
+  void clearShippingState() {
+    final updatedShipping = (state.shippingAddress ?? ShippingAddress()).copyWith(
+      state: null,
+    );
+
+    final newErrors = Map<String, String>.from(ref.read(customerErrorsProvider));
+    newErrors.remove('shipping.state');
+    ref.read(customerErrorsProvider.notifier).state = newErrors;
+
+    // Reset UI state label provider
+    ref.read(shippingStateLabelProvider.notifier).state = 'Tap to Select';
+
+    if (state.sameAddressFlag == true) {
+      final updatedBilling = (state.billingAddress ?? BillingAddress()).copyWith(
+        state: null,
+      );
+      state = state.copyWith(
+        shippingAddress: updatedShipping,
+        billingAddress: updatedBilling,
+      );
+
+      // Mirror reset to billing label
+      ref.read(billingStateLabelProvider.notifier).state = 'Tap to Select';
+    } else {
+      state = state.copyWith(shippingAddress: updatedShipping);
+    }
+  }
+
+  /// Convenience: clear both country & state for billing (and shipping when sameAddressFlag is true)
+  void clearBillingLocation() {
+    clearBillingCountry();
+    clearBillingState();
+  }
+
+  /// Convenience: clear both country & state for shipping (and billing when sameAddressFlag is true)
+  void clearShippingLocation() {
+    clearShippingCountry();
+    clearShippingState();
+  }
+
 
   void updateShippingAddress(String key, String value) {
     final cur = state.shippingAddress ?? ShippingAddress();
@@ -237,7 +399,7 @@ class CustomerFormNotifier extends StateNotifier<AddCustomerModel> {
   // ----------------------
   // sameAddressFlag helper
   // ----------------------
-  void updateSameAddressFlag(bool value) {
+    void updateSameAddressFlag(bool value) {
     if (value) {
       final b = state.billingAddress ?? BillingAddress();
       final newShipping = ShippingAddress(
@@ -313,98 +475,155 @@ class CustomerFormNotifier extends StateNotifier<AddCustomerModel> {
   // Validation: builds errors map and writes to customerErrorsProvider
   // Returns true if valid (no errors), false if there are errors
   // ----------------------
+  /// Validate form fields and populate customerErrorsProvider.
+  /// Returns true when there are no errors.
+  /// Validate form fields and populate customerErrorsProvider.
+  /// Returns true when there are no errors.
+  /// Validate form fields and populate customerErrorsProvider.
+  /// Returns true when there are no errors.
   bool validateFields() {
     final errors = <String, String>{};
 
-    // Customer type required
+    // -----------------------
+    // Regexes (updated)
+    // -----------------------
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    final ksaMobileRegex = RegExp(r'^5\d{8}$'); // 9 digits starting with 5
+    final workPhoneRegex = RegExp(r'^\d{6,15}$');
+    final vatRegex = RegExp(r'^\d{10,15}$');
+    final crRegex = RegExp(r'^\d{10}$');
+
+    // Building: exactly 4 digits (Saudi) — per your update
+    final buildingRegex = RegExp(r'^\d{4}$');
+
+    // Saudi ZIP: 5 digits, cannot start with 0
+    final saudiZipRegex = RegExp(r'^[1-9]\d{4}$');
+
+    // Arabic-only regex for typed Arabic fields (letters + spaces)
+    final arabicOnlyRegex = RegExp(
+      r'^[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\s]+$',
+    );
+
+    // -----------------------
+    // Customer type
+    // -----------------------
     if ((state.customerType ?? '').toString().trim().isEmpty) {
       errors['customerType'] = 'Customer type is required';
     }
 
-    // Primary contact
+    // -----------------------
+    // Primary contact (optional fields; require min length if typed)
+    // -----------------------
     final firstName = state.primaryContact?.firstName ?? '';
     final lastName = state.primaryContact?.lastName ?? '';
-    // if (firstName.trim().isEmpty) {
-    //   errors['firstName'] = 'First name is required';
-    // }
-    // if (lastName.trim().isEmpty) {
-    //   errors['secondName'] = 'Last name is required';
-    // }
+    if (firstName.trim().isNotEmpty && firstName.trim().length < 3) {
+      errors['firstName'] = 'First name must be at least 3 characters.';
+    }
+    if (lastName.trim().isNotEmpty && lastName.trim().length < 3) {
+      errors['secondName'] = 'Last name must be at least 3 characters.';
+    }
 
-    // Primary contact (Arabic) — optional? your earlier spec required Arabic but user later listed companyNameArabic required
-    // We'll validate Arabic names if present but not make them strictly required here (you can toggle if needed).
-    // (keeping them optional to avoid breaking UX unless you want them mandatory)
-    // If you want required, uncomment following lines:
-    // if ((state.primaryContactArabic?.firstNameArabic ?? '').trim().isEmpty) {
-    //   errors['firstNameArabic'] = 'First name (Arabic) is required';
-    // }
-    // if ((state.primaryContactArabic?.lastNameArabic ?? '').trim().isEmpty) {
-    //   errors['secondNameArabic'] = 'Last name (Arabic) is required';
-    // }
+    // Primary contact Arabic (if typed, min length)
+    final firstNameAr = state.primaryContactArabic?.firstNameArabic ?? '';
+    final lastNameAr = state.primaryContactArabic?.lastNameArabic ?? '';
+    if (firstNameAr.trim().isNotEmpty && firstNameAr.trim().length < 3) {
+      errors['firstNameArabic'] = 'First name (Arabic) must be at least 3 characters.';
+    }
+    if (lastNameAr.trim().isNotEmpty && lastNameAr.trim().length < 3) {
+      errors['secondNameArabic'] = 'Last name (Arabic) must be at least 3 characters.';
+    }
 
-    // Company fields REQUIRED per request
+    // -----------------------
+    // Company fields (required per spec)
+    // -----------------------
     if ((state.companyName ?? '').trim().isEmpty) {
       errors['companyName'] = 'Company name is required';
+    } else if ((state.companyName ?? '').trim().length > 0 &&
+        (state.companyName ?? '').trim().length < 3) {
+      errors['companyName'] = 'Company name must be at least 3 characters';
     }
+
     if ((state.companyNameArabic ?? '').trim().isEmpty) {
       errors['companyNameArabic'] = 'Company name (Arabic) is required';
+    } else if ((state.companyNameArabic ?? '').trim().length > 0 &&
+        (state.companyNameArabic ?? '').trim().length < 3) {
+      errors['companyNameArabic'] = 'Company name (Arabic) must be at least 3 characters';
     }
 
-    // // Email (still required by previous logic)
-    // final email = (state.emailAddress ?? '').trim();
-    // if (email.isEmpty) {
-    //   errors['emailAddress'] = 'Email is required';
-    // } else if (!_isValidEmail(email)) {
-    //   errors['emailAddress'] = 'Invalid email';
-    // }
+    // displayName if typed must be min 3
+    if ((state.displayName ?? '').trim().isNotEmpty &&
+        (state.displayName ?? '').trim().length < 3) {
+      errors['displayName'] = 'Display name must be at least 3 characters';
+    }
 
-    // // Mobile (required)
-    // final mobile = (state.mobile ?? '').trim();
-    // if (mobile.isEmpty) {
-    //   errors['mobile'] = 'Mobile number is required';
-    // } else if (!_isValidKsaMobile(mobile)) {
-    //   errors['mobile'] = 'Invalid mobile number';
-    // }
+    // -----------------------
+    // Email (optional): validate if typed
+    // -----------------------
+    final email = (state.emailAddress ?? '').trim();
+    if (email.isNotEmpty && !emailRegex.hasMatch(email)) {
+      errors['email'] = 'Invalid email address';
+    }
 
-    // Work phone — optional but validated if provided
+    // -----------------------
+    // Mobile / Phone (optional): validate if typed
+    // -----------------------
+    final mobile = (state.mobile ?? '').trim();
+    if (mobile.isNotEmpty && !ksaMobileRegex.hasMatch(mobile)) {
+      errors['mobile'] = 'Invalid mobile number';
+    }
+
     final workPhone = (state.phone ?? '').trim();
-    if (workPhone.isNotEmpty && !_isValidWorkPhone(workPhone)) {
-      errors['workPhone'] = 'Invalid phone number';
+    if (workPhone.isNotEmpty && !workPhoneRegex.hasMatch(workPhone)) {
+      errors['phone'] = 'Invalid phone number';
     }
 
-    // VAT & CR — required if taxedOrganization == true
+    // -----------------------
+    // VAT & CR validation
+    // -----------------------
+    final taxed = state.taxedOrganization ?? false;
     final vat = (state.vatNumber ?? '').trim();
     final cr = (state.crNum ?? '').trim();
-    final taxed = state.taxedOrganization ?? false;
+
     if (taxed) {
       if (vat.isEmpty) {
         errors['vatNumber'] = 'VAT number is required';
-      } else if (!_isValidVat(vat)) {
+      } else if (!vatRegex.hasMatch(vat)) {
         errors['vatNumber'] = 'Invalid VAT number';
       }
+
       if (cr.isEmpty) {
         errors['crNum'] = 'Customer CR is required';
-      } else if (!_isValidCr(cr)) {
+      } else if (!crRegex.hasMatch(cr)) {
         errors['crNum'] = 'Invalid CR number';
       }
     } else {
-      // optional validation when provided
-      if (vat.isNotEmpty && !_isValidVat(vat)) {
+      if (vat.isNotEmpty && !vatRegex.hasMatch(vat)) {
         errors['vatNumber'] = 'Invalid VAT number';
       }
-      if (cr.isNotEmpty && !_isValidCr(cr)) {
+      if (cr.isNotEmpty && !crRegex.hasMatch(cr)) {
         errors['crNum'] = 'Invalid CR number';
       }
     }
 
-    // Opening amount — optional, if provided must be positive number
-    final openingAmt = (state.openingBalance?.amount?.toString() ?? '').trim();
-    if (openingAmt.isNotEmpty && !_isPositiveNumber(openingAmt)) {
-      errors['openingAmount'] = 'Opening amount must be a positive number';
+    // -----------------------
+    // Opening balance: numeric & non-negative
+    // -----------------------
+    final openingAmtStr = (state.openingBalance?.amount?.toString() ?? '').trim();
+    if (openingAmtStr.isNotEmpty) {
+      final parsed = double.tryParse(openingAmtStr);
+      if (parsed == null) {
+        errors['openingBalance.amount'] = 'Opening amount must be a number';
+      } else if (parsed < 0) {
+        errors['openingBalance.amount'] = 'Opening amount cannot be negative';
+      }
     }
 
-    // Billing validations (dot keys to match UI) - required fields per user request:
-    // country, state, city, cityArabic
+    // -----------------------
+    // Billing address checks
+    // Required: country, state, city, cityArabic
+    // Optional checks applied when the field is typed
+    // NOTE: keys are aligned with UI field keys (building, street, streetArabic, city, cityArabic, zip)
+    // -----------------------
     final b = state.billingAddress;
     if ((b?.countryRegion ?? '').toString().trim().isEmpty) {
       errors['billing.country'] = 'Billing country is required';
@@ -419,7 +638,54 @@ class CustomerFormNotifier extends StateNotifier<AddCustomerModel> {
       errors['billing.cityArabic'] = 'Billing city (Arabic) is required';
     }
 
-    // Shipping validations — required per request unless sameAddressFlag == true
+    // building number (optional) — must be exactly 4 digits when provided
+    final billingBuilding = (b?.buildingNumber ?? '').toString().trim();
+    if (billingBuilding.isNotEmpty && !buildingRegex.hasMatch(billingBuilding)) {
+      errors['billing.building'] = 'Building number must be exactly 4 digits';
+    }
+
+    // street (optional) must be >= 3 chars when provided
+    final billingStreet = (b?.streetAddress ?? '').toString().trim();
+    if (billingStreet.isNotEmpty && billingStreet.length < 3) {
+      errors['billing.street'] = 'Street must be at least 3 characters.';
+    }
+
+    // street (Arabic) (optional) must be Arabic-only and >= 3 chars when provided
+    final billingStreetAr = (b?.streetAddressArabic ?? '').toString().trim();
+    if (billingStreetAr.isNotEmpty) {
+      if (billingStreetAr.length < 3) {
+        errors['billing.streetArabic'] = 'Street (Arabic) must be at least 3 characters.';
+      } else if (!arabicOnlyRegex.hasMatch(billingStreetAr)) {
+        errors['billing.streetArabic'] = 'Street (Arabic) must contain only Arabic letters and spaces.';
+      }
+    }
+
+    // city length (optional extra check — although required above)
+    final billingCity = (b?.city ?? '').toString().trim();
+    if (billingCity.isNotEmpty && billingCity.length < 3) {
+      errors['billing.city'] = 'City must be at least 3 characters.';
+    }
+
+    // city Arabic (optional) must be Arabic-only and >= 3 if provided
+    final billingCityAr = (b?.cityArabic ?? '').toString().trim();
+    if (billingCityAr.isNotEmpty) {
+      if (billingCityAr.length < 3) {
+        errors['billing.cityArabic'] = 'City (Arabic) must be at least 3 characters.';
+      } else if (!arabicOnlyRegex.hasMatch(billingCityAr)) {
+        errors['billing.cityArabic'] = 'City (Arabic) must contain only Arabic letters and spaces.';
+      }
+    }
+
+    // zip (if typed) -> Saudi ZIP rule
+    final billingZip = (b?.zipCode ?? '').toString().trim();
+    if (billingZip.isNotEmpty && !saudiZipRegex.hasMatch(billingZip)) {
+      errors['billing.zip'] = 'Invalid Saudi ZIP code (5 digits, cannot start with 0)';
+    }
+
+    // -----------------------
+    // Shipping address checks (if sameAddressFlag != true)
+    // Apply same optional rules as billing (keys aligned to UI)
+    // -----------------------
     final s = state.shippingAddress;
     if (state.sameAddressFlag != true) {
       if ((s?.countryRegion ?? '').toString().trim().isEmpty) {
@@ -436,12 +702,93 @@ class CustomerFormNotifier extends StateNotifier<AddCustomerModel> {
       }
     }
 
-    // Persist errors to provider so UI can show them
+    // shipping building (optional) must be exactly 4 digits when provided
+    final shippingBuilding = (s?.buildingNumber ?? '').toString().trim();
+    if (shippingBuilding.isNotEmpty && !buildingRegex.hasMatch(shippingBuilding)) {
+      errors['shipping.building'] = 'Building number must be exactly 4 digits';
+    }
+
+    // shipping street (optional)
+    final shippingStreet = (s?.streetAddress ?? '').toString().trim();
+    if (shippingStreet.isNotEmpty && shippingStreet.length < 3) {
+      errors['shipping.street'] = 'Street must be at least 3 characters.';
+    }
+
+    // shipping street Arabic (optional)
+    final shippingStreetAr = (s?.streetAddressArabic ?? '').toString().trim();
+    if (shippingStreetAr.isNotEmpty) {
+      if (shippingStreetAr.length < 3) {
+        errors['shipping.streetArabic'] = 'Street (Arabic) must be at least 3 characters.';
+      } else if (!arabicOnlyRegex.hasMatch(shippingStreetAr)) {
+        errors['shipping.streetArabic'] = 'Street (Arabic) must contain only Arabic letters and spaces.';
+      }
+    }
+
+    // shipping city length (optional)
+    final shippingCity = (s?.city ?? '').toString().trim();
+    if (shippingCity.isNotEmpty && shippingCity.length < 3) {
+      errors['shipping.city'] = 'City must be at least 3 characters.';
+    }
+
+    // shipping city Arabic (optional)
+    final shippingCityAr = (s?.cityArabic ?? '').toString().trim();
+    if (shippingCityAr.isNotEmpty) {
+      if (shippingCityAr.length < 3) {
+        errors['shipping.cityArabic'] = 'City (Arabic) must be at least 3 characters.';
+      } else if (!arabicOnlyRegex.hasMatch(shippingCityAr)) {
+        errors['shipping.cityArabic'] = 'City (Arabic) must contain only Arabic letters and spaces.';
+      }
+    }
+
+    // shipping zip (if typed)
+    final shippingZip = (s?.zipCode ?? '').toString().trim();
+    if (shippingZip.isNotEmpty && !saudiZipRegex.hasMatch(shippingZip)) {
+      errors['shipping.zip'] = 'Invalid Saudi ZIP code (5 digits, cannot start with 0)';
+    }
+
+    // -----------------------
+    // Documents: each documentNumber if present must be at least 3 chars
+    // -----------------------
+    try {
+      if (state.documents is List && (state.documents as List).isNotEmpty) {
+        for (var i = 0; i < (state.documents as List).length; i++) {
+          final doc = (state.documents as List)[i];
+          if (doc is Map && doc.containsKey('documentNumber')) {
+            final dn = (doc['documentNumber'] ?? '').toString().trim();
+            if (dn.isNotEmpty && dn.length < 3) {
+              errors['documents.$i.documentNumber'] = 'Document number must be at least 3 characters.';
+            }
+          }
+        }
+      } else if (state.documents is Map) {
+        final dn = (state.documents![1] ?? '').toString().trim();
+        if (dn.isNotEmpty && dn.length < 3) {
+          errors['documents.documentNumber'] = 'Document number must be at least 3 characters.';
+        }
+      }
+    } catch (_) {
+      // ignore document structure problems - do not crash validation
+    }
+
+    // -----------------------
+    // Persist and print errors
+    // -----------------------
     ref.read(customerErrorsProvider.notifier).state = errors;
 
-    // return validity
+    if (errors.isEmpty) {
+      debugPrint('✅ validateFields: no validation errors found.');
+    } else {
+      debugPrint('❌ validateFields: validation errors found (${errors.length}):');
+      errors.forEach((key, msg) {
+        debugPrint('  • $key -> $msg');
+      });
+    }
+
     return errors.isEmpty;
   }
+
+
+
 
   // ----------------------
   // Clear / reset

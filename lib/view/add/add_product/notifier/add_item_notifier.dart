@@ -66,7 +66,7 @@ class ProductFormNotifier extends StateNotifier<AddProductModel> {
         state = state.copyWith(itemName: value);
         break;
       case 'itemNameArabic':
-        state = state.copyWith(itemName: value);
+        state = state.copyWith(itemNameArabic: value);
         break;
       case 'hsnCode':
         state = state.copyWith(hsnCode: value);
@@ -223,6 +223,102 @@ class ProductFormNotifier extends StateNotifier<AddProductModel> {
       state = state.copyWith(purchaseType: value);
     }
   }
+  /// Clear only the preferred vendor (name + preferedVendor id)
+  void clearPreferredVendor() {
+    state = state.copyWith(
+      preferredVendor: 'Tap to Select', // UI-visible label default
+      purchaseInformation: state.purchaseInformation.copyWith(
+        preferedVendor: 0, // numeric id reset
+      ),
+    );
+  }
+  // inside ProductFormNotifier
+
+  void clearInventoryAccount() {
+    // copy existing errors and remove the inventory error key if present
+    Map<String, String>? newErrors;
+    if (state.errors != null) {
+      newErrors = Map<String, String>.from(state.errors!);
+      newErrors.remove('inventoryAccount'); // remove the error entry
+      if (newErrors.isEmpty) newErrors = null;
+    }
+
+    state = state.copyWith(
+      inventoryDto: state.inventoryDto.copyWith(
+        stockAccountId: 0,
+        stockAccountName: '',
+      ),
+      errors: newErrors,
+    );
+  }
+
+  void updateInventoryAccount(int stockAccountId, String stockAccountName) {
+    // copy existing errors and remove the inventory error key if present
+    Map<String, String>? newErrors;
+    if (state.errors != null) {
+      newErrors = Map<String, String>.from(state.errors!);
+      newErrors.remove('inventoryAccount');
+      if (newErrors.isEmpty) newErrors = null;
+    }
+
+    state = state.copyWith(
+      inventoryDto: state.inventoryDto.copyWith(
+        stockAccountId: stockAccountId,
+        stockAccountName: stockAccountName,
+      ),
+      errors: newErrors,
+    );
+  }
+  /// Clear sales/account selection used by the UI (account label) and internal sellingAccount id.
+  /// Also clears related validation errors.
+  void clearSalesAccount() {
+    // copy errors and remove any keys that may refer to sales/account
+    Map<String, String>? newErrors;
+    if (state.errors != null) {
+      newErrors = Map<String, String>.from(state.errors!);
+      newErrors.remove('sellingAccount'); // internal id error
+      newErrors.remove('salesAccount');   // alternate key
+      newErrors.remove('account');        // UI label error key (you use product.errors?['sellingAccount'] in UI but safe to remove)
+      if (newErrors.isEmpty) newErrors = null;
+    }
+
+    state = state.copyWith(
+      account: 'Tap to Select', // matches your UI trailing usage
+      // if you used salesAccount elsewhere, you can clear it too:
+      salesAccount: 'Tap to Select',
+      saleInformation: state.saleInformation.copyWith(
+        sellingAccount: 0, // reset numeric id used in API
+      ),
+      errors: newErrors,
+    );
+  }
+
+  
+
+  /// Clear only the purchase account selection (name + id)
+  void clearPurchaseAccount() {
+    state = state.copyWith(
+      purchaseAccount: 'Tap to Select', // UI label default
+      purchaseInformation: state.purchaseInformation.copyWith(
+        purchaseAccount: 0,
+      ),
+    );
+  }
+
+  /// Clear only the unit selection (both name and id)
+  void clearUnit() {
+    state = state.copyWith(
+      unit: 'Tap to Select', // or '' depending on your defaults
+      unitId: 0,
+    );
+  }
+  /// Clear only the tax preference (both name and object)
+  void clearTaxPreference() {
+    state = state.copyWith(
+      taxPreference: '', // clears the displayed label
+      taxPrefObj: const TaxPreference(taxId: 0, taxType: ''), // resets internal object
+    );
+  }
 
   void clearForm() {
     state = AddProductModel(
@@ -363,6 +459,10 @@ class ProductFormNotifier extends StateNotifier<AddProductModel> {
     // 🟡 Inventory Info
     if (state.inventoryFlag) {
       final inventory = state.inventoryDto;
+      final openingStockVal = state.inventoryDto.openingStock;
+      if (openingStockVal <= 0) {
+        errors['openingStock'] = 'Opening stock must be greater than 0';
+      }
 
       if (inventory.stockAccountId == 0) {
         errors['stockAccount'] = 'Inventory account is required';

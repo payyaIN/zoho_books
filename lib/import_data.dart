@@ -133,4 +133,6 @@ export 'package:payzo_books/view/add/add_expense/widgets/add_expense_form.dart';
 export 'package:payzo_books/view/add/add_expense/provider/add_expense_provider.dart';
 export 'package:payzo_books/view/add/add_expense/widgets/add_expense_submit_button.dart';
 export 'package:flutter_riverpod/legacy.dart';
+export 'package:payzo_books/view/add/add_invoice/views/widgets/customer_name_field_add_invoice_new.dart';
+
 

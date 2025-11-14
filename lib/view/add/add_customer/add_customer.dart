@@ -20,6 +20,7 @@ import '../../../data/repository/add_vendor/get_state_list_repository.dart'
     show getStateList;
 import '../../../data/repository/add_vendor/get_state_list_repository.dart'
     as state_repo;
+import '../../../utils/common_widgets/reusable_snackbar.dart';
 
 // label providers so selected names appear in UI immediately
 final billingCountryLabelProvider = StateProvider<String>((ref) => '');
@@ -40,7 +41,7 @@ class _AddCustomerState extends ConsumerState<AddCustomer> {
   late final Map<String, TextEditingController> customerTypeController;
   late final Map<String, TextEditingController> billController;
   late final Map<String, TextEditingController> shippingController;
-  late final TextEditingController openingAmountController;
+  // late final TextEditingController openingAmountController;
 
   @override
   void initState() {
@@ -50,6 +51,16 @@ class _AddCustomerState extends ConsumerState<AddCustomer> {
       ref.read(getStateList);
       ref.read(fetchBranchListProvider);
       ref.read(fetchPriceCurrencyProvider);
+      // ✅ Correct way to set default value
+      ref.read(customerFormProvider.notifier).state =
+          ref.read(customerFormProvider.notifier).state.copyWith(
+            governmentEntity: false,
+          );
+      // ✅ Correct way to set default value
+      ref.read(customerFormProvider.notifier).state =
+          ref.read(customerFormProvider.notifier).state.copyWith(
+            taxedOrganization: false,
+          );
     });
 
     customerTypeController = {
@@ -73,7 +84,7 @@ class _AddCustomerState extends ConsumerState<AddCustomer> {
       "remark": TextEditingController(),
     };
 
-    openingAmountController = TextEditingController();
+    // openingAmountController = TextEditingController();
 
     billController = {
       "building": TextEditingController(),
@@ -105,7 +116,7 @@ class _AddCustomerState extends ConsumerState<AddCustomer> {
     for (final controller in shippingController.values) {
       controller.dispose();
     }
-    openingAmountController.dispose();
+    // openingAmountController.dispose();
     super.dispose();
   }
 
@@ -140,13 +151,17 @@ class _AddCustomerState extends ConsumerState<AddCustomer> {
 
       // Clear notifier form state
       notifier.clearForm();
+      notifier.clearShippingCountry();
+      notifier.clearShippingState();
+      notifier.clearBillingState();
+      notifier.clearBillingCountry();
 
       // Collapse expansion tiles if needed
       ref.read(billingTileExpandedProvider.notifier).state = false;
       ref.read(shippingTileExpandedProvider.notifier).state = false;
       ref.read(openingAmountProvider.notifier).state = '';
       notifier.updateField('openingAmount', '');
-      openingAmountController.text = '';
+      // openingAmountController.text = '';
       // clear label providers
       ref.read(billingCountryLabelProvider.notifier).state = '';
       ref.read(shippingCountryLabelProvider.notifier).state = '';
@@ -173,7 +188,7 @@ class _AddCustomerState extends ConsumerState<AddCustomer> {
               children: [
                 // CustomerTypeWidget expects the expanded customerTypeController with extra keys
                 CustomerTypeWidget(
-                    customerTypeController, openingAmountController),
+                    customerTypeController),
                 const SizedBox(height: 15),
                 ReusablePadding(
                   padding: const EdgeInsets.only(left: 22, right: 22, top: 10),
@@ -321,7 +336,7 @@ class _AddCustomerState extends ConsumerState<AddCustomer> {
               ref.read(customerSameAsBillingToggleProvider.notifier).state =
                   false;
               notifier.clearForm();
-              openingAmountController.text = '';
+              // openingAmountController.text = '';
               ref.read(openingAmountProvider.notifier).state = 'Tap to Select';
               notifier.updateField('openingAmount', '');
               // clear label providers
@@ -469,11 +484,52 @@ class _AddCustomerState extends ConsumerState<AddCustomer> {
       children: [
         // Country selector
         PayzoBottomsheetNavigator(
+          onUnselect: () {
+              final notifier = ref.read(customerFormProvider.notifier);
+              if (isBilling) {
+                notifier.clearBillingCountry();
+                ref
+                    .read(billingCountryLabelProvider.notifier)
+                    .state = '';
+                // if same-as-billing, clear shipping labels too
+                if (ref.read(customerSameAsBillingToggleProvider)) {
+                  ref
+                      .read(shippingCountryLabelProvider.notifier)
+                      .state = '';
+                }
+                // clear text controller for billing country if you used one (optional)
+                if (isBilling && controller.containsKey('country')) {
+                  controller['country']?.clear();
+                }
+              } else {
+                notifier.clearShippingCountry();
+                ref
+                    .read(shippingCountryLabelProvider.notifier)
+                    .state = '';
+                if (ref.read(customerSameAsBillingToggleProvider)) {
+                  ref
+                      .read(billingCountryLabelProvider.notifier)
+                      .state = '';
+                }
+                if (!isBilling && controller.containsKey('country')) {
+                  controller['country']?.clear();
+                }
+              }
+
+              showPayzoSnackBar(
+                context: context,
+                ref: ref,
+                message: '${isBilling
+                    ? 'Billing'
+                    : 'Shipping'} country cleared',
+                type: PayzoSnackType.success,
+              );
+          },
           enabled: enabled,
           errorText: errors['${isBilling ? 'billing' : 'shipping'}.country'],
           required: true,
           title: 'Country',
-          trailing: countryLabel.isEmpty ? 'Tap to select' : countryLabel,
+          trailing: countryLabel.isEmpty ? 'Tap to Select' : countryLabel,
           isPayzoColor: true,
           onTap: () async {
             await ref.read(focusUtilsProvider).unfocusAndDelay();
@@ -575,11 +631,36 @@ class _AddCustomerState extends ConsumerState<AddCustomer> {
 
         // State selector
         PayzoBottomsheetNavigator(
+          onUnselect: () {
+            final notifier = ref.read(customerFormProvider.notifier);
+            if (isBilling) {
+              notifier.clearBillingState();
+              ref.read(billingStateLabelProvider.notifier).state = '';
+              if (ref.read(customerSameAsBillingToggleProvider)) {
+                ref.read(shippingStateLabelProvider.notifier).state = '';
+              }
+              if (controller.containsKey('state')) controller['state']?.clear();
+            } else {
+              notifier.clearShippingState();
+              ref.read(shippingStateLabelProvider.notifier).state = '';
+              if (ref.read(customerSameAsBillingToggleProvider)) {
+                ref.read(billingStateLabelProvider.notifier).state = '';
+              }
+              if (controller.containsKey('state')) controller['state']?.clear();
+            }
+
+            showPayzoSnackBar(
+              context: context,
+              ref: ref,
+              message: '${isBilling ? 'Billing' : 'Shipping'} state cleared',
+              type: PayzoSnackType.success,
+            );
+          },
           enabled: enabled,
           errorText: errors['${isBilling ? 'billing' : 'shipping'}.state'],
           required: true,
           title: 'State',
-          trailing: stateLabel.isEmpty ? 'Tap to select' : stateLabel,
+          trailing: stateLabel.isEmpty ? 'Tap to Select' : stateLabel,
           isPayzoColor: true,
           onTap: () async {
             await ref.read(focusUtilsProvider).unfocusAndDelay();
@@ -664,15 +745,15 @@ class _AddCustomerState extends ConsumerState<AddCustomer> {
             required:
                 fieldKey == 'city' || fieldKey == 'cityArabic' ? true : false,
             inputFormatters: fieldKey == 'building'
-                ? PayzoInputFormatters.onlyDigits
+                ? PayzoInputFormatters.saudiBuildingNumber
                 : fieldKey == 'street'
                     ? PayzoInputFormatters.street
                     : fieldKey == 'streetArabic'
-                        ? PayzoInputFormatters.street
+                        ? PayzoInputFormatters.onlyArabic
                         : fieldKey == 'city'
                             ? PayzoInputFormatters.city
                             : fieldKey == 'cityArabic'
-                                ? PayzoInputFormatters.city
+                                ? PayzoInputFormatters.onlyArabic
                                 : fieldKey == 'zip'
                                     ? PayzoInputFormatters.onlyFiveDigits
                                     : PayzoInputFormatters.alphanumeric,

@@ -10,6 +10,7 @@ import 'package:payzo_books/utils/common_widgets/reusable_bottom_sheet.dart';
 import 'package:payzo_books/utils/common_widgets/sar_textfield.dart';
 
 import '../../../../import_data.dart';
+import '../../../../utils/common_widgets/reusable_snackbar.dart';
 import '../notifier/add_item_notifier.dart';
 
 final purchaseInformationCurrencyTypeNameProvider =
@@ -131,6 +132,12 @@ class PurchaseSectionAddProduct extends ConsumerWidget {
                     title: 'Preferred Vendor',
                     isPayzoColor: true,
                     trailing: product.preferredVendor,
+                    onUnselect: () {
+                      notifier.clearPreferredVendor();
+                      showPayzoSnackBar(
+                          context: context,
+                          ref: ref, message: 'Preferred Vendor cleared',type: PayzoSnackType.success);
+                    },
                     onTap: () async {
                       await ref.read(focusUtilsProvider).unfocusAndDelay();
                       final vendorData = await ref.read(getVendorList.future);
@@ -181,6 +188,12 @@ class PurchaseSectionAddProduct extends ConsumerWidget {
                     errorText: product.errors?['purchaseAccount'],
                     title: 'Account',
                     trailing: product.purchaseAccount,
+                    onUnselect: () {
+                      notifier.clearPurchaseAccount();
+                      showPayzoSnackBar(
+                          context: context,
+                          ref: ref, message: 'Purchase Account cleared',type: PayzoSnackType.success);
+                    },
                     onTap: () async {
                       await ref.read(focusUtilsProvider).unfocusAndDelay();
                       final accountData =
@@ -340,6 +353,16 @@ class PurchaseSectionAddProduct extends ConsumerWidget {
                     ReusableColumn(children: [
                       ReusableSizedBox(height: 15),
                       PayzoBottomsheetNavigator(
+                        onUnselect: () {
+                          notifier.clearInventoryAccount();
+                          showPayzoSnackBar(
+                              context: context,
+                              ref: ref,
+                              message: 'Inventory Account cleared',
+                              type: PayzoSnackType.success);
+                          debugPrint(
+                              '✅ Inventory Account cleared:');
+                        },
                         errorText: product.errors?['stockAccount'],
                         required: true,
                         title: 'Inventory Account',
@@ -387,8 +410,8 @@ class PurchaseSectionAddProduct extends ConsumerWidget {
                       PayzoInputField(
                           required: true,
                           label: 'Opening Stock',
-                          inputFormatters: PayzoInputFormatters.noSpecialChars,
-                          errorText: product.errors?['stockCurrency'] ?? '',
+                          inputFormatters: PayzoInputFormatters.onlyDecimalNumbers,
+                          errorText: product.errors?['openingStock'] ?? '',
                           controller: controllers['openingStock'],
                           onChanged: (val) {
                             notifier.updateInventoryDto(

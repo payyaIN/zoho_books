@@ -446,6 +446,7 @@ class ProductDetailPage extends ConsumerWidget {
                             controller: skuController),
                         ReusableSizedBox(height: 15),
                         PayzoBottomsheetNavigator(
+                          showClearButton: false,
                             navigationButton: false,
                             isPayzoColor: true,
                             title: 'Unit',
@@ -476,6 +477,7 @@ class ProductDetailPage extends ConsumerWidget {
                           controller: sellingPriceController),
                       ReusableSizedBox(height: 15),
                       PayzoBottomsheetNavigator(
+                        showClearButton: false,
                           navigationButton: false,
                           isPayzoColor: true,
                           title: 'Account',
@@ -510,6 +512,7 @@ class ProductDetailPage extends ConsumerWidget {
                           controller: costPriceController),
                       ReusableSizedBox(height: 15),
                       PayzoBottomsheetNavigator(
+                        showClearButton: false,
                           navigationButton: false,
                           isPayzoColor: true,
                           title: 'Account',

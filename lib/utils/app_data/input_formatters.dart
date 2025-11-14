@@ -22,10 +22,16 @@ class PayzoInputFormatters {
     FilteringTextInputFormatter.digitsOnly,
     LengthLimitingTextInputFormatter(10),
   ];
+  /// ✅ Saudi Building Number — exactly 4 digits
+  static final saudiBuildingNumber = [
+    FilteringTextInputFormatter.digitsOnly,
+    LengthLimitingTextInputFormatter(4),
+  ];
 
   /// ✅ Only decimal numbers (accepts digits + one dot + decimal places)
   static final onlyDecimalNumbers = [
-    FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+    // allow single characters: digits and dot — don't anchor to whole-string
+    FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
     _SmartDecimalFormatter(decimalRange: 2),
   ];
 
@@ -77,6 +83,10 @@ class PayzoInputFormatters {
     LengthLimitingTextInputFormatter(12),
   ];
 
+  /// ✅ Arabic only (no numbers, symbols, or other languages)
+  static final onlyArabic = [
+    _ArabicOnlyTextInputFormatter(),
+  ];
 }
 
 /// ✅ Smart Decimal Formatter (smooth decimal typing experience)
@@ -90,27 +100,58 @@ class _SmartDecimalFormatter extends TextInputFormatter {
       TextEditingValue oldValue,
       TextEditingValue newValue,
       ) {
-    String text = newValue.text;
+    final oldText = oldValue.text;
+    var newText = newValue.text;
 
-    // Prevent double dots
-    if (text.indexOf('.') != text.lastIndexOf('.')) {
+    // Reject if more than one dot
+    if (newText.indexOf('.') != newText.lastIndexOf('.')) {
       return oldValue;
     }
 
-    // Auto add 0 if starts with .
-    if (text.startsWith('.')) {
-      text = '0$text';
+    // If user typed '.' as the first character, make it '0.'
+    if (newText == '.') {
+      newText = '0.';
     }
 
-    // Limit decimals
-    if (text.contains('.') &&
-        text.substring(text.indexOf('.') + 1).length > decimalRange) {
-      return oldValue;
+    // If there's a dot, ensure decimal part length <= decimalRange
+    final dotIndex = newText.indexOf('.');
+    if (dotIndex >= 0) {
+      final decimals = newText.substring(dotIndex + 1);
+      if (decimals.length > decimalRange) {
+        return oldValue;
+      }
     }
+
+    // Compute selection offset adjustment (keep caret friendly)
+    int selectionIndex = newValue.selection.end;
+    final lengthDiff = newText.length - newValue.text.length;
+    selectionIndex = (selectionIndex + lengthDiff).clamp(0, newText.length);
 
     return TextEditingValue(
-      text: text,
-      selection: TextSelection.collapsed(offset: text.length),
+      text: newText,
+      selection: TextSelection.collapsed(offset: selectionIndex),
     );
+  }
+}
+
+
+/// ✅ Custom Formatter — Arabic only (no numbers, symbols, or other languages)
+class _ArabicOnlyTextInputFormatter extends TextInputFormatter {
+  static final _arabicRegex = RegExp(
+    r'^[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\s]+$',
+  );
+
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue,
+      TextEditingValue newValue,
+      ) {
+    if (newValue.text.isEmpty) return newValue;
+
+    if (_arabicRegex.hasMatch(newValue.text)) {
+      return newValue;
+    } else {
+      return oldValue;
+    }
   }
 }
