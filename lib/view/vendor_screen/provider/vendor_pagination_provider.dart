@@ -1,4 +1,4 @@
-import 'package:payzo_books/data/models/vendor_model/vendor_model.dart';
+import 'package:payzo_books/data/models/vendor_model_list/vendor_model.dart';
 import 'package:payzo_books/data/repository/vendor_api/vendor_listing/vendor_api.dart';
 import 'package:payzo_books/import_data.dart';
 import 'dart:developer' as developer;

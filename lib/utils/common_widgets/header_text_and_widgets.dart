@@ -38,8 +38,8 @@ Column headerTextAndWidgets({
           callOnTap: callOnTap,
           mailOnTap: mailOnTap,
           msgOnTap: msgOnTap,
-          editOnTap: editOnTap,
-          isEditNeeded: isEditNeeded,
+          moreOnTap: editOnTap,
+          isMoreNeeded: isEditNeeded,
           isMailNeeded: isMailNeeded,
           isCallNeeded: isCallNeeded),
       GapSpace.height12
@@ -89,8 +89,8 @@ Row boxIconWithLabel({
   required VoidCallback callOnTap,
   required VoidCallback mailOnTap,
   required VoidCallback msgOnTap,
-  required VoidCallback editOnTap,
-  required bool isEditNeeded,
+  required VoidCallback moreOnTap,
+  required bool isMoreNeeded,
   required bool isMailNeeded,
   required bool isCallNeeded,
   required String img1,
@@ -126,10 +126,10 @@ Row boxIconWithLabel({
           onTap: msgOnTap,
           child: boxIconWithLabelComponent(image: img3, labelText: imgName3),
         ),
-        isEditNeeded == true ? GapSpace.width36 : const SizedBox(),
-        isEditNeeded == true
+        isMoreNeeded == true ? GapSpace.width36 : const SizedBox(),
+        isMoreNeeded == true
             ? GestureDetector(
-                onTap: editOnTap,
+                onTap: moreOnTap,
                 child: boxIconWithLabelComponent(
                   image: img4,
                   labelText: imgName4,

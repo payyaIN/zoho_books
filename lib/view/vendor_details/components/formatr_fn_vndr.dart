@@ -1,4 +1,4 @@
-import 'package:payzo_books/data/models/vendor_model/vendor_model.dart';
+import 'package:payzo_books/data/models/vendor_model_list/vendor_model.dart';
 
 String vendorFormatAddress(Address address) {
   final List<String> addressParts = [];

@@ -127,7 +127,7 @@
 //   );
 // }
 
-import 'package:payzo_books/data/models/vendor_model/vendor_model.dart';
+import 'package:payzo_books/data/models/vendor_model_list/vendor_model.dart';
 import 'package:payzo_books/import_data.dart';
 import 'package:payzo_books/view/vendor_details/provider/vendor_detail_fn_provider.dart';
 import 'package:payzo_books/view/vendor_screen/components/vendor_search_data.dart';

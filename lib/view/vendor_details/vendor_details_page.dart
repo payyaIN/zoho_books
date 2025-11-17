@@ -1,5 +1,14 @@
+import 'package:payzo_books/data/repository/document_type/get_doc_type_api.dart';
+import 'package:payzo_books/data/repository/event_api/get_event_api.dart';
+import 'package:payzo_books/data/repository/price_currency/price_currency_api.dart';
 import 'package:payzo_books/data/repository/vendor_api/vendor_details/vendor_detail_api.dart';
+import 'package:payzo_books/data/repository/view_party/view_party_api.dart';
 import 'package:payzo_books/import_data.dart';
+import 'package:payzo_books/view/customer_detail_page/provider/country_list_provider.dart';
+import 'package:payzo_books/view/update_vendor/update_vendor_model.dart';
+import 'package:payzo_books/view/update_vendor/update_vendor_page.dart';
+import 'package:payzo_books/view/update_vendor/update_vendor_provider.dart';
+import 'package:payzo_books/view/vendor_details/components/formatr_fn_vndr.dart';
 import 'package:payzo_books/view/vendor_details/components/no_vendor_detail_found_page.dart';
 
 class VendorDetailPage extends ConsumerStatefulWidget {
@@ -128,7 +137,23 @@ class _VendorDetailsPageState extends ConsumerState<VendorDetailPage> {
                             urlLauncher.sendEmail(vendor.emailAddress),
                         msgOnTap: () => urlLauncher.sendSms(validPhoneNumber),
                         editOnTap: () {
-                          pushNavigate(context, AddVendor());
+                          // Set edit mode
+                          ref
+                              .read(updateVendorEditModeProvider.notifier)
+                              .state = true;
+                          ref
+                              .read(updateVendorEditPartyIdProvider.notifier)
+                              .state = vendor.partyId;
+                          ref.read(vendorEditDataProvider.notifier).state =
+                              vendor;
+
+                          // Navigate
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const UpdateVendorScreen(),
+                            ),
+                          );
                         },
                       ),
                       GapSpace.height35,
