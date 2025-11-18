@@ -1,3 +1,5 @@
+import 'package:payzo_books/data/models/vendor_model_list/vendor_model.dart';
+import 'package:payzo_books/view/update_vendor/update_vendor_model.dart';
 import 'package:payzo_books/view/update_vendor/update_vendor_provider.dart';
 import 'package:payzo_books/data/repository/add_bills/get_branch_list_repository.dart';
 import 'package:payzo_books/data/repository/add_bills/get_price_currency_repository.dart';
@@ -18,6 +20,12 @@ import 'package:payzo_books/view/main_screen/notifiers/bottom_nav_bar_notifier.d
 import 'package:payzo_books/view/update_vendor/update_vendor_provider.dart';
 import 'package:payzo_books/data/models/view_party/view_party_model.dart';
 import '../../../data/repository/add_vendor/get_country_list_repository.dart';
+import 'package:payzo_books/import_data.dart';
+import 'package:payzo_books/data/models/view_party/view_party_model.dart';
+import 'package:payzo_books/view/update_vendor/update_vendor_notifier.dart';
+import 'package:payzo_books/view/update_vendor/update_vendor_provider.dart';
+import 'package:payzo_books/view/update_vendor/update_vendor_repo.dart';
+import 'package:payzo_books/data/repository/add_vendor/get_country_list_repository.dart';
 
 final vendorBillingTileExpandedProvider = StateProvider<bool>((ref) => false);
 final vendorShippingTileExpandedProvider = StateProvider<bool>((ref) => false);
@@ -31,20 +39,9 @@ class UpdateVendorScreen extends ConsumerStatefulWidget {
 }
 
 class _UpdateVendorScreenState extends ConsumerState<UpdateVendorScreen> {
-  var vendorControllers = <String, TextEditingController>{
-    'firstName': TextEditingController(),
-    'firstNameArabic': TextEditingController(),
-    'secondName': TextEditingController(),
-    'secondNameArabic': TextEditingController(),
-    'companyName': TextEditingController(),
-    'companyNameArabic': TextEditingController(),
-    'email': TextEditingController(),
-    'mobile': TextEditingController(),
-    'workPhone': TextEditingController(),
-    'vatNumber': TextEditingController(),
-    'crNumber': TextEditingController(),
-  };
+  var vendorControllers = <String, TextEditingController>{};
   TextEditingController openingAmount = TextEditingController();
+
   var topSectionLabels = <String, String>{
     'firstName': 'First Name',
     'firstNameArabic': 'First Name(Arabic)',
@@ -58,18 +55,18 @@ class _UpdateVendorScreenState extends ConsumerState<UpdateVendorScreen> {
     'vatNumber': 'VAT Number',
     'crNumber': 'CR Number',
   };
+
   var billingAddressLabels = <String, String>{
     'building': 'Building Number',
-    // 'street': 'Street',
     'streetAddress': 'Street Address',
     'city': 'City',
     'streetAddressArabic': 'Street Address (Arabic)',
     'cityArabic': 'City (Arabic)',
     'zip': 'Zip',
   };
+
   var shippingAddressLabels = <String, String>{
     'building': 'Building Number',
-    // 'street': 'Street',
     'streetAddress': 'Street Address',
     'city': 'City',
     'streetAddressArabic': 'Street Address (Arabic)',
@@ -77,31 +74,9 @@ class _UpdateVendorScreenState extends ConsumerState<UpdateVendorScreen> {
     'zip': 'Zip',
   };
 
-  var billingControllers = <String, TextEditingController>{
-    // 'country': TextEditingController(),
-    // 'state': TextEditingController(),
-    'building': TextEditingController(),
-    // 'street': TextEditingController(),
-    'streetAddress': TextEditingController(),
-    'streetAddressArabic': TextEditingController(),
-    'city': TextEditingController(),
-    'cityArabic': TextEditingController(),
-    'zip': TextEditingController(),
-  };
+  var billingControllers = <String, TextEditingController>{};
+  var shippingControllers = <String, TextEditingController>{};
 
-  var shippingControllers = <String, TextEditingController>{
-    // 'country': TextEditingController(),
-    // 'state': TextEditingController(),
-    'building': TextEditingController(),
-    // 'street': TextEditingController(),
-    'streetAddress': TextEditingController(),
-    'streetAddressArabic': TextEditingController(),
-    'city': TextEditingController(),
-    'cityArabic': TextEditingController(),
-    'zip': TextEditingController(),
-  };
-
-  @override
   @override
   void initState() {
     super.initState();
@@ -124,13 +99,19 @@ class _UpdateVendorScreenState extends ConsumerState<UpdateVendorScreen> {
     billingControllers = {
       'building': TextEditingController(),
       'streetAddress': TextEditingController(),
+      'streetAddressArabic': TextEditingController(),
       'city': TextEditingController(),
+      'cityArabic': TextEditingController(),
+      'zip': TextEditingController(),
     };
 
     shippingControllers = {
       'building': TextEditingController(),
       'streetAddress': TextEditingController(),
+      'streetAddressArabic': TextEditingController(),
       'city': TextEditingController(),
+      'cityArabic': TextEditingController(),
+      'zip': TextEditingController(),
     };
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -141,93 +122,193 @@ class _UpdateVendorScreenState extends ConsumerState<UpdateVendorScreen> {
     });
   }
 
+  /// ✅ FIXED: Populate from ViewPartyResponseData (complete data with addressId)
   void _populateVendorData() {
-    final vendorData = ref.read(updateVendorEditDataProvider);
-    if (vendorData == null) return;
+    // ✅ Try to get complete data from viewParty first
+    final viewPartyData = ref.read(viewPartyEditDataProvider);
+
+    if (viewPartyData != null) {
+      _populateFromViewParty(viewPartyData);
+      return;
+    }
+
+    // Fallback to basic vendor data if viewParty not available
+    final vendorData = ref.read(vendorEditDataProvider);
+    if (vendorData != null) {
+      _populateFromVendor(vendorData);
+    } else {
+      print('⚠️ No vendor data available for population');
+    }
+  }
+
+  /// ✅ NEW: Populate from ViewPartyResponseData (complete data)
+  void _populateFromViewParty(ViewPartyResponseData data) {
+    print('✅ Populating from ViewParty data: ${data.companyName}');
 
     final notifier = ref.read(updateVendorFormProvider.notifier);
 
-    // Populate text controllers
-    vendorControllers['firstName']?.text =
-        vendorData.primaryContact.firstName ?? '';
-    vendorControllers['secondName']?.text =
-        vendorData.primaryContact.lastName ?? '';
-    vendorControllers['firstNameArabic']?.text =
-        vendorData.primaryContactArabic?.firstNameArabic ?? '';
-    vendorControllers['secondNameArabic']?.text =
-        vendorData.primaryContactArabic?.lastNameArabic ?? '';
-    vendorControllers['companyName']?.text = vendorData.companyName ?? '';
-    vendorControllers['companyNameArabic']?.text =
-        vendorData.companyNameArabic ?? '';
-    vendorControllers['email']?.text = vendorData.emailAddress ?? '';
-    vendorControllers['workPhone']?.text = vendorData.phone?.toString() ?? '';
-    vendorControllers['mobile']?.text = vendorData.mobile?.toString() ?? '';
-    vendorControllers['vatNumber']?.text = vendorData.vatNumber ?? '';
-    vendorControllers['crNum']?.text = vendorData.crNum ?? '';
+    // ✅ Store original displayName to prevent "already exists" error
+    ref.read(updateVendorOriginalDisplayNameProvider.notifier).state =
+        data.displayName;
 
-    // Populate billing address
+    // Populate text controllers
+    vendorControllers['firstName']?.text = data.primaryContact.firstName ?? '';
+    vendorControllers['secondName']?.text = data.primaryContact.lastName ?? '';
+    vendorControllers['firstNameArabic']?.text = ''; // Not in ViewParty model
+    vendorControllers['secondNameArabic']?.text = ''; // Not in ViewParty model
+    vendorControllers['companyName']?.text = data.companyName ?? '';
+    vendorControllers['companyNameArabic']?.text = ''; // Not in ViewParty model
+    vendorControllers['email']?.text = data.emailAddress ?? '';
+    vendorControllers['workPhone']?.text = data.phone?.toString() ?? '';
+    vendorControllers['mobile']?.text = data.mobile?.toString() ?? '';
+
+    // ✅ VAT and CR - these are still not in ViewParty model (backend limitation)
+    vendorControllers['vatNumber']?.text = ''; // Not available from API
+    vendorControllers['crNumber']?.text = ''; // Not available from API
+
+    // ✅ Populate billing address with addressId
     billingControllers['building']?.text =
-        vendorData.billingAddress.buildingNumber ?? '';
+        data.billingAddress.buildingNumber ?? '';
     billingControllers['streetAddress']?.text =
-        vendorData.billingAddress.streetAddress ?? '';
-    billingControllers['streetAddressArabic']?.text =
-        vendorData.billingAddress.streetAddressArabic ?? '';
-    billingControllers['city']?.text = vendorData.billingAddress.city ?? '';
-    billingControllers['cityArabic']?.text =
-        vendorData.billingAddress.cityArabic ?? '';
-    billingControllers['zip']?.text = vendorData.billingAddress.zipCode ?? '';
+        data.billingAddress.streetAddress ?? '';
+    billingControllers['streetAddressArabic']?.text = ''; // Not in model
+    billingControllers['city']?.text = data.billingAddress.city ?? '';
+    billingControllers['cityArabic']?.text = ''; // Not in model
+    billingControllers['zip']?.text = data.billingAddress.zipCode ?? '';
+
+    // ✅ CRITICAL: Update form state with addressId (required for updates)
+    notifier.updateBillingAddress(
+        'addressId', data.billingAddress.addressId.toString());
+    notifier.updateBillingAddress(
+        'building', data.billingAddress.buildingNumber ?? '');
+    notifier.updateBillingAddress(
+        'streetAddress', data.billingAddress.streetAddress ?? '');
+    notifier.updateBillingAddress('streetAddressArabic', '');
+    notifier.updateBillingAddress('city', data.billingAddress.city ?? '');
+    notifier.updateBillingAddress('cityArabic', '');
+    notifier.updateBillingAddress(
+        'countryRegion', data.billingAddress.countryRegion ?? '');
+    notifier.updateBillingAddress('state', data.billingAddress.state ?? '');
+    notifier.updateBillingAddress('zip', data.billingAddress.zipCode ?? '');
+
+    // ✅ Populate shipping address with addressId
+    shippingControllers['building']?.text =
+        data.shippingAddress.buildingNumber ?? '';
+    shippingControllers['streetAddress']?.text =
+        data.shippingAddress.streetAddress ?? '';
+    shippingControllers['streetAddressArabic']?.text = '';
+    shippingControllers['city']?.text = data.shippingAddress.city ?? '';
+    shippingControllers['cityArabic']?.text = '';
+    shippingControllers['zip']?.text = data.shippingAddress.zipCode ?? '';
+
+    // ✅ CRITICAL: Update form state with addressId (required for updates)
+    notifier.updateShippingAddress(
+        'addressId', data.shippingAddress.addressId.toString());
+    notifier.updateShippingAddress(
+        'building', data.shippingAddress.buildingNumber ?? '');
+    notifier.updateShippingAddress(
+        'streetAddress', data.shippingAddress.streetAddress ?? '');
+    notifier.updateShippingAddress('streetAddressArabic', '');
+    notifier.updateShippingAddress('city', data.shippingAddress.city ?? '');
+    notifier.updateShippingAddress('cityArabic', '');
+    notifier.updateShippingAddress(
+        'countryRegion', data.shippingAddress.countryRegion ?? '');
+    notifier.updateShippingAddress('state', data.shippingAddress.state ?? '');
+    notifier.updateShippingAddress('zip', data.shippingAddress.zipCode ?? '');
+
+    // Update vendor-level fields
+    notifier.updateField('firstName', data.primaryContact.firstName ?? '');
+    notifier.updateField('secondName', data.primaryContact.lastName ?? '');
+    notifier.updateField('firstNameArabic', '');
+    notifier.updateField('secondNameArabic', '');
+    notifier.updateField('companyName', data.companyName ?? '');
+    notifier.updateField('companyNameArabic', '');
+    notifier.updateField('email', data.emailAddress ?? '');
+    notifier.updateField('mobile', data.mobile?.toString() ?? '');
+    notifier.updateField('workPhone', data.phone?.toString() ?? '');
+    notifier.updateField('vatNumber', ''); // Not available
+    notifier.updateField('crNum', ''); // Not available
+    notifier.updateField('displayName', data.displayName ?? '');
+    notifier.updateField('partyType', data.partyType ?? '');
+    notifier.updateField('customerType', data.customerType ?? '');
+    notifier.updateField('mobileCode', data.mobileCode ?? '');
+    notifier.updateField('phoneCode', data.phoneCode ?? '');
+
+    print('✅ ViewParty data population complete');
+  }
+
+  /// Fallback method for basic Vendor model (if ViewParty not available)
+  void _populateFromVendor(Vendor data) {
+    print('⚠️ Using fallback Vendor model (may have incomplete data)');
+
+    final notifier = ref.read(updateVendorFormProvider.notifier);
+
+    // Store original displayName
+    ref.read(updateVendorOriginalDisplayNameProvider.notifier).state =
+        data.displayName;
+
+    // Populate text controllers with available data
+    vendorControllers['firstName']?.text = data.primaryContact.firstName ?? '';
+    vendorControllers['secondName']?.text = data.primaryContact.lastName ?? '';
+    vendorControllers['firstNameArabic']?.text = '';
+    vendorControllers['secondNameArabic']?.text = '';
+    vendorControllers['companyName']?.text = data.companyName ?? '';
+    vendorControllers['companyNameArabic']?.text = '';
+    vendorControllers['email']?.text = data.emailAddress ?? '';
+    vendorControllers['workPhone']?.text = data.phone?.toString() ?? '';
+    vendorControllers['mobile']?.text = data.mobile?.toString() ?? '';
+    vendorControllers['vatNumber']?.text = '';
+    vendorControllers['crNumber']?.text = '';
+
+    // Populate billing address (without addressId - will be null)
+    billingControllers['building']?.text =
+        data.billingAddress.buildingNumber ?? '';
+    billingControllers['streetAddress']?.text =
+        data.billingAddress.streetAddress ?? '';
+    billingControllers['city']?.text = data.billingAddress.city ?? '';
+    billingControllers['zip']?.text = data.billingAddress.zipCode ?? '';
+
+    // Update form state
+    notifier.updateBillingAddress(
+        'building', data.billingAddress.buildingNumber ?? '');
+    notifier.updateBillingAddress(
+        'streetAddress', data.billingAddress.streetAddress ?? '');
+    notifier.updateBillingAddress('city', data.billingAddress.city ?? '');
+    notifier.updateBillingAddress(
+        'countryRegion', data.billingAddress.countryRegion ?? '');
+    notifier.updateBillingAddress('state', data.billingAddress.state ?? '');
+    notifier.updateBillingAddress('zip', data.billingAddress.zipCode ?? '');
 
     // Populate shipping address
     shippingControllers['building']?.text =
-        vendorData.shippingAddress.buildingNumber ?? '';
+        data.shippingAddress.buildingNumber ?? '';
     shippingControllers['streetAddress']?.text =
-        vendorData.shippingAddress.streetAddress ?? '';
-    shippingControllers['streetAddressArabic']?.text =
-        vendorData.shippingAddress.streetAddressArabic ?? '';
-    shippingControllers['city']?.text = vendorData.shippingAddress.city ?? '';
-    shippingControllers['cityArabic']?.text =
-        vendorData.shippingAddress.cityArabic ?? '';
-    shippingControllers['zip']?.text = vendorData.shippingAddress.zipCode ?? '';
+        data.shippingAddress.streetAddress ?? '';
+    shippingControllers['city']?.text = data.shippingAddress.city ?? '';
+    shippingControllers['zip']?.text = data.shippingAddress.zipCode ?? '';
 
-    // Update notifier state
-    notifier.updateField(
-        'firstName', vendorData.primaryContact.firstName ?? '');
-    notifier.updateField(
-        'secondName', vendorData.primaryContact.lastName ?? '');
-    notifier.updateField('companyName', vendorData.companyName ?? '');
-    notifier.updateField('email', vendorData.emailAddress ?? '');
-    notifier.updateField('workPhone', vendorData.phone?.toString() ?? '');
-    notifier.updateField('mobile', vendorData.mobile?.toString() ?? '');
-    notifier.updateField('customerType', vendorData.customerType ?? 'BUSINESS');
-    notifier.updateField('vatNumber', vendorData.vatNumber ?? '');
-    notifier.updateField('crNum', vendorData.crNum ?? '');
+    // Update form state
+    notifier.updateShippingAddress(
+        'building', data.shippingAddress.buildingNumber ?? '');
+    notifier.updateShippingAddress(
+        'streetAddress', data.shippingAddress.streetAddress ?? '');
+    notifier.updateShippingAddress('city', data.shippingAddress.city ?? '');
+    notifier.updateShippingAddress(
+        'countryRegion', data.shippingAddress.countryRegion ?? '');
+    notifier.updateShippingAddress('state', data.shippingAddress.state ?? '');
+    notifier.updateShippingAddress('zip', data.shippingAddress.zipCode ?? '');
 
-    // Update addresses
-    notifier.updateBillingAddress(
-        'building', vendorData.billingAddress.buildingNumber ?? '');
-    notifier.updateBillingAddress(
-        'streetAddress', vendorData.billingAddress.streetAddress ?? '');
-    notifier.updateBillingAddress('city', vendorData.billingAddress.city ?? '');
-    notifier.updateBillingAddress(
-        'countryRegion', vendorData.billingAddress.countryRegion ?? '');
-    notifier.updateBillingAddress(
-        'state', vendorData.billingAddress.state ?? '');
-    notifier.updateBillingAddress(
-        'zip', vendorData.billingAddress.zipCode ?? '');
-    // Important!
-
-    notifier.updateShippingAddress(
-        'building', vendorData.shippingAddress.buildingNumber ?? '');
-    notifier.updateShippingAddress(
-        'streetAddress', vendorData.shippingAddress.streetAddress ?? '');
-    notifier.updateShippingAddress(
-        'city', vendorData.shippingAddress.city ?? '');
-    notifier.updateShippingAddress(
-        'countryRegion', vendorData.shippingAddress.countryRegion ?? '');
-    notifier.updateShippingAddress(
-        'state', vendorData.shippingAddress.state ?? '');
-    notifier.updateShippingAddress(
-        'zip', vendorData.shippingAddress.zipCode ?? '');
+    // Update vendor fields
+    notifier.updateField('firstName', data.primaryContact.firstName ?? '');
+    notifier.updateField('secondName', data.primaryContact.lastName ?? '');
+    notifier.updateField('companyName', data.companyName ?? '');
+    notifier.updateField('email', data.emailAddress ?? '');
+    notifier.updateField('mobile', data.mobile?.toString() ?? '');
+    notifier.updateField('workPhone', data.phone?.toString() ?? '');
+    notifier.updateField('displayName', data.displayName ?? '');
+    notifier.updateField('partyType', data.partyType ?? '');
+    notifier.updateField('mobileCode', data.mobileCode ?? '');
+    notifier.updateField('phoneCode', data.phoneCode ?? '');
   }
 
   @override
@@ -236,6 +317,8 @@ class _UpdateVendorScreenState extends ConsumerState<UpdateVendorScreen> {
     ref.read(updateVendorEditModeProvider.notifier).state = false;
     ref.read(updateVendorEditPartyIdProvider.notifier).state = null;
     ref.read(vendorEditDataProvider.notifier).state = null;
+    ref.read(viewPartyEditDataProvider.notifier).state = null;
+    ref.read(updateVendorOriginalDisplayNameProvider.notifier).state = null;
 
     // Dispose controllers
     for (final controller in vendorControllers.values) {
@@ -247,6 +330,7 @@ class _UpdateVendorScreenState extends ConsumerState<UpdateVendorScreen> {
     for (final controller in shippingControllers.values) {
       controller.dispose();
     }
+    openingAmount.dispose();
 
     super.dispose();
   }
@@ -274,6 +358,8 @@ class _UpdateVendorScreenState extends ConsumerState<UpdateVendorScreen> {
         ref.read(updateVendorEditModeProvider.notifier).state = false;
         ref.read(updateVendorEditPartyIdProvider.notifier).state = null;
         ref.read(vendorEditDataProvider.notifier).state = null;
+        ref.read(viewPartyEditDataProvider.notifier).state = null;
+        ref.read(updateVendorOriginalDisplayNameProvider.notifier).state = null;
 
         // Refresh vendor list
         ref.invalidate(getVendorData);

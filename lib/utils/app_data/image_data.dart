@@ -21,6 +21,7 @@ class AppImages {
   static const String mail = 'assets/mail.svg';
   static const String msg = 'assets/msg.svg';
   static const String more = 'assets/more.svg';
+  static const String delete = 'assets/delete_icon.svg';
   static const String locationPin = 'assets/location_pin.svg';
   static const String paypal = 'assets/paypal.svg';
   static const String razorpay = 'assets/razorpay.svg';
@@ -35,4 +36,7 @@ class AppImages {
   static const String invoicewhte = 'assets/invoice_white.svg';
   static const String logoutimg = 'assets/logout.png';
   static const String statusBox = 'assets/status_box.png';
+  // static const String importExpense = 'assets/import.png';
+  static const String importExpense = 'assets/import.svg';
+  static const String exportExpense = 'assets/export.svg';
 }

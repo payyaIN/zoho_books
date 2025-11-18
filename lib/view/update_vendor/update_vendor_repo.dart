@@ -1,3 +1,8 @@
+// File: lib/view/update_vendor/update_vendor_repo.dart
+// KEY CHANGES:
+// 1. Uses original displayName to prevent "already exists" error
+// 2. Includes addressId in billing and shipping addresses
+
 import 'package:payzo_books/data/models/add_vendor/add_vendor_model.dart';
 import 'package:payzo_books/data/models/vendor_model_list/vendor_model.dart';
 import 'package:payzo_books/data/repository/add_vendor/get_state_list_repository.dart';
@@ -5,6 +10,7 @@ import 'package:payzo_books/data/services/base_api_service.dart';
 import 'package:payzo_books/import_data.dart';
 import 'package:payzo_books/view/add/add_vendor/add_vendor.dart';
 import 'package:payzo_books/view/update_vendor/update_vendor_notifier.dart';
+import 'package:payzo_books/view/update_vendor/update_vendor_provider.dart';
 
 class UpdateVendorRepository {
   final Ref ref;
@@ -17,8 +23,14 @@ class UpdateVendorRepository {
     final sameAsBilling = ref.read(sameAsBillingToggleProvider);
     final mobileCode = ref.read(countryPhoneMobileProvider);
 
+    // ✅ Get original displayName to avoid "already exists" error
+    final originalDisplayName =
+        ref.read(updateVendorOriginalDisplayNameProvider);
+
     debugPrint("🔍 Update Vendor State: ${state.toJson()}");
     debugPrint("🔍 Party ID: $partyId");
+    debugPrint("🔍 Original DisplayName: $originalDisplayName");
+    debugPrint("🔍 Current DisplayName: ${state.displayName}");
 
     final vendorBody = {
       "primaryContact": {
@@ -34,7 +46,8 @@ class UpdateVendorRepository {
       "partyId": partyId.toString(),
       "companyName": state.companyName,
       "companyNameArabic": state.companyNameArabic,
-      "displayName": state.displayName,
+      // ✅ CRITICAL FIX: Use original displayName to prevent "already exists" error
+      "displayName": originalDisplayName ?? state.displayName,
       "emailAddress": state.email,
       "phoneCode": countryPhone,
       "phone": int.tryParse(state.workPhone) ?? 0,
@@ -52,6 +65,7 @@ class UpdateVendorRepository {
       "customFields": state.customFields,
       "reportingTag": state.reportingTag,
       "billingAddress": {
+        // ✅ CRITICAL: Include addressId for updates (from ViewParty API)
         "addressId": state.billingAddress['addressId'],
         "attention": null,
         "countryRegion": state.billingAddress['countryRegion'] ?? "KSA",
@@ -65,6 +79,7 @@ class UpdateVendorRepository {
         "zipCode": state.billingAddress['zip'],
       },
       "shippingAddress": {
+        // ✅ CRITICAL: Include addressId for updates (from ViewParty API)
         "addressId": state.shippingAddress['addressId'],
         "attention": state.shippingAddress['attention'],
         "countryRegion": state.shippingAddress['countryRegion'] ?? "KSA",
@@ -92,14 +107,25 @@ class UpdateVendorRepository {
       "sameAddressFlag": sameAsBilling,
     };
 
+    debugPrint("📤 Update Vendor Request Body:");
+    debugPrint(jsonEncode(vendorBody));
+
     const url =
         'http://81.208.173.149/pb-process-service/api/process/updateVendor';
 
-    return await ref.read(apiServiceProvider).postApi<VendorModel>(
+    final result = await ref.read(apiServiceProvider).postApi<VendorModel>(
           url: url,
           body: vendorBody,
           fromJson: (json) => VendorModel.fromJson(json as String),
         );
+
+    debugPrint("📥 Update Vendor Response:");
+    debugPrint("Status: ${result.status}");
+    debugPrint("Error: ${result.error}");
+    debugPrint("Error Msg: ${result.errorMsg}");
+    debugPrint("Success Msg: ${result.successMsg}");
+
+    return result;
   }
 }
 

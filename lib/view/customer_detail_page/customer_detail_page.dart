@@ -71,6 +71,37 @@ class CustomerDetailPage extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // headerTextAndWidgets(
+                      //   headerText1: customer.companyName,
+                      //   headerText2: customer.emailAddress,
+                      //   title1: AppText.call,
+                      //   title2: AppText.mail,
+                      //   title3: AppText.msg,
+                      //   title4: AppText.edit,
+                      //   title5: AppText.delete,
+                      //   img1: AppImages.call,
+                      //   img2: AppImages.mail,
+                      //   img3: AppImages.msg,
+                      //   img4: AppImages.editWhite,
+                      //   img5: AppImages.delete,
+                      //   isonTap1Needed: true,
+                      //   isonTap4Needed: true,
+                      //   isonTap2Needed: true,
+                      //   isonTap5Needed: true,
+                      //   isonTap3Needed: true,
+                      //   onTap1: () => urlLauncher.makePhoneCall(
+                      //       customer.phone?.toString() ??
+                      //           customer.mobile?.toString() ??
+                      //           AppText.vendorContact),
+                      //   onTap2: () =>
+                      //       urlLauncher.sendEmail(customer.emailAddress),
+                      //   onTap3: () => urlLauncher.sendSms(
+                      //       customer.phone?.toString() ??
+                      //           customer.mobile?.toString() ??
+                      //           AppText.vendorContact),
+                      //   onTap4: () {},
+                      //   onTap5: () {},
+                      // ),
                       headerTextAndWidgets(
                           headerText1: customer.companyName,
                           headerText2: customer.emailAddress,
