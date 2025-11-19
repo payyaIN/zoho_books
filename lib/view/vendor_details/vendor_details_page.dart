@@ -4,6 +4,7 @@ import 'package:payzo_books/data/repository/price_currency/price_currency_api.da
 import 'package:payzo_books/data/repository/vendor_api/vendor_details/vendor_detail_api.dart';
 import 'package:payzo_books/data/repository/view_party/view_party_api.dart';
 import 'package:payzo_books/import_data.dart';
+import 'package:payzo_books/utils/common_widgets/reusable_scaffold_messenger.dart';
 import 'package:payzo_books/view/customer_detail_page/provider/country_list_provider.dart';
 import 'package:payzo_books/view/update_vendor/update_vendor_model.dart';
 import 'package:payzo_books/view/update_vendor/update_vendor_page.dart';
@@ -122,24 +123,72 @@ class _VendorDetailsPageState extends ConsumerState<VendorDetailPage> {
                         onTap2: () =>
                             urlLauncher.sendEmail(vendor.emailAddress),
                         onTap3: () => urlLauncher.sendSms(validPhoneNumber),
-                        onTap4: () {
+                        // onTap4: () {
+                        //   ref
+                        //       .read(updateVendorEditModeProvider.notifier)
+                        //       .state = true;
+                        //   ref
+                        //       .read(updateVendorEditPartyIdProvider.notifier)
+                        //       .state = vendor.partyId;
+                        //   ref.read(vendorEditDataProvider.notifier).state =
+                        //       vendor;
+
+                        //   Navigator.push(
+                        //     context,
+                        //     MaterialPageRoute(
+                        //       builder: (context) => const UpdateVendorScreen(),
+                        //     ),
+                        //   );
+                        // },
+                        onTap4: () async {
                           ref
                               .read(updateVendorEditModeProvider.notifier)
                               .state = true;
                           ref
                               .read(updateVendorEditPartyIdProvider.notifier)
                               .state = vendor.partyId;
-                          ref.read(vendorEditDataProvider.notifier).state =
-                              vendor;
 
-                          // Navigate
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const UpdateVendorScreen(),
+                          showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (context) => const Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.appMainColor,
+                              ),
                             ),
                           );
+
+                          try {
+                            final viewPartyData = await ref
+                                .read(viewPartyProvider(vendor.partyId).future);
+
+                            // ✅ Store the complete ViewParty response data
+                            ref.read(viewPartyEditDataProvider.notifier).state =
+                                viewPartyData.response;
+
+                            Navigator.of(context).pop();
+
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const UpdateVendorScreen(),
+                              ),
+                            );
+                          } catch (e) {
+                            Navigator.of(context).pop();
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content:
+                                    Text('Failed to load vendor details: $e'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            print('Error fetching vendor details: $e');
+                          }
                         },
+
                         onTap5: () {},
                       ),
                       GapSpace.height35,

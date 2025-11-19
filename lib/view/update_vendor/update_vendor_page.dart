@@ -125,18 +125,131 @@ class _UpdateVendorScreenState extends ConsumerState<UpdateVendorScreen> {
     });
   }
 
-  /// ✅ FIXED: Populate from ViewPartyResponseData (complete data with addressId)
-  void _populateVendorData() {
-    // Fallback to basic vendor data if viewParty not available
-    final vendorData = ref.read(vendorEditDataProvider);
-    if (vendorData != null) {
-      _populateFromVendor(vendorData);
-    } else {
-      print('⚠️ No vendor data available for population');
-    }
+  void _populateFromViewParty(ViewPartyResponseData data) {
+    print('Using complete ViewParty data with all fields');
+
+    final notifier = ref.read(updateVendorFormProvider.notifier);
+
+    // Primary contact
+    vendorControllers['firstName']?.text = data.primaryContact.firstName;
+    vendorControllers['secondName']?.text = data.primaryContact.lastName;
+
+    // ✅ Arabic names (now available!)
+    vendorControllers['firstNameArabic']?.text =
+        data.primaryContactArabic?.firstNameArabic ?? '';
+    vendorControllers['secondNameArabic']?.text =
+        data.primaryContactArabic?.lastNameArabic ?? '';
+
+    // Company info
+    vendorControllers['companyName']?.text = data.companyName;
+    vendorControllers['companyNameArabic']?.text = data.companyNameArabic ?? '';
+
+    // Contact details
+    vendorControllers['email']?.text = data.emailAddress;
+    vendorControllers['workPhone']?.text = data.phone.toString();
+    vendorControllers['mobile']?.text = data.mobile.toString();
+
+    // ✅ VAT and CR numbers (now available!)
+    vendorControllers['vatNumber']?.text = data.vatNumber ?? '';
+    vendorControllers['crNumber']?.text = data.crNum ?? '';
+
+    billingControllers['building']?.text = data.billingAddress.buildingNumber;
+    billingControllers['streetAddress']?.text =
+        data.billingAddress.streetAddress ?? '';
+    billingControllers['streetAddressArabic']?.text =
+        data.billingAddress.streetAddressArabic ?? '';
+    billingControllers['city']?.text = data.billingAddress.city;
+    billingControllers['cityArabic']?.text =
+        data.billingAddress.cityArabic ?? '';
+    billingControllers['zip']?.text = data.billingAddress.zipCode;
+
+    // Update form state for billing address
+    notifier.updateBillingAddress('addressId', data.billingAddress.addressId);
+    notifier.updateBillingAddress(
+        'building', data.billingAddress.buildingNumber);
+    notifier.updateBillingAddress(
+        'streetAddress', data.billingAddress.streetAddress ?? '');
+    notifier.updateBillingAddress(
+        'streetAddressArabic', data.billingAddress.streetAddressArabic ?? '');
+    notifier.updateBillingAddress('city', data.billingAddress.city);
+    notifier.updateBillingAddress(
+        'cityArabic', data.billingAddress.cityArabic ?? '');
+    notifier.updateBillingAddress(
+        'countryRegion', data.billingAddress.countryRegion);
+    notifier.updateBillingAddress('state', data.billingAddress.state);
+    notifier.updateBillingAddress('zip', data.billingAddress.zipCode);
+
+    shippingControllers['building']?.text = data.shippingAddress.buildingNumber;
+    shippingControllers['streetAddress']?.text =
+        data.shippingAddress.streetAddress ?? '';
+    shippingControllers['streetAddressArabic']?.text =
+        data.shippingAddress.streetAddressArabic ?? '';
+    shippingControllers['city']?.text = data.shippingAddress.city;
+    shippingControllers['cityArabic']?.text =
+        data.shippingAddress.cityArabic ?? '';
+    shippingControllers['zip']?.text = data.shippingAddress.zipCode;
+
+    // Update form state for shipping address
+    notifier.updateShippingAddress('addressId', data.shippingAddress.addressId);
+    notifier.updateShippingAddress(
+        'building', data.shippingAddress.buildingNumber);
+    notifier.updateShippingAddress(
+        'streetAddress', data.shippingAddress.streetAddress ?? '');
+    notifier.updateShippingAddress(
+        'streetAddressArabic', data.shippingAddress.streetAddressArabic ?? '');
+    notifier.updateShippingAddress('city', data.shippingAddress.city);
+    notifier.updateShippingAddress(
+        'cityArabic', data.shippingAddress.cityArabic ?? '');
+    notifier.updateShippingAddress(
+        'countryRegion', data.shippingAddress.countryRegion);
+    notifier.updateShippingAddress('state', data.shippingAddress.state);
+    notifier.updateShippingAddress('zip', data.shippingAddress.zipCode);
+
+    notifier.updateField('firstName', data.primaryContact.firstName);
+    notifier.updateField('secondName', data.primaryContact.lastName);
+    notifier.updateField(
+        'firstNameArabic', data.primaryContactArabic?.firstNameArabic ?? '');
+    notifier.updateField(
+        'secondNameArabic', data.primaryContactArabic?.lastNameArabic ?? '');
+    notifier.updateField('companyName', data.companyName);
+    notifier.updateField('companyNameArabic', data.companyNameArabic ?? '');
+    notifier.updateField('email', data.emailAddress);
+    notifier.updateField('mobile', data.mobile.toString());
+    notifier.updateField('workPhone', data.phone.toString());
+    notifier.updateField('displayName', data.displayName);
+    notifier.updateField('partyType', data.partyType);
+    notifier.updateField('mobileCode', data.mobileCode);
+    notifier.updateField('phoneCode', data.phoneCode);
+    notifier.updateField('vatNumber', data.vatNumber ?? '');
+    notifier.updateField('crNum', data.crNum ?? '');
+
+    // Set same address flag
+    ref.read(sameAsBillingToggleProvider.notifier).state = data.sameAddressFlag;
+
+    print('✅ All fields populated successfully from ViewParty data');
   }
 
-  /// Fallback method for basic Vendor model (if ViewParty not available)
+  void _populateVendorData() {
+    // ✅ First, try to get ViewParty data (complete data)
+    final viewPartyData = ref.read(viewPartyEditDataProvider);
+
+    if (viewPartyData != null) {
+      print('✅ Found ViewParty data, using complete field population');
+      _populateFromViewParty(viewPartyData);
+      return;
+    }
+
+    // ⚠️ Fallback: Try basic Vendor model (incomplete data)
+    final vendorData = ref.read(vendorEditDataProvider);
+    if (vendorData != null) {
+      print('⚠️ Using fallback Vendor model (some fields will be empty)');
+      _populateFromVendor(vendorData);
+      return;
+    }
+
+    print('❌ No vendor data available for population');
+  }
+
   void _populateFromVendor(Vendor data) {
     print('⚠️ Using fallback Vendor model (may have incomplete data)');
 
