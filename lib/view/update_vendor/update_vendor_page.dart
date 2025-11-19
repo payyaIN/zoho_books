@@ -35,7 +35,8 @@ final vendorShippingTileExpandedProvider = StateProvider<bool>((ref) => false);
 final sameAsBillingToggleProvider = StateProvider<bool>((ref) => false);
 
 class UpdateVendorScreen extends ConsumerStatefulWidget {
-  const UpdateVendorScreen({super.key});
+  final int? partyId;
+  const UpdateVendorScreen({super.key, this.partyId});
 
   @override
   ConsumerState<UpdateVendorScreen> createState() => _UpdateVendorScreenState();
@@ -259,29 +260,46 @@ class _UpdateVendorScreenState extends ConsumerState<UpdateVendorScreen> {
   }
 
   void _populateFromVendor(Vendor data) {
-    print('⚠️ Using fallback Vendor model (may have incomplete data)');
+    print('✅ Populating from Vendor model with all fields');
 
     final notifier = ref.read(updateVendorFormProvider.notifier);
 
-    // Populate text controllers with available data
+    // ========== TEXT CONTROLLERS ==========
+
+    // Primary contact
     vendorControllers['firstName']?.text = data.primaryContact.firstName ?? '';
     vendorControllers['secondName']?.text = data.primaryContact.lastName ?? '';
-    vendorControllers['firstNameArabic']?.text = '';
-    vendorControllers['secondNameArabic']?.text = '';
+
+    // ✅ Arabic names - NOW AVAILABLE!
+    vendorControllers['firstNameArabic']?.text =
+        data.primaryContactArabic?.firstNameArabic ?? '';
+    vendorControllers['secondNameArabic']?.text =
+        data.primaryContactArabic?.lastNameArabic ?? '';
+
+    // Company
     vendorControllers['companyName']?.text = data.companyName ?? '';
-    vendorControllers['companyNameArabic']?.text = '';
+    vendorControllers['companyNameArabic']?.text = data.companyNameArabic ?? '';
+
+    // Contact
     vendorControllers['email']?.text = data.emailAddress ?? '';
     vendorControllers['workPhone']?.text = data.phone?.toString() ?? '';
     vendorControllers['mobile']?.text = data.mobile?.toString() ?? '';
-    vendorControllers['vatNumber']?.text = '';
-    vendorControllers['crNumber']?.text = '';
 
-    // Populate billing address (without addressId - will be null)
+    // ✅ VAT and CR - NOW AVAILABLE!
+    vendorControllers['vatNumber']?.text = data.vatNumber ?? '';
+    vendorControllers['crNumber']?.text = data.crNum ?? '';
+
+    // ========== BILLING ADDRESS ==========
+
     billingControllers['building']?.text =
         data.billingAddress.buildingNumber ?? '';
     billingControllers['streetAddress']?.text =
         data.billingAddress.streetAddress ?? '';
+    billingControllers['streetAddressArabic']?.text =
+        data.billingAddress.streetAddressArabic ?? ''; // ✅ NOW AVAILABLE!
     billingControllers['city']?.text = data.billingAddress.city ?? '';
+    billingControllers['cityArabic']?.text =
+        data.billingAddress.cityArabic ?? ''; // ✅ NOW AVAILABLE!
     billingControllers['zip']?.text = data.billingAddress.zipCode ?? '';
 
     // Update form state
@@ -289,18 +307,27 @@ class _UpdateVendorScreenState extends ConsumerState<UpdateVendorScreen> {
         'building', data.billingAddress.buildingNumber ?? '');
     notifier.updateBillingAddress(
         'streetAddress', data.billingAddress.streetAddress ?? '');
+    notifier.updateBillingAddress(
+        'streetAddressArabic', data.billingAddress.streetAddressArabic ?? '');
     notifier.updateBillingAddress('city', data.billingAddress.city ?? '');
+    notifier.updateBillingAddress(
+        'cityArabic', data.billingAddress.cityArabic ?? '');
     notifier.updateBillingAddress(
         'countryRegion', data.billingAddress.countryRegion ?? '');
     notifier.updateBillingAddress('state', data.billingAddress.state ?? '');
     notifier.updateBillingAddress('zip', data.billingAddress.zipCode ?? '');
 
-    // Populate shipping address
+    // ========== SHIPPING ADDRESS ==========
+
     shippingControllers['building']?.text =
         data.shippingAddress.buildingNumber ?? '';
     shippingControllers['streetAddress']?.text =
         data.shippingAddress.streetAddress ?? '';
+    shippingControllers['streetAddressArabic']?.text =
+        data.shippingAddress.streetAddressArabic ?? ''; // ✅ NOW AVAILABLE!
     shippingControllers['city']?.text = data.shippingAddress.city ?? '';
+    shippingControllers['cityArabic']?.text =
+        data.shippingAddress.cityArabic ?? ''; // ✅ NOW AVAILABLE!
     shippingControllers['zip']?.text = data.shippingAddress.zipCode ?? '';
 
     // Update form state
@@ -308,16 +335,26 @@ class _UpdateVendorScreenState extends ConsumerState<UpdateVendorScreen> {
         'building', data.shippingAddress.buildingNumber ?? '');
     notifier.updateShippingAddress(
         'streetAddress', data.shippingAddress.streetAddress ?? '');
+    notifier.updateShippingAddress(
+        'streetAddressArabic', data.shippingAddress.streetAddressArabic ?? '');
     notifier.updateShippingAddress('city', data.shippingAddress.city ?? '');
+    notifier.updateShippingAddress(
+        'cityArabic', data.shippingAddress.cityArabic ?? '');
     notifier.updateShippingAddress(
         'countryRegion', data.shippingAddress.countryRegion ?? '');
     notifier.updateShippingAddress('state', data.shippingAddress.state ?? '');
     notifier.updateShippingAddress('zip', data.shippingAddress.zipCode ?? '');
 
-    // Update vendor fields
+    // ========== VENDOR STATE FIELDS ==========
+
     notifier.updateField('firstName', data.primaryContact.firstName ?? '');
     notifier.updateField('secondName', data.primaryContact.lastName ?? '');
+    notifier.updateField(
+        'firstNameArabic', data.primaryContactArabic?.firstNameArabic ?? '');
+    notifier.updateField(
+        'secondNameArabic', data.primaryContactArabic?.lastNameArabic ?? '');
     notifier.updateField('companyName', data.companyName ?? '');
+    notifier.updateField('companyNameArabic', data.companyNameArabic ?? '');
     notifier.updateField('email', data.emailAddress ?? '');
     notifier.updateField('mobile', data.mobile?.toString() ?? '');
     notifier.updateField('workPhone', data.phone?.toString() ?? '');
@@ -325,6 +362,10 @@ class _UpdateVendorScreenState extends ConsumerState<UpdateVendorScreen> {
     notifier.updateField('partyType', data.partyType ?? '');
     notifier.updateField('mobileCode', data.mobileCode ?? '');
     notifier.updateField('phoneCode', data.phoneCode ?? '');
+    notifier.updateField('vatNumber', data.vatNumber ?? '');
+    notifier.updateField('crNum', data.crNum ?? '');
+
+    print('✅ All fields populated successfully from Vendor model!');
   }
 
   @override
@@ -351,11 +392,20 @@ class _UpdateVendorScreenState extends ConsumerState<UpdateVendorScreen> {
   }
 
   Future<void> _updateVendor() async {
-    final partyId = ref.read(updateVendorEditPartyIdProvider);
-    if (partyId == null) {
+    final partyId = widget.partyId ?? ref.read(updateVendorEditPartyIdProvider);
+
+    print(
+        '🔵 Using partyId: $partyId (widget: ${widget.partyId}, provider: ${ref.read(updateVendorEditPartyIdProvider)})');
+
+    if (partyId == null || partyId == 0) {
       showSnackBar(context, 'Error: Vendor ID not found');
       return;
     }
+    // final partyId = ref.read(updateVendorEditPartyIdProvider);
+    // if (partyId == null) {
+    //   showSnackBar(context, 'Error: Vendor ID not found');
+    //   return;
+    // }
 
     try {
       showPayzoProgress(context: context);

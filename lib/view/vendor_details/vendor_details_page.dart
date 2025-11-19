@@ -123,87 +123,109 @@ class _VendorDetailsPageState extends ConsumerState<VendorDetailPage> {
                         onTap2: () =>
                             urlLauncher.sendEmail(vendor.emailAddress),
                         onTap3: () => urlLauncher.sendSms(validPhoneNumber),
-                        // onTap4: () {
-                        //   ref
-                        //       .read(updateVendorEditModeProvider.notifier)
-                        //       .state = true;
-                        //   ref
-                        //       .read(updateVendorEditPartyIdProvider.notifier)
-                        //       .state = vendor.partyId;
-                        //   ref.read(vendorEditDataProvider.notifier).state =
-                        //       vendor;
-
-                        //   Navigator.push(
-                        //     context,
-                        //     MaterialPageRoute(
-                        //       builder: (context) => const UpdateVendorScreen(),
-                        //     ),
-                        //   );
-                        // },
-                        onTap4: () async {
-                          // Set edit mode and party ID
+                        onTap4: () {
                           ref
                               .read(updateVendorEditModeProvider.notifier)
                               .state = true;
                           ref
                               .read(updateVendorEditPartyIdProvider.notifier)
                               .state = vendor.partyId;
+                          ref.read(vendorEditDataProvider.notifier).state =
+                              vendor;
 
-                          // Show loading indicator
-                          showDialog(
-                            context: context,
-                            barrierDismissible: false,
-                            builder: (context) => const Center(
-                              child: CircularProgressIndicator(
-                                color: AppColors.appMainColor,
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => UpdateVendorScreen(
+                                partyId: vendor.partyId,
                               ),
                             ),
                           );
-
-                          try {
-                            // ✅ Fetch complete ViewParty data
-                            final viewPartyData = await ref
-                                .read(viewPartyProvider(vendor.partyId).future);
-
-                            // ✅ Store complete data
-                            ref.read(viewPartyEditDataProvider.notifier).state =
-                                viewPartyData.response;
-
-                            // Close loading dialog
-                            if (context.mounted) {
-                              Navigator.of(context).pop();
-                            }
-
-                            // Navigate to update screen
-                            if (context.mounted) {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const UpdateVendorScreen(),
-                                ),
-                              );
-                            }
-                          } catch (e) {
-                            // Close loading dialog
-                            if (context.mounted) {
-                              Navigator.of(context).pop();
-                            }
-
-                            // Show error
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content:
-                                      Text('Failed to load vendor details: $e'),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                            }
-                            print('❌ Error fetching vendor details: $e');
-                          }
                         },
+                        // onTap4: () async {
+                        //   // ✅ ADD DEBUG LOGGING
+                        //   print(
+                        //       '🟢 Edit button clicked for vendor: ${vendor.partyId}');
+                        //   print('🟢 Vendor details: ${vendor.companyName}');
 
+                        //   // Set edit mode and party ID
+                        //   ref
+                        //       .read(updateVendorEditModeProvider.notifier)
+                        //       .state = true;
+                        //   ref
+                        //       .read(updateVendorEditPartyIdProvider.notifier)
+                        //       .state = vendor.partyId;
+
+                        //   // ✅ VERIFY IT WAS SET
+                        //   final setPartyId =
+                        //       ref.read(updateVendorEditPartyIdProvider);
+                        //   print('🟢 PartyId set in provider: $setPartyId');
+
+                        //   // Show loading indicator
+                        //   showDialog(
+                        //     context: context,
+                        //     barrierDismissible: false,
+                        //     builder: (context) => const Center(
+                        //       child: CircularProgressIndicator(
+                        //         color: AppColors.appMainColor,
+                        //       ),
+                        //     ),
+                        //   );
+
+                        //   try {
+                        //     print(
+                        //         '🟢 Fetching ViewParty data for partyId: ${vendor.partyId}');
+
+                        //     // ✅ Fetch complete ViewParty data
+                        //     final viewPartyData = await ref
+                        //         .read(viewPartyProvider(vendor.partyId).future);
+
+                        //     print('🟢 ViewParty data fetched successfully');
+
+                        //     // ✅ Store complete data
+                        //     ref.read(viewPartyEditDataProvider.notifier).state =
+                        //         viewPartyData.response;
+
+                        //     // ✅ VERIFY partyId is still set
+                        //     final currentPartyId =
+                        //         ref.read(updateVendorEditPartyIdProvider);
+                        //     print(
+                        //         '🟢 PartyId BEFORE navigation: $currentPartyId');
+
+                        //     // Close loading dialog
+                        //     if (context.mounted) {
+                        //       Navigator.of(context).pop();
+                        //     }
+
+                        //     // Navigate to update screen
+                        //     if (context.mounted) {
+                        //       Navigator.push(
+                        //         context,
+                        //         MaterialPageRoute(
+                        //           builder: (context) =>
+                        //               const UpdateVendorScreen(),
+                        //         ),
+                        //       );
+                        //     }
+                        //   } catch (e) {
+                        //     print('🔴 Error fetching vendor details: $e');
+                        //     // Close loading dialog
+                        //     if (context.mounted) {
+                        //       Navigator.of(context).pop();
+                        //     }
+
+                        //     // Show error
+                        //     if (context.mounted) {
+                        //       ScaffoldMessenger.of(context).showSnackBar(
+                        //         SnackBar(
+                        //           content:
+                        //               Text('Failed to load vendor details: $e'),
+                        //           backgroundColor: Colors.red,
+                        //         ),
+                        //       );
+                        //     }
+                        //   }
+                        // },
                         onTap5: () {},
                       ),
                       GapSpace.height35,

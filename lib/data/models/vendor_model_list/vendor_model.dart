@@ -134,6 +134,10 @@ class Vendor {
   final Address billingAddress;
   final int partyId;
   final String partyType;
+  final String? vatNumber;
+  final String? crNum;
+  final String? companyNameArabic;
+  final PrimaryContactArabic? primaryContactArabic;
 
   Vendor({
     required this.emailAddress,
@@ -148,6 +152,10 @@ class Vendor {
     required this.billingAddress,
     required this.partyId,
     required this.partyType,
+    this.vatNumber,
+    this.crNum,
+    this.companyNameArabic,
+    this.primaryContactArabic,
   });
 
   factory Vendor.empty() => Vendor(
@@ -183,6 +191,12 @@ class Vendor {
       } else {
         print('Warning: shippingAddress is not a Map');
       }
+    }
+    PrimaryContactArabic? primaryContactArabic;
+    if (json["primaryContactArabic"] != null &&
+        json["primaryContactArabic"] is Map) {
+      primaryContactArabic = PrimaryContactArabic.fromMap(
+          Map<String, dynamic>.from(json["primaryContactArabic"] as Map));
     }
 
     Map<String, dynamic> billingAddressMap = {};
@@ -226,6 +240,10 @@ class Vendor {
       billingAddress: Address.fromMap(billingAddressMap),
       partyId: partyId,
       partyType: json["partyType"] ?? "",
+      vatNumber: json["vatNumber"],
+      crNum: json["crNum"],
+      companyNameArabic: json["companyNameArabic"],
+      primaryContactArabic: primaryContactArabic,
     );
   }
 }
@@ -253,6 +271,23 @@ class PrimaryContact {
       );
 }
 
+class PrimaryContactArabic {
+  final String? firstNameArabic;
+  final String? lastNameArabic;
+
+  PrimaryContactArabic({
+    this.firstNameArabic,
+    this.lastNameArabic,
+  });
+
+  factory PrimaryContactArabic.fromMap(Map<String, dynamic> json) {
+    return PrimaryContactArabic(
+      firstNameArabic: json["firstNameArabic"],
+      lastNameArabic: json["lastNameArabic"],
+    );
+  }
+}
+
 class Address {
   final String zipCode;
   final String? streetName;
@@ -262,6 +297,8 @@ class Address {
   final String buildingNumber;
   final String? countryName;
   final String state;
+  final String? streetAddressArabic;
+  final String? cityArabic;
 
   Address({
     required this.zipCode,
@@ -272,6 +309,8 @@ class Address {
     required this.buildingNumber,
     this.countryName,
     required this.state,
+    this.streetAddressArabic,
+    this.cityArabic,
   });
 
   factory Address.empty() => Address(
@@ -291,6 +330,8 @@ class Address {
         buildingNumber: json["buildingNumber"] ?? "",
         countryName: json["countryName"],
         state: json["state"] ?? "",
+        streetAddressArabic: json["streetAddressArabic"],
+        cityArabic: json["cityArabic"],
       );
 }
 // import 'dart:convert';
