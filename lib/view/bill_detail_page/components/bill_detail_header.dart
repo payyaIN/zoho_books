@@ -19,57 +19,33 @@ class _BillDetailHeaderDataHeaderState
     final billDetailsAsync = ref.watch(getBillDetailsProvider(effectiveBillId));
     return billDetailsAsync.when(
         data: (billDetail) {
-          //   return headerTextAndWidgets(
-          //     headerText1: formatCurrency(
-          //         billDetail.billTotalAmount, billDetail.billCurrency),
-          //     headerText2: billDetail.billVenderName,
-          //     title1: AppText.edit,
-          //     title2: AppText.payments,
-          //     title3: AppText.downloadpdf,
-          //     title4: AppText.more,
-          //     title5: AppText.delete,
-          //     img1: AppImages.editWhite,
-          //     img2: AppImages.moneyBag,
-          //     img3: AppImages.printIcon,
-          //     img4: AppImages.more,
-          //     img5: AppImages.delete,
-          //     isonTap1Needed: false,
-          //     isonTap4Needed: false,
-          //     isonTap2Needed: false,
-          //     isonTap5Needed: true,
-          //     isonTap3Needed: true,
-          //     onTap1: () {},
-          //     onTap2: () {},
-          //     onTap3: () {
-          //       print("Message icon tapped, initiating download...");
-          //       downloadBillPdf(ref, context, billDetail.billId);
-          //     },
-          //     onTap4: () {},
-          //     onTap5: () {},
-          //   );
-          // },
           return headerTextAndWidgets(
               headerText1: formatCurrency(
                   billDetail.billTotalAmount, billDetail.billCurrency),
               headerText2: billDetail.billVenderName,
-              imgName1: AppText.edit,
-              imgName2: AppText.payments,
-              imgName3: AppText.downloadpdf,
-              imgName4: AppText.more,
-              img1: AppImages.editWhite,
-              img2: AppImages.moneyBag,
-              img3: AppImages.printIcon,
-              img4: AppImages.more,
-              isMailNeeded: false,
-              isCallNeeded: false,
-              callOnTap: () {},
-              mailOnTap: () {},
-              msgOnTap: () {
+              title1: AppText.downloadpdf,
+              title2: AppText.recrngBill,
+              title3: AppText.makeBillPayment,
+              title4: AppText.editBill,
+              title5: AppText.deleteBill,
+              img1: AppImages.printIcon,
+              img2: AppImages.invoicewhte,
+              img3: AppImages.billPayment,
+              img4: AppImages.editWhite,
+              img5: AppImages.delete,
+              isOnTap1Needed: true,
+              isOnTap2Needed: true,
+              isOnTap3Needed: true,
+              isOnTap4Needed: true,
+              isOnTap5Needed: true,
+              onTap1: () {},
+              onTap2: () {},
+              onTap3: () {
                 print("Message icon tapped, initiating download...");
                 downloadBillPdf(ref, context, billDetail.billId);
               },
-              editOnTap: () {},
-              isEditNeeded: false);
+              onTap4: () {},
+              onTap5: () {});
         },
         loading: () => const Center(
               child: CircularProgressIndicator(

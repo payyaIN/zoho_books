@@ -23,57 +23,33 @@ class _ExpenseDetailHeaderDataState
     return expenseDetailsAsync.when(
       data: (expenseDetail) {
         final data = expenseDetail.response!;
-        //   return headerTextAndWidgets(
-        //     headerText1:
-        //         formatCurrency(data.expenseAmount!.toDouble(), data.currency!),
-        //     headerText2: data.vendor ?? '',
-        //     title1: AppText.importExpense,
-        //     title2: AppText.exportExcel,
-        //     title3: AppText.downloadpdf,
-        //     title4: AppText.edit,
-        //     title5: AppText.delete,
-        //     img1: AppImages.importExpense,
-        //     img2: AppImages.exportExpense,
-        //     img3: AppImages.printIcon,
-        //     img4: AppImages.editWhite,
-        //     img5: AppImages.delete,
-        //     isonTap1Needed: true,
-        //     isonTap4Needed: true,
-        //     isonTap2Needed: true,
-        //     isonTap5Needed: true,
-        //     isonTap3Needed: true,
-        //     onTap1: () {},
-        //     onTap2: () {},
-        //     onTap3: () {
-        //       print("Message icon tapped, initiating expense PDF download...");
-        //       // downloadExpensePdf(ref, context, data.transactionId?.toInt() ?? 0);
-        //     },
-        //     onTap4: () {},
-        //     onTap5: () {},
-        //   );
-        // },
         return headerTextAndWidgets(
           headerText1:
               formatCurrency(data.expenseAmount!.toDouble(), data.currency!),
           headerText2: data.vendor ?? '',
-          imgName1: AppText.edit,
-          imgName2: AppText.payments,
-          imgName3: AppText.downloadpdf,
-          imgName4: AppText.more,
-          img1: AppImages.editWhite,
-          img2: AppImages.moneyBag,
-          img3: AppImages.printIcon,
-          img4: AppImages.more,
-          isMailNeeded: false,
-          isCallNeeded: false,
-          callOnTap: () {},
-          mailOnTap: () {},
-          msgOnTap: () {
+          title1: AppText.importExpense,
+          title2: AppText.exportExcelExpense,
+          title3: AppText.editExpense,
+          title4: AppText.deleteExpense,
+          title5: '',
+          img1: AppImages.importExpense,
+          img2: AppImages.exportExpense,
+          img3: AppImages.editWhite,
+          img4: AppImages.delete,
+          img5: '',
+          isOnTap1Needed: true,
+          isOnTap2Needed: true,
+          isOnTap3Needed: true,
+          isOnTap4Needed: true,
+          isOnTap5Needed: false,
+          onTap1: () {},
+          onTap2: () {},
+          onTap3: () {
             print("Message icon tapped, initiating expense PDF download...");
             // downloadExpensePdf(ref, context, data.transactionId?.toInt() ?? 0);
           },
-          editOnTap: () {},
-          isEditNeeded: false,
+          onTap4: () {},
+          onTap5: () {},
         );
       },
       loading: () => const Center(

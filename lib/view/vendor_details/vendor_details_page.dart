@@ -102,23 +102,27 @@ class _VendorDetailsPageState extends ConsumerState<VendorDetailPage> {
                       headerTextAndWidgets(
                         headerText1: vendor.companyName,
                         headerText2: vendor.emailAddress,
-                        imgName1: AppText.call,
-                        imgName2: AppText.mail,
-                        imgName3: AppText.msg,
-                        imgName4: AppText.edit,
                         img1: AppImages.call,
                         img2: AppImages.mail,
                         img3: AppImages.msg,
                         img4: AppImages.editWhite,
-                        isMailNeeded: true,
-                        isCallNeeded: true,
-                        isEditNeeded: true,
-                        callOnTap: () =>
+                        img5: '',
+                        title1: AppText.call,
+                        title2: AppText.mail,
+                        title3: AppText.msg,
+                        title4: AppText.editVendor,
+                        title5: '',
+                        isOnTap1Needed: true,
+                        isOnTap3Needed: true,
+                        isOnTap2Needed: true,
+                        isOnTap4Needed: true,
+                        isOnTap5Needed: false,
+                        onTap1: () =>
                             urlLauncher.makePhoneCall(validPhoneNumber),
-                        mailOnTap: () =>
+                        onTap2: () =>
                             urlLauncher.sendEmail(vendor.emailAddress),
-                        msgOnTap: () => urlLauncher.sendSms(validPhoneNumber),
-                        editOnTap: () {
+                        onTap3: () => urlLauncher.sendSms(validPhoneNumber),
+                        onTap4: () {
                           ref
                               .read(updateVendorEditModeProvider.notifier)
                               .state = true;
@@ -136,6 +140,7 @@ class _VendorDetailsPageState extends ConsumerState<VendorDetailPage> {
                             ),
                           );
                         },
+                        onTap5: () {},
                       ),
                       GapSpace.height35,
                       financialCard(

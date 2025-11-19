@@ -2,7 +2,8 @@ class AppImages {
   static const String userIcon = 'assets/user.svg';
   static const String lockIcon = 'assets/lock.svg';
   static const String eyeOffIcon = 'assets/eyeoff.svg';
-
+  static const String createAndDebitNote = 'assets/createnote.svg';
+  static const String billPayment = 'assets/billpayment.svg';
   static const String invoiceIcon1 = 'assets/invoice1.svg';
   static const String invoiceIcon2 = 'assets/invoice2.svg';
   static const String bellBlack = 'assets/bell black.svg';

@@ -51,58 +51,31 @@ class InvoiceDetailPage extends ConsumerWidget {
                               invoiceDetail.invoiceTotalAmount,
                               invoiceDetail.invoiceCurrency),
                           headerText2: invoiceDetail.invoiceCustomerName,
-                          imgName1: AppText.edit,
-                          imgName2: AppText.payments,
-                          imgName3: AppText.downloadpdf,
-                          imgName4: AppText.recrngInvc,
-                          img1: AppImages.editWhite,
-                          img2: AppImages.moneyBag,
-                          img3: AppImages.printIcon,
-                          img4: AppImages.invoicewhte,
-                          isMailNeeded: false,
-                          isCallNeeded: false,
-                          callOnTap: () {},
-                          mailOnTap: () {},
-                          msgOnTap: () {
+                          title1: AppText.importInvoice,
+                          title2: AppText.downloadpdf,
+                          title3: AppText.recrngInvc,
+                          title4: AppText.creditNote,
+                          title5: AppText.debitNote,
+                          img1: AppImages.importExpense,
+                          img2: AppImages.printIcon,
+                          img3: AppImages.invoicewhte,
+                          img4: AppImages.createAndDebitNote,
+                          img5: AppImages.createAndDebitNote,
+                          isOnTap1Needed: true,
+                          isOnTap2Needed: true,
+                          isOnTap3Needed: true,
+                          isOnTap4Needed: true,
+                          isOnTap5Needed: true,
+                          onTap1: () {},
+                          onTap2: () {},
+                          onTap3: () {
                             print(
                                 "Message icon tapped, initiating download...");
                             downloadInvoicePdf(
                                 ref, context, invoiceDetail.invoiceId);
                           },
-                          editOnTap: () {},
-                          isEditNeeded: false),
-                      // headerTextAndWidgets(
-                      //   headerText1: formatCurrency(
-                      //       invoiceDetail.invoiceTotalAmount,
-                      //       invoiceDetail.invoiceCurrency),
-                      //   headerText2: invoiceDetail.invoiceCustomerName,
-                      //   title1: AppText.importExpense,
-                      //   title2: AppText.downloadpdf,
-                      //   title3: AppText.edit,
-
-                      //   // imgName4: AppText.recrngInvc,
-                      //   title4: AppText.delete,
-
-                      //   img1: AppImages.importExpense,
-                      //   img2: AppImages.printIcon,
-                      //   img3: AppImages.editWhite,
-                      //   img4: AppImages.delete,
-                      //   // img4: AppImages.invoicewhte,
-
-                      //   isonTap1Needed: true,
-                      //   isonTap2Needed: true,
-                      //   isonTap3Needed: true,
-                      //   isonTap4Needed: true,
-
-                      //   onTap1: () {},
-                      //   onTap2: () {},
-                      //   onTap3: () {
-                      //     print("Message icon tapped, initiating download...");
-                      //     downloadInvoicePdf(
-                      //         ref, context, invoiceDetail.invoiceId);
-                      //   },
-                      //   onTap4: () {},
-                      //   ),
+                          onTap4: () {},
+                          onTap5: () {}),
                       invoiceAndBillInformationWidget(
                         isBill: false,
                         invoiceCreatedByName:

@@ -31,7 +31,9 @@ class AppText {
   static const String mail = 'Mail';
   static const String msg = 'Message';
   static const String more = 'More';
-  static const String recrngInvc = 'Recurring Invoice';
+  static const String recrngInvc = 'Recurring\nInvoice';
+  static const String recrngBill = 'Recurring\nBill';
+  static const String makeBillPayment = 'Bill\nPayment';
   static const String noInternetAvl = 'No internet available';
   static const String vendorName = 'ARABIAN PALACE';
   static const String vendorMail = 'arabianpalace123@gmail.com';
@@ -71,12 +73,20 @@ class AppText {
   static const String razorpayDisc =
       'Razorpay is an Indian payment gateway which\nallows your customer to pay via cards, netbanking\nand wallets.';
   static const String invoices = 'Invoices';
-  static const String edit = 'Edit';
+  static const String editExpense = 'Edit';
+  static const String deleteExpense = 'Delete';
+  static const String editBill = 'Edit\n ';
+  static const String deleteBill = 'Delete\n ';
+  static const String editCustomer = 'Edit';
+  static const String editVendor = 'Edit';
+  static const String creditNote = 'Credit\nNote';
+  static const String debitNote = 'Debit\nNote';
+  static const String importInvoice = 'Import\n ';
   static const String importExpense = 'Import';
-  static const String exportExcel = 'Export';
+  static const String exportExcelExpense = 'Export';
   static const String delete = 'Delete';
   static const String payments = 'Payments';
-  static const String downloadpdf = 'PDF';
+  static const String downloadpdf = 'PDF\n ';
   static const String product = 'Product';
   static const String paid = 'PAID';
   static const String pending = 'PENDING';
