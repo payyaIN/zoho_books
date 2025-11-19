@@ -125,33 +125,38 @@ class _UpdateVendorScreenState extends ConsumerState<UpdateVendorScreen> {
     });
   }
 
+  /// ✅ NEW: Populate from complete ViewParty data
   void _populateFromViewParty(ViewPartyResponseData data) {
-    print('Using complete ViewParty data with all fields');
+    print('✅ Populating all fields from ViewParty data');
 
     final notifier = ref.read(updateVendorFormProvider.notifier);
+
+    // ========== TEXT CONTROLLERS ==========
 
     // Primary contact
     vendorControllers['firstName']?.text = data.primaryContact.firstName;
     vendorControllers['secondName']?.text = data.primaryContact.lastName;
 
-    // ✅ Arabic names (now available!)
+    // ✅ Arabic names
     vendorControllers['firstNameArabic']?.text =
         data.primaryContactArabic?.firstNameArabic ?? '';
     vendorControllers['secondNameArabic']?.text =
         data.primaryContactArabic?.lastNameArabic ?? '';
 
-    // Company info
+    // Company
     vendorControllers['companyName']?.text = data.companyName;
     vendorControllers['companyNameArabic']?.text = data.companyNameArabic ?? '';
 
-    // Contact details
+    // Contact
     vendorControllers['email']?.text = data.emailAddress;
     vendorControllers['workPhone']?.text = data.phone.toString();
     vendorControllers['mobile']?.text = data.mobile.toString();
 
-    // ✅ VAT and CR numbers (now available!)
+    // ✅ VAT and CR
     vendorControllers['vatNumber']?.text = data.vatNumber ?? '';
     vendorControllers['crNumber']?.text = data.crNum ?? '';
+
+    // ========== BILLING ADDRESS ==========
 
     billingControllers['building']?.text = data.billingAddress.buildingNumber;
     billingControllers['streetAddress']?.text =
@@ -163,7 +168,7 @@ class _UpdateVendorScreenState extends ConsumerState<UpdateVendorScreen> {
         data.billingAddress.cityArabic ?? '';
     billingControllers['zip']?.text = data.billingAddress.zipCode;
 
-    // Update form state for billing address
+    // Update state
     notifier.updateBillingAddress('addressId', data.billingAddress.addressId);
     notifier.updateBillingAddress(
         'building', data.billingAddress.buildingNumber);
@@ -179,6 +184,8 @@ class _UpdateVendorScreenState extends ConsumerState<UpdateVendorScreen> {
     notifier.updateBillingAddress('state', data.billingAddress.state);
     notifier.updateBillingAddress('zip', data.billingAddress.zipCode);
 
+    // ========== SHIPPING ADDRESS ==========
+
     shippingControllers['building']?.text = data.shippingAddress.buildingNumber;
     shippingControllers['streetAddress']?.text =
         data.shippingAddress.streetAddress ?? '';
@@ -189,7 +196,7 @@ class _UpdateVendorScreenState extends ConsumerState<UpdateVendorScreen> {
         data.shippingAddress.cityArabic ?? '';
     shippingControllers['zip']?.text = data.shippingAddress.zipCode;
 
-    // Update form state for shipping address
+    // Update state
     notifier.updateShippingAddress('addressId', data.shippingAddress.addressId);
     notifier.updateShippingAddress(
         'building', data.shippingAddress.buildingNumber);
@@ -204,6 +211,8 @@ class _UpdateVendorScreenState extends ConsumerState<UpdateVendorScreen> {
         'countryRegion', data.shippingAddress.countryRegion);
     notifier.updateShippingAddress('state', data.shippingAddress.state);
     notifier.updateShippingAddress('zip', data.shippingAddress.zipCode);
+
+    // ========== VENDOR STATE FIELDS ==========
 
     notifier.updateField('firstName', data.primaryContact.firstName);
     notifier.updateField('secondName', data.primaryContact.lastName);
@@ -223,26 +232,25 @@ class _UpdateVendorScreenState extends ConsumerState<UpdateVendorScreen> {
     notifier.updateField('vatNumber', data.vatNumber ?? '');
     notifier.updateField('crNum', data.crNum ?? '');
 
-    // Set same address flag
+    // Same address flag
     ref.read(sameAsBillingToggleProvider.notifier).state = data.sameAddressFlag;
 
-    print('✅ All fields populated successfully from ViewParty data');
+    print('✅ All fields populated successfully!');
   }
 
   void _populateVendorData() {
-    // ✅ First, try to get ViewParty data (complete data)
+    // ✅ FIRST: Try ViewParty data (complete)
     final viewPartyData = ref.read(viewPartyEditDataProvider);
-
     if (viewPartyData != null) {
-      print('✅ Found ViewParty data, using complete field population');
+      print('✅ Found ViewParty data, using complete population');
       _populateFromViewParty(viewPartyData);
       return;
     }
 
-    // ⚠️ Fallback: Try basic Vendor model (incomplete data)
+    // ⚠️ FALLBACK: Basic Vendor model (incomplete)
     final vendorData = ref.read(vendorEditDataProvider);
     if (vendorData != null) {
-      print('⚠️ Using fallback Vendor model (some fields will be empty)');
+      print('⚠️ Using fallback Vendor model (incomplete data)');
       _populateFromVendor(vendorData);
       return;
     }
@@ -324,6 +332,7 @@ class _UpdateVendorScreenState extends ConsumerState<UpdateVendorScreen> {
     // Clear edit mode when leaving
     ref.read(updateVendorEditModeProvider.notifier).state = false;
     ref.read(updateVendorEditPartyIdProvider.notifier).state = null;
+    ref.read(viewPartyEditDataProvider.notifier).state = null;
     ref.read(vendorEditDataProvider.notifier).state = null;
 
     // Dispose controllers

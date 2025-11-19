@@ -141,6 +141,7 @@ class _VendorDetailsPageState extends ConsumerState<VendorDetailPage> {
                         //   );
                         // },
                         onTap4: () async {
+                          // Set edit mode and party ID
                           ref
                               .read(updateVendorEditModeProvider.notifier)
                               .state = true;
@@ -148,6 +149,7 @@ class _VendorDetailsPageState extends ConsumerState<VendorDetailPage> {
                               .read(updateVendorEditPartyIdProvider.notifier)
                               .state = vendor.partyId;
 
+                          // Show loading indicator
                           showDialog(
                             context: context,
                             barrierDismissible: false,
@@ -159,33 +161,46 @@ class _VendorDetailsPageState extends ConsumerState<VendorDetailPage> {
                           );
 
                           try {
+                            // ✅ Fetch complete ViewParty data
                             final viewPartyData = await ref
                                 .read(viewPartyProvider(vendor.partyId).future);
 
-                            // ✅ Store the complete ViewParty response data
+                            // ✅ Store complete data
                             ref.read(viewPartyEditDataProvider.notifier).state =
                                 viewPartyData.response;
 
-                            Navigator.of(context).pop();
+                            // Close loading dialog
+                            if (context.mounted) {
+                              Navigator.of(context).pop();
+                            }
 
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const UpdateVendorScreen(),
-                              ),
-                            );
+                            // Navigate to update screen
+                            if (context.mounted) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const UpdateVendorScreen(),
+                                ),
+                              );
+                            }
                           } catch (e) {
-                            Navigator.of(context).pop();
+                            // Close loading dialog
+                            if (context.mounted) {
+                              Navigator.of(context).pop();
+                            }
 
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content:
-                                    Text('Failed to load vendor details: $e'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                            print('Error fetching vendor details: $e');
+                            // Show error
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content:
+                                      Text('Failed to load vendor details: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                            print('❌ Error fetching vendor details: $e');
                           }
                         },
 
