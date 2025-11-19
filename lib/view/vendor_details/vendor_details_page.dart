@@ -118,62 +118,7 @@ class _VendorDetailsPageState extends ConsumerState<VendorDetailPage> {
                         mailOnTap: () =>
                             urlLauncher.sendEmail(vendor.emailAddress),
                         msgOnTap: () => urlLauncher.sendSms(validPhoneNumber),
-                        // editOnTap: () async {
-                        //   print(
-                        //       '🔘 Edit button tapped for vendor: ${vendor.companyName}');
-
-                        //   // ✅ Set edit mode
-                        //   ref
-                        //       .read(updateVendorEditModeProvider.notifier)
-                        //       .state = true;
-                        //   ref
-                        //       .read(updateVendorEditPartyIdProvider.notifier)
-                        //       .state = vendor.partyId;
-
-                        //   // ✅ Store basic vendor data (fallback)
-                        //   ref.read(vendorEditDataProvider.notifier).state =
-                        //       vendor;
-
-                        //   try {
-                        //     // ✅ Fetch FULL details using viewParty API (this has all fields including addressId)
-                        //     print(
-                        //         '📡 Fetching complete vendor details from viewParty API...');
-                        //     final viewPartyData = await ref
-                        //         .read(viewPartyProvider(vendor.partyId).future);
-
-                        //     if (viewPartyData.status == true) {
-                        //       // ✅ Store complete vendor data from viewParty
-                        //       ref
-                        //           .read(viewPartyEditDataProvider.notifier)
-                        //           .state = viewPartyData.response;
-                        //       print(
-                        //           '✅ Complete vendor data stored from viewParty API');
-                        //     } else {
-                        //       print(
-                        //           '⚠️ ViewParty API returned error, using fallback vendor data');
-                        //     }
-                        //   } catch (e) {
-                        //     print('⚠️ Error fetching viewParty data: $e');
-                        //     print('Using fallback basic vendor data');
-                        //   }
-
-                        //   // Navigate to update screen
-                        //   if (context.mounted) {
-                        //     Navigator.push(
-                        //       context,
-                        //       MaterialPageRoute(
-                        //         builder: (context) =>
-                        //             const UpdateVendorScreen(),
-                        //       ),
-                        //     );
-                        //   }
-                        // },
-                        editOnTap: () async {
-                          print(
-                              '🔘 Edit button tapped for vendor: ${vendor.companyName}');
-
-                          // ✅ STEP 1: Store basic vendor data FIRST (before API call)
-                          // This ensures we always have SOMETHING to work with
+                        editOnTap: () {
                           ref
                               .read(updateVendorEditModeProvider.notifier)
                               .state = true;
@@ -183,151 +128,15 @@ class _VendorDetailsPageState extends ConsumerState<VendorDetailPage> {
                           ref.read(vendorEditDataProvider.notifier).state =
                               vendor;
 
-                          // ✅ STEP 2: Try to fetch complete data from viewParty API
-                          // If this fails, we still have the basic data from step 1
-                          try {
-                            print(
-                                '📡 Attempting to fetch complete vendor details from viewParty API...');
-
-                            // Fetch complete vendor data (includes addressId)
-                            final viewPartyData = await ref
-                                .read(viewPartyProvider(vendor.partyId).future);
-
-                            // Check if API call was successful
-                            if (viewPartyData.status == true &&
-                                !viewPartyData.error) {
-                              // ✅ Success - store complete vendor data
-                              ref
-                                  .read(viewPartyEditDataProvider.notifier)
-                                  .state = viewPartyData.response;
-                              print(
-                                  '✅ Complete vendor data stored from viewParty API');
-                            } else {
-                              // ⚠️ API returned error status (but didn't throw exception)
-                              print(
-                                  '⚠️ ViewParty API returned error status: ${viewPartyData.errorMsg}');
-                              print('ℹ️ Using fallback basic vendor data');
-
-                              // Optional: Show warning to user
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                        'Loading with limited data. Some fields may be empty.'),
-                                    duration: Duration(seconds: 2),
-                                    backgroundColor: Colors.orange,
-                                  ),
-                                );
-                              }
-                            }
-                          } catch (e) {
-                            // ⚠️ API call failed completely (network error, 500 error, etc.)
-                            print('⚠️ Error fetching viewParty data: $e');
-                            print(
-                                'ℹ️ Proceeding with fallback basic vendor data');
-
-                            // Show warning to user about limited data
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                      'Could not load complete data. Proceeding with available information.'),
-                                  duration: Duration(seconds: 3),
-                                  backgroundColor: Colors.orange,
-                                ),
-                              );
-                            }
-                          }
-
-                          // ✅ STEP 3: Navigate to update screen
-                          // This happens REGARDLESS of whether API succeeded or failed
-                          // User can still edit with whatever data is available
-                          if (context.mounted) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const UpdateVendorScreen(),
-                              ),
-                            );
-                          }
+                          // Navigate
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const UpdateVendorScreen(),
+                            ),
+                          );
                         },
                       ),
-                      // headerTextAndWidgets(
-                      //     headerText1: vendor.companyName,
-                      //     headerText2: vendor.emailAddress,
-                      //     title1: AppText.call,
-                      //     title2: AppText.mail,
-                      //     title3: AppText.msg,
-                      //     title4: AppText.edit,
-                      //     title5: AppText.delete,
-                      //     img1: AppImages.call,
-                      //     img2: AppImages.mail,
-                      //     img3: AppImages.msg,
-                      //     img4: AppImages.editWhite,
-                      //     img5: AppImages.delete,
-                      //     isonTap1Needed: true,
-                      //     isonTap2Needed: true,
-                      //     isonTap3Needed: true,
-                      //     isonTap4Needed: true,
-                      //     isonTap5Needed: true,
-                      //     onTap1: () =>
-                      //         urlLauncher.makePhoneCall(validPhoneNumber),
-                      //     onTap2: () =>
-                      //         urlLauncher.sendEmail(vendor.emailAddress),
-                      //     onTap3: () => urlLauncher.sendSms(validPhoneNumber),
-                      //     onTap4: () async {
-                      //       print(
-                      //           '🔘 Edit button tapped for vendor: ${vendor.companyName}');
-
-                      //       // ✅ Set edit mode
-                      //       ref
-                      //           .read(updateVendorEditModeProvider.notifier)
-                      //           .state = true;
-                      //       ref
-                      //           .read(updateVendorEditPartyIdProvider.notifier)
-                      //           .state = vendor.partyId;
-
-                      //       // ✅ Store basic vendor data (fallback)
-                      //       ref.read(vendorEditDataProvider.notifier).state =
-                      //           vendor;
-
-                      //       try {
-                      //         // ✅ Fetch FULL details using viewParty API (this has all fields including addressId)
-                      //         print(
-                      //             '📡 Fetching complete vendor details from viewParty API...');
-                      //         final viewPartyData = await ref.read(
-                      //             viewPartyProvider(vendor.partyId).future);
-
-                      //         if (viewPartyData.status == true) {
-                      //           // ✅ Store complete vendor data from viewParty
-                      //           ref
-                      //               .read(viewPartyEditDataProvider.notifier)
-                      //               .state = viewPartyData.response;
-                      //           print(
-                      //               '✅ Complete vendor data stored from viewParty API');
-                      //         } else {
-                      //           print(
-                      //               '⚠️ ViewParty API returned error, using fallback vendor data');
-                      //         }
-                      //       } catch (e) {
-                      //         print('⚠️ Error fetching viewParty data: $e');
-                      //         print('Using fallback basic vendor data');
-                      //       }
-
-                      //       // Navigate to update screen
-                      //       if (context.mounted) {
-                      //         Navigator.push(
-                      //           context,
-                      //           MaterialPageRoute(
-                      //             builder: (context) =>
-                      //                 const UpdateVendorScreen(),
-                      //           ),
-                      //         );
-                      //       }
-                      //       ;
-                      //     },
-                      //     onTap5: () {}),
                       GapSpace.height35,
                       financialCard(
                         state: stateValue,

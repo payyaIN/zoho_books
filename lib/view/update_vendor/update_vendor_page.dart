@@ -26,6 +26,9 @@ import 'package:payzo_books/view/update_vendor/update_vendor_notifier.dart';
 import 'package:payzo_books/view/update_vendor/update_vendor_provider.dart';
 import 'package:payzo_books/view/update_vendor/update_vendor_repo.dart';
 import 'package:payzo_books/data/repository/add_vendor/get_country_list_repository.dart';
+import 'package:payzo_books/data/repository/document_type/get_doc_type_api.dart';
+import 'package:payzo_books/data/repository/event_api/get_event_api.dart';
+import 'package:payzo_books/data/repository/price_currency/price_currency_api.dart';
 
 final vendorBillingTileExpandedProvider = StateProvider<bool>((ref) => false);
 final vendorShippingTileExpandedProvider = StateProvider<bool>((ref) => false);
@@ -124,14 +127,6 @@ class _UpdateVendorScreenState extends ConsumerState<UpdateVendorScreen> {
 
   /// ✅ FIXED: Populate from ViewPartyResponseData (complete data with addressId)
   void _populateVendorData() {
-    // ✅ Try to get complete data from viewParty first
-    final viewPartyData = ref.read(viewPartyEditDataProvider);
-
-    if (viewPartyData != null) {
-      _populateFromViewParty(viewPartyData);
-      return;
-    }
-
     // Fallback to basic vendor data if viewParty not available
     final vendorData = ref.read(vendorEditDataProvider);
     if (vendorData != null) {
@@ -141,111 +136,11 @@ class _UpdateVendorScreenState extends ConsumerState<UpdateVendorScreen> {
     }
   }
 
-  /// ✅ NEW: Populate from ViewPartyResponseData (complete data)
-  void _populateFromViewParty(ViewPartyResponseData data) {
-    print('✅ Populating from ViewParty data: ${data.companyName}');
-
-    final notifier = ref.read(updateVendorFormProvider.notifier);
-
-    // ✅ Store original displayName to prevent "already exists" error
-    ref.read(updateVendorOriginalDisplayNameProvider.notifier).state =
-        data.displayName;
-
-    // Populate text controllers
-    vendorControllers['firstName']?.text = data.primaryContact.firstName ?? '';
-    vendorControllers['secondName']?.text = data.primaryContact.lastName ?? '';
-    vendorControllers['firstNameArabic']?.text = ''; // Not in ViewParty model
-    vendorControllers['secondNameArabic']?.text = ''; // Not in ViewParty model
-    vendorControllers['companyName']?.text = data.companyName ?? '';
-    vendorControllers['companyNameArabic']?.text = ''; // Not in ViewParty model
-    vendorControllers['email']?.text = data.emailAddress ?? '';
-    vendorControllers['workPhone']?.text = data.phone?.toString() ?? '';
-    vendorControllers['mobile']?.text = data.mobile?.toString() ?? '';
-
-    // ✅ VAT and CR - these are still not in ViewParty model (backend limitation)
-    vendorControllers['vatNumber']?.text = ''; // Not available from API
-    vendorControllers['crNumber']?.text = ''; // Not available from API
-
-    // ✅ Populate billing address with addressId
-    billingControllers['building']?.text =
-        data.billingAddress.buildingNumber ?? '';
-    billingControllers['streetAddress']?.text =
-        data.billingAddress.streetAddress ?? '';
-    billingControllers['streetAddressArabic']?.text = ''; // Not in model
-    billingControllers['city']?.text = data.billingAddress.city ?? '';
-    billingControllers['cityArabic']?.text = ''; // Not in model
-    billingControllers['zip']?.text = data.billingAddress.zipCode ?? '';
-
-    // ✅ CRITICAL: Update form state with addressId (required for updates)
-    notifier.updateBillingAddress(
-        'addressId', data.billingAddress.addressId.toString());
-    notifier.updateBillingAddress(
-        'building', data.billingAddress.buildingNumber ?? '');
-    notifier.updateBillingAddress(
-        'streetAddress', data.billingAddress.streetAddress ?? '');
-    notifier.updateBillingAddress('streetAddressArabic', '');
-    notifier.updateBillingAddress('city', data.billingAddress.city ?? '');
-    notifier.updateBillingAddress('cityArabic', '');
-    notifier.updateBillingAddress(
-        'countryRegion', data.billingAddress.countryRegion ?? '');
-    notifier.updateBillingAddress('state', data.billingAddress.state ?? '');
-    notifier.updateBillingAddress('zip', data.billingAddress.zipCode ?? '');
-
-    // ✅ Populate shipping address with addressId
-    shippingControllers['building']?.text =
-        data.shippingAddress.buildingNumber ?? '';
-    shippingControllers['streetAddress']?.text =
-        data.shippingAddress.streetAddress ?? '';
-    shippingControllers['streetAddressArabic']?.text = '';
-    shippingControllers['city']?.text = data.shippingAddress.city ?? '';
-    shippingControllers['cityArabic']?.text = '';
-    shippingControllers['zip']?.text = data.shippingAddress.zipCode ?? '';
-
-    // ✅ CRITICAL: Update form state with addressId (required for updates)
-    notifier.updateShippingAddress(
-        'addressId', data.shippingAddress.addressId.toString());
-    notifier.updateShippingAddress(
-        'building', data.shippingAddress.buildingNumber ?? '');
-    notifier.updateShippingAddress(
-        'streetAddress', data.shippingAddress.streetAddress ?? '');
-    notifier.updateShippingAddress('streetAddressArabic', '');
-    notifier.updateShippingAddress('city', data.shippingAddress.city ?? '');
-    notifier.updateShippingAddress('cityArabic', '');
-    notifier.updateShippingAddress(
-        'countryRegion', data.shippingAddress.countryRegion ?? '');
-    notifier.updateShippingAddress('state', data.shippingAddress.state ?? '');
-    notifier.updateShippingAddress('zip', data.shippingAddress.zipCode ?? '');
-
-    // Update vendor-level fields
-    notifier.updateField('firstName', data.primaryContact.firstName ?? '');
-    notifier.updateField('secondName', data.primaryContact.lastName ?? '');
-    notifier.updateField('firstNameArabic', '');
-    notifier.updateField('secondNameArabic', '');
-    notifier.updateField('companyName', data.companyName ?? '');
-    notifier.updateField('companyNameArabic', '');
-    notifier.updateField('email', data.emailAddress ?? '');
-    notifier.updateField('mobile', data.mobile?.toString() ?? '');
-    notifier.updateField('workPhone', data.phone?.toString() ?? '');
-    notifier.updateField('vatNumber', ''); // Not available
-    notifier.updateField('crNum', ''); // Not available
-    notifier.updateField('displayName', data.displayName ?? '');
-    notifier.updateField('partyType', data.partyType ?? '');
-    notifier.updateField('customerType', data.customerType ?? '');
-    notifier.updateField('mobileCode', data.mobileCode ?? '');
-    notifier.updateField('phoneCode', data.phoneCode ?? '');
-
-    print('✅ ViewParty data population complete');
-  }
-
   /// Fallback method for basic Vendor model (if ViewParty not available)
   void _populateFromVendor(Vendor data) {
     print('⚠️ Using fallback Vendor model (may have incomplete data)');
 
     final notifier = ref.read(updateVendorFormProvider.notifier);
-
-    // Store original displayName
-    ref.read(updateVendorOriginalDisplayNameProvider.notifier).state =
-        data.displayName;
 
     // Populate text controllers with available data
     vendorControllers['firstName']?.text = data.primaryContact.firstName ?? '';
@@ -317,8 +212,6 @@ class _UpdateVendorScreenState extends ConsumerState<UpdateVendorScreen> {
     ref.read(updateVendorEditModeProvider.notifier).state = false;
     ref.read(updateVendorEditPartyIdProvider.notifier).state = null;
     ref.read(vendorEditDataProvider.notifier).state = null;
-    ref.read(viewPartyEditDataProvider.notifier).state = null;
-    ref.read(updateVendorOriginalDisplayNameProvider.notifier).state = null;
 
     // Dispose controllers
     for (final controller in vendorControllers.values) {
@@ -358,9 +251,6 @@ class _UpdateVendorScreenState extends ConsumerState<UpdateVendorScreen> {
         ref.read(updateVendorEditModeProvider.notifier).state = false;
         ref.read(updateVendorEditPartyIdProvider.notifier).state = null;
         ref.read(vendorEditDataProvider.notifier).state = null;
-        ref.read(viewPartyEditDataProvider.notifier).state = null;
-        ref.read(updateVendorOriginalDisplayNameProvider.notifier).state = null;
-
         // Refresh vendor list
         ref.invalidate(getVendorData);
         ref.invalidate(getAllVendorsData);
@@ -410,15 +300,32 @@ class _UpdateVendorScreenState extends ConsumerState<UpdateVendorScreen> {
     final isBillingExpanded = ref.watch(vendorBillingTileExpandedProvider);
     final isShippingExpanded = ref.watch(vendorShippingTileExpandedProvider);
     final state = ref.read(updateVendorFormProvider);
+
+    // ✅ Core data providers (already present)
     final data = ref.watch(getCountryList);
     final stateData = ref.watch(getStateList);
+    final countryList = ref.watch(getCountryList);
+
+    // ✅ NEW: Pre-load dropdown data providers (matching web behavior)
+    final documentTypes = ref.watch(documentTypesProvider);
+    final branchList = ref.watch(fetchBranchListProvider);
+    final priceCurrencies = ref.watch(priceCurrenciesProvider);
+    final events = ref.watch(eventsProvider);
+
+    // Other providers
     final sameAsBilling = ref.watch(sameAsBillingToggleProvider);
     final customer = ref.watch(customerFormProvider);
-    final countryList = ref.watch(getCountryList);
     final currencyName = ref.watch(openingBalanceProvider);
     final branchName = ref.watch(openingAmountProvider);
     final sameAddress = ref.read(sameAsBillingToggleProvider.notifier).state;
 
+    // ✅ Check if any critical data is still loading
+    final isLoadingCriticalData = data.isLoading ||
+        stateData.isLoading ||
+        documentTypes.isLoading ||
+        branchList.isLoading ||
+        priceCurrencies.isLoading ||
+        events.isLoading;
     return ScalingFactor(
         child: PopScope(
             onPopInvokedWithResult: (didPop, result) {
@@ -445,755 +352,836 @@ class _UpdateVendorScreenState extends ConsumerState<UpdateVendorScreen> {
                   //     : 'Add Vendor',
                   context: context,
                   showBackButton: true),
-              body: SingleChildScrollView(
-                physics: BouncingScrollPhysics(),
-                padding: const EdgeInsets.all(22),
-                child: ReusableColumn(
-                  children: [
-                    FormContainer(
-                      height: 2,
+              body: isLoadingCriticalData
+                  ? const Center(
                       child: Padding(
-                        padding: const EdgeInsets.only(
-                            top: 0, left: 15, right: 15, bottom: 18),
-                        child: ReusableColumn(
+                        padding: EdgeInsets.all(32.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            ReusableColumn(
-                              children: vendorControllers.entries
-                                  .map((entry) => PayzoInputField(
-                                        label: topSectionLabels[entry.key] ??
-                                            entry.key,
-                                        inputFormatters: entry.key ==
-                                                'workPhone'
-                                            ? PayzoInputFormatters.mobileNumber
-                                            : entry.key == 'vatNumber'
-                                                ? PayzoInputFormatters
-                                                    .saudiVatNumber
-                                                : entry.key == 'crNumber'
-                                                    ? PayzoInputFormatters
-                                                        .saudiCrNumber
-                                                    : entry.key == 'mobile'
-                                                        ? PayzoInputFormatters
-                                                            .mobileNumber
-                                                        : entry.key == 'email'
-                                                            ? PayzoInputFormatters
-                                                                .email
-                                                            : entry.key ==
-                                                                        'firstNameArabic' ||
-                                                                    entry.key ==
-                                                                        'secondNameArabic' ||
-                                                                    entry.key ==
-                                                                        'companyNameArabic'
-                                                                ? PayzoInputFormatters
-                                                                    .onlyArabic
-                                                                : PayzoInputFormatters
-                                                                    .onlyAlphabets,
-                                        keyboardType:
-                                            entry.key == 'workPhone' ||
-                                                    entry.key == 'mobile' ||
-                                                    entry.key == 'vatNumber' ||
-                                                    entry.key == 'crNumber'
-                                                ? TextInputType.phone
-                                                : entry.key == 'email'
-                                                    ? TextInputType.emailAddress
-                                                    : TextInputType.text,
-                                        required: entry.key == 'companyName' ||
-                                                entry.key == 'companyNameArabic'
-                                            ? true
-                                            : false,
-                                        countryTap: entry.key == 'workPhone'
-                                            ? () async {
-                                                await ref
-                                                    .read(focusUtilsProvider)
-                                                    .unfocusAndDelay();
-                                                showModalBottomSheet(
-                                                  context: context,
-                                                  isScrollControlled: true,
-                                                  backgroundColor:
-                                                      Colors.transparent,
-                                                  builder: (_) => data.when(
-                                                    data: (data) =>
-                                                        ReusableCountryBottomSheet(
-                                                      title: 'Countries',
-                                                      items: data.response
-                                                              ?.map((e) => e
-                                                                  .countryName!)
-                                                              .toList() ??
-                                                          [],
-                                                      onSelect:
-                                                          (selectedCountry) {
-                                                        final selected = data
-                                                            .response
-                                                            ?.firstWhere(
-                                                          (element) =>
-                                                              element
-                                                                  .countryName ==
-                                                              selectedCountry,
-                                                        );
-                                                        if (selected != null) {
-                                                          ref
-                                                              .read(
-                                                                  countryPhoneProvider
-                                                                      .notifier)
-                                                              .state = selected
-                                                                  .ccphnCode
-                                                                  ?.toString() ??
-                                                              '';
-                                                          ref
-                                                              .read(
-                                                                  countryFlagProvider
-                                                                      .notifier)
-                                                              .state = selected
-                                                                  .countryFlag
-                                                                  ?.toString() ??
-                                                              '';
-                                                          notifier.updateField(
-                                                              'phoneCode',
-                                                              selected.ccphnCode
-                                                                      ?.toString() ??
-                                                                  ''); // ✅ Added for workPhone
-                                                        }
-                                                      },
-                                                    ),
-                                                    error: (err, _) {
-                                                      print(_);
-                                                      print('error is $err');
-                                                      return SizedBox();
-                                                    },
-                                                    loading: () =>
-                                                        ReusableSizedBox(
-                                                      width: 10,
-                                                      height: 10,
-                                                      child:
-                                                          CircularProgressIndicator(),
-                                                    ),
-                                                  ),
-                                                );
-                                              }
-                                            : () async {
-                                                await ref
-                                                    .read(focusUtilsProvider)
-                                                    .unfocusAndDelay();
-                                                showModalBottomSheet(
-                                                  context: context,
-                                                  isScrollControlled: true,
-                                                  backgroundColor:
-                                                      Colors.transparent,
-                                                  builder: (_) => data.when(
-                                                    data: (data) =>
-                                                        ReusableCountryBottomSheet(
-                                                      title: 'Countries',
-                                                      items: data.response
-                                                              ?.map((e) => e
-                                                                  .countryName!)
-                                                              .toList() ??
-                                                          [],
-                                                      onSelect:
-                                                          (selectedCountry) {
-                                                        final selected = data
-                                                            .response
-                                                            ?.firstWhere(
-                                                          (element) =>
-                                                              element
-                                                                  .countryName ==
-                                                              selectedCountry,
-                                                        );
-                                                        if (selected != null) {
-                                                          ref
-                                                              .read(
-                                                                  countryPhoneMobileProvider
-                                                                      .notifier)
-                                                              .state = selected
-                                                                  .ccphnCode
-                                                                  ?.toString() ??
-                                                              '';
-                                                          ref
-                                                              .read(
-                                                                  countryFlagMobileProvider
-                                                                      .notifier)
-                                                              .state = selected
-                                                                  .countryFlag
-                                                                  ?.toString() ??
-                                                              '';
-                                                          notifier.updateField(
-                                                              'mobileCode',
-                                                              selected.ccphnCode
-                                                                      ?.toString() ??
-                                                                  '');
-                                                        }
-                                                      },
-                                                    ),
-                                                    error: (err, _) {
-                                                      print(_);
-                                                      print('error is $err');
-                                                      return SizedBox();
-                                                    },
-                                                    loading: () =>
-                                                        ReusableSizedBox(
-                                                      width: 10,
-                                                      height: 10,
-                                                      child:
-                                                          CircularProgressIndicator(),
-                                                    ),
-                                                  ),
-                                                );
-                                              },
-                                        controller: entry.value,
-                                        errorText:
-                                            vendorState.errors[entry.key],
-                                        countryFlagCode: entry.key ==
-                                                'workPhone'
-                                            ? ref.watch(countryFlagProvider)
-                                            : entry.key == 'mobile'
-                                                ? ref.watch(
-                                                    countryFlagMobileProvider)
-                                                : null,
-                                        onChanged: (value) => notifier
-                                            .updateField(entry.key, value),
-                                      ))
-                                  .toList(),
+                            CircularProgressIndicator(
+                              color: AppColors.appMainColor,
                             ),
-                            // PayzoBottomsheetNavigator(
-                            //   title: 'Opening Balance',
-                            //   isPayzoColor: true,
-                            //   trailing: branchName,
-                            //   // errorText: customer.errors['branchId'],
-                            //   onTap: () async {
-                            //     await ref
-                            //         .read(focusUtilsProvider)
-                            //         .unfocusAndDelay();
-                            //
-                            //     showModalBottomSheet(
-                            //       context: context,
-                            //       isScrollControlled: true,
-                            //       backgroundColor: Colors.transparent,
-                            //       builder: (context) {
-                            //         return Consumer(
-                            //           builder: (context, ref, _) {
-                            //             final branchAsync =
-                            //                 ref.watch(fetchBranchListProvider);
-                            //
-                            //             return branchAsync.when(
-                            //               data: (data) {
-                            //                 final branches = data.data
-                            //                         ?.map(
-                            //                             (b) => b.namePrimary ?? '')
-                            //                         .where(
-                            //                             (name) => name.isNotEmpty)
-                            //                         .toList() ??
-                            //                     [];
-                            //
-                            //                 return ReusableCountryBottomSheet(
-                            //                   title: 'Select Opening Balance',
-                            //                   items: branches,
-                            //                   onSelect: (selectedName) {
-                            //                     final selectedBranch =
-                            //                         data.data?.firstWhere(
-                            //                       (b) =>
-                            //                           b.namePrimary == selectedName,
-                            //                       orElse: () => data.data!.first,
-                            //                     );
-                            //
-                            //                     if (selectedBranch != null) {
-                            //                       notifier
-                            //                           .updateOpeningBalanceField(
-                            //                               'branch',
-                            //                               selectedBranch.branchId);
-                            //                       ref
-                            //                               .read(
-                            //                                   openingAmountProvider
-                            //                                       .notifier)
-                            //                               .state =
-                            //                           selectedBranch.nameSecondary!;
-                            //                     }
-                            //                   },
-                            //                 );
-                            //               },
-                            //               loading: () => const Center(
-                            //                   child: CircularProgressIndicator()),
-                            //               error: (err, _) => Center(
-                            //                   child: Text(
-                            //                       'Failed to load branches: $err')),
-                            //             );
-                            //           },
-                            //         );
-                            //       },
-                            //     );
-                            //   },
-                            // ),
-                            // PayzoInputField(
-                            //   leading: SarTextfield(
-                            //     title: () {
-                            //       final currencyId = vendorState
-                            //               .openingBalance['currency']
-                            //               ?.toString() ??
-                            //           '';
-                            //       if (currencyId.isEmpty) return 'SAR';
-                            //
-                            //       // Fetch currency list synchronously if already cached in provider
-                            //       final currencyListAsync =
-                            //           ref.watch(fetchPriceCurrencyProvider);
-                            //
-                            //       return currencyListAsync.when(
-                            //         data: (currencyList) {
-                            //           final selected = currencyList.firstWhere(
-                            //             (e) =>
-                            //                 e.currencyId.toString() == currencyId,
-                            //             orElse: () => currencyList.first,
-                            //           );
-                            //           return selected.currencyValue ?? 'SAR';
-                            //         },
-                            //         loading: () => 'Loading...',
-                            //         error: (_, __) => 'SAR',
-                            //       );
-                            //     }(),
-                            //     onTap: () async {
-                            //       final currencyList = await ref
-                            //           .read(fetchPriceCurrencyProvider.future);
-                            //
-                            //       final currencyLabels = currencyList
-                            //           .map((e) => e.currencyValue ?? '')
-                            //           .where((e) => e.isNotEmpty)
-                            //           .toSet()
-                            //           .toList();
-                            //
-                            //
-                            //       if (context.mounted) {
-                            //         await ref
-                            //             .read(focusUtilsProvider)
-                            //             .unfocusAndDelay();
-                            //         showModalBottomSheet(
-                            //           context: context,
-                            //           isScrollControlled: true,
-                            //           backgroundColor: Colors.transparent,
-                            //           builder: (_) => ReusableCountryBottomSheet(
-                            //             title: 'Select Currency',
-                            //             items: currencyLabels,
-                            //             onSelect: (selectedCurrency) {
-                            //               final selected = currencyList.firstWhere(
-                            //                 (e) =>
-                            //                     e.currencyValue == selectedCurrency,
-                            //                 orElse: () => currencyList.first,
-                            //               );
-                            //               notifier.updateOpeningBalanceField(
-                            //                   'currency', selected.currencyId);
-                            //               ref
-                            //                   .read(openingBalanceProvider.notifier)
-                            //                   .state = selected.currencyValue!;
-                            //               debugPrint(
-                            //                   '✅ Selected Currency: ${selected.currencyValue}, ID: ${selected.currencyId}');
-                            //             },
-                            //           ),
-                            //         );
-                            //       }
-                            //     },
-                            //   ),
-                            //   label: 'Opening Amount',
-                            //   controller: openingAmount,
-                            //   errorText: customer.errors['currencyId'],
-                            //   keyboardType: TextInputType.number,
-                            //   onChanged: (val) {
-                            //     final parsed = double.tryParse(val);
-                            //     if (parsed != null) {
-                            //       notifier.updateOpeningBalanceField('amount', val);
-                            //       debugPrint('✅ Updated Opening Amount: $val');
-                            //     }
-                            //   },
-                            // ),
+                            SizedBox(height: 16),
+                            Text(
+                              'Loading vendor details...',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                    ),
-                    SizedBox(height: 15),
-                    CustomExpansionTile(
-                      title: 'Billing Address',
-                      isExpanded: isBillingExpanded,
-                      onToggle: () => ref
-                          .read(vendorBillingTileExpandedProvider.notifier)
-                          .state = !isBillingExpanded,
-                      height: 0,
+                    )
+                  : SingleChildScrollView(
+                      physics: BouncingScrollPhysics(),
+                      padding: const EdgeInsets.all(22),
                       child: ReusableColumn(
                         children: [
-                          PayzoBottomsheetNavigator(
-                            onUnselect: () {
-                              notifier.clearBillingCountry();
-                              showPayzoSnackBar(
-                                  context: context,
-                                  ref: ref,
-                                  message: 'Billing Country cleared',
-                                  type: PayzoSnackType.success);
-                            },
-                            required: true,
-                            title: 'Country',
-                            errorText: vendorState.errors['billing_country'],
-                            trailing:
-                                state.billingAddress['country']!.isEmpty ||
-                                        state.billingAddress['country'] == ''
-                                    ? 'Tap to Select'
-                                    : '${state.billingAddress['country']}',
-                            isPayzoColor: true,
-                            onTap: () async {
-                              await ref
-                                  .read(focusUtilsProvider)
-                                  .unfocusAndDelay();
+                          FormContainer(
+                            height: 2,
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                  top: 0, left: 15, right: 15, bottom: 18),
+                              child: ReusableColumn(
+                                children: [
+                                  ReusableColumn(
+                                    children: vendorControllers.entries
+                                        .map((entry) => PayzoInputField(
+                                              label:
+                                                  topSectionLabels[entry.key] ??
+                                                      entry.key,
+                                              inputFormatters: entry
+                                                          .key ==
+                                                      'workPhone'
+                                                  ? PayzoInputFormatters
+                                                      .mobileNumber
+                                                  : entry.key == 'vatNumber'
+                                                      ? PayzoInputFormatters
+                                                          .saudiVatNumber
+                                                      : entry.key == 'crNumber'
+                                                          ? PayzoInputFormatters
+                                                              .saudiCrNumber
+                                                          : entry
+                                                                      .key ==
+                                                                  'mobile'
+                                                              ? PayzoInputFormatters
+                                                                  .mobileNumber
+                                                              : entry.key ==
+                                                                      'email'
+                                                                  ? PayzoInputFormatters
+                                                                      .email
+                                                                  : entry.key ==
+                                                                              'firstNameArabic' ||
+                                                                          entry.key ==
+                                                                              'secondNameArabic' ||
+                                                                          entry.key ==
+                                                                              'companyNameArabic'
+                                                                      ? PayzoInputFormatters
+                                                                          .onlyArabic
+                                                                      : PayzoInputFormatters
+                                                                          .onlyAlphabets,
+                                              keyboardType: entry.key ==
+                                                          'workPhone' ||
+                                                      entry.key == 'mobile' ||
+                                                      entry.key ==
+                                                          'vatNumber' ||
+                                                      entry.key == 'crNumber'
+                                                  ? TextInputType.phone
+                                                  : entry.key == 'email'
+                                                      ? TextInputType
+                                                          .emailAddress
+                                                      : TextInputType.text,
+                                              required: entry.key ==
+                                                          'companyName' ||
+                                                      entry.key ==
+                                                          'companyNameArabic'
+                                                  ? true
+                                                  : false,
+                                              countryTap: entry.key ==
+                                                      'workPhone'
+                                                  ? () async {
+                                                      await ref
+                                                          .read(
+                                                              focusUtilsProvider)
+                                                          .unfocusAndDelay();
+                                                      showModalBottomSheet(
+                                                        context: context,
+                                                        isScrollControlled:
+                                                            true,
+                                                        backgroundColor:
+                                                            Colors.transparent,
+                                                        builder: (_) =>
+                                                            data.when(
+                                                          data: (data) =>
+                                                              ReusableCountryBottomSheet(
+                                                            title: 'Countries',
+                                                            items: data.response
+                                                                    ?.map((e) =>
+                                                                        e.countryName!)
+                                                                    .toList() ??
+                                                                [],
+                                                            onSelect:
+                                                                (selectedCountry) {
+                                                              final selected = data
+                                                                  .response
+                                                                  ?.firstWhere(
+                                                                (element) =>
+                                                                    element
+                                                                        .countryName ==
+                                                                    selectedCountry,
+                                                              );
+                                                              if (selected !=
+                                                                  null) {
+                                                                ref
+                                                                    .read(countryPhoneProvider
+                                                                        .notifier)
+                                                                    .state = selected
+                                                                        .ccphnCode
+                                                                        ?.toString() ??
+                                                                    '';
+                                                                ref
+                                                                    .read(countryFlagProvider
+                                                                        .notifier)
+                                                                    .state = selected
+                                                                        .countryFlag
+                                                                        ?.toString() ??
+                                                                    '';
+                                                                notifier.updateField(
+                                                                    'phoneCode',
+                                                                    selected.ccphnCode
+                                                                            ?.toString() ??
+                                                                        ''); // ✅ Added for workPhone
+                                                              }
+                                                            },
+                                                          ),
+                                                          error: (err, _) {
+                                                            print(_);
+                                                            print(
+                                                                'error is $err');
+                                                            return SizedBox();
+                                                          },
+                                                          loading: () =>
+                                                              ReusableSizedBox(
+                                                            width: 10,
+                                                            height: 10,
+                                                            child:
+                                                                CircularProgressIndicator(),
+                                                          ),
+                                                        ),
+                                                      );
+                                                    }
+                                                  : () async {
+                                                      await ref
+                                                          .read(
+                                                              focusUtilsProvider)
+                                                          .unfocusAndDelay();
+                                                      showModalBottomSheet(
+                                                        context: context,
+                                                        isScrollControlled:
+                                                            true,
+                                                        backgroundColor:
+                                                            Colors.transparent,
+                                                        builder: (_) =>
+                                                            data.when(
+                                                          data: (data) =>
+                                                              ReusableCountryBottomSheet(
+                                                            title: 'Countries',
+                                                            items: data.response
+                                                                    ?.map((e) =>
+                                                                        e.countryName!)
+                                                                    .toList() ??
+                                                                [],
+                                                            onSelect:
+                                                                (selectedCountry) {
+                                                              final selected = data
+                                                                  .response
+                                                                  ?.firstWhere(
+                                                                (element) =>
+                                                                    element
+                                                                        .countryName ==
+                                                                    selectedCountry,
+                                                              );
+                                                              if (selected !=
+                                                                  null) {
+                                                                ref
+                                                                    .read(countryPhoneMobileProvider
+                                                                        .notifier)
+                                                                    .state = selected
+                                                                        .ccphnCode
+                                                                        ?.toString() ??
+                                                                    '';
+                                                                ref
+                                                                    .read(countryFlagMobileProvider
+                                                                        .notifier)
+                                                                    .state = selected
+                                                                        .countryFlag
+                                                                        ?.toString() ??
+                                                                    '';
+                                                                notifier.updateField(
+                                                                    'mobileCode',
+                                                                    selected.ccphnCode
+                                                                            ?.toString() ??
+                                                                        '');
+                                                              }
+                                                            },
+                                                          ),
+                                                          error: (err, _) {
+                                                            print(_);
+                                                            print(
+                                                                'error is $err');
+                                                            return SizedBox();
+                                                          },
+                                                          loading: () =>
+                                                              ReusableSizedBox(
+                                                            width: 10,
+                                                            height: 10,
+                                                            child:
+                                                                CircularProgressIndicator(),
+                                                          ),
+                                                        ),
+                                                      );
+                                                    },
+                                              controller: entry.value,
+                                              errorText:
+                                                  vendorState.errors[entry.key],
+                                              countryFlagCode: entry.key ==
+                                                      'workPhone'
+                                                  ? ref.watch(
+                                                      countryFlagProvider)
+                                                  : entry.key == 'mobile'
+                                                      ? ref.watch(
+                                                          countryFlagMobileProvider)
+                                                      : null,
+                                              onChanged: (value) =>
+                                                  notifier.updateField(
+                                                      entry.key, value),
+                                            ))
+                                        .toList(),
+                                  ),
+                                  // PayzoBottomsheetNavigator(
+                                  //   title: 'Opening Balance',
+                                  //   isPayzoColor: true,
+                                  //   trailing: branchName,
+                                  //   // errorText: customer.errors['branchId'],
+                                  //   onTap: () async {
+                                  //     await ref
+                                  //         .read(focusUtilsProvider)
+                                  //         .unfocusAndDelay();
+                                  //
+                                  //     showModalBottomSheet(
+                                  //       context: context,
+                                  //       isScrollControlled: true,
+                                  //       backgroundColor: Colors.transparent,
+                                  //       builder: (context) {
+                                  //         return Consumer(
+                                  //           builder: (context, ref, _) {
+                                  //             final branchAsync =
+                                  //                 ref.watch(fetchBranchListProvider);
+                                  //
+                                  //             return branchAsync.when(
+                                  //               data: (data) {
+                                  //                 final branches = data.data
+                                  //                         ?.map(
+                                  //                             (b) => b.namePrimary ?? '')
+                                  //                         .where(
+                                  //                             (name) => name.isNotEmpty)
+                                  //                         .toList() ??
+                                  //                     [];
+                                  //
+                                  //                 return ReusableCountryBottomSheet(
+                                  //                   title: 'Select Opening Balance',
+                                  //                   items: branches,
+                                  //                   onSelect: (selectedName) {
+                                  //                     final selectedBranch =
+                                  //                         data.data?.firstWhere(
+                                  //                       (b) =>
+                                  //                           b.namePrimary == selectedName,
+                                  //                       orElse: () => data.data!.first,
+                                  //                     );
+                                  //
+                                  //                     if (selectedBranch != null) {
+                                  //                       notifier
+                                  //                           .updateOpeningBalanceField(
+                                  //                               'branch',
+                                  //                               selectedBranch.branchId);
+                                  //                       ref
+                                  //                               .read(
+                                  //                                   openingAmountProvider
+                                  //                                       .notifier)
+                                  //                               .state =
+                                  //                           selectedBranch.nameSecondary!;
+                                  //                     }
+                                  //                   },
+                                  //                 );
+                                  //               },
+                                  //               loading: () => const Center(
+                                  //                   child: CircularProgressIndicator()),
+                                  //               error: (err, _) => Center(
+                                  //                   child: Text(
+                                  //                       'Failed to load branches: $err')),
+                                  //             );
+                                  //           },
+                                  //         );
+                                  //       },
+                                  //     );
+                                  //   },
+                                  // ),
+                                  // PayzoInputField(
+                                  //   leading: SarTextfield(
+                                  //     title: () {
+                                  //       final currencyId = vendorState
+                                  //               .openingBalance['currency']
+                                  //               ?.toString() ??
+                                  //           '';
+                                  //       if (currencyId.isEmpty) return 'SAR';
+                                  //
+                                  //       // Fetch currency list synchronously if already cached in provider
+                                  //       final currencyListAsync =
+                                  //           ref.watch(fetchPriceCurrencyProvider);
+                                  //
+                                  //       return currencyListAsync.when(
+                                  //         data: (currencyList) {
+                                  //           final selected = currencyList.firstWhere(
+                                  //             (e) =>
+                                  //                 e.currencyId.toString() == currencyId,
+                                  //             orElse: () => currencyList.first,
+                                  //           );
+                                  //           return selected.currencyValue ?? 'SAR';
+                                  //         },
+                                  //         loading: () => 'Loading...',
+                                  //         error: (_, __) => 'SAR',
+                                  //       );
+                                  //     }(),
+                                  //     onTap: () async {
+                                  //       final currencyList = await ref
+                                  //           .read(fetchPriceCurrencyProvider.future);
+                                  //
+                                  //       final currencyLabels = currencyList
+                                  //           .map((e) => e.currencyValue ?? '')
+                                  //           .where((e) => e.isNotEmpty)
+                                  //           .toSet()
+                                  //           .toList();
+                                  //
+                                  //
+                                  //       if (context.mounted) {
+                                  //         await ref
+                                  //             .read(focusUtilsProvider)
+                                  //             .unfocusAndDelay();
+                                  //         showModalBottomSheet(
+                                  //           context: context,
+                                  //           isScrollControlled: true,
+                                  //           backgroundColor: Colors.transparent,
+                                  //           builder: (_) => ReusableCountryBottomSheet(
+                                  //             title: 'Select Currency',
+                                  //             items: currencyLabels,
+                                  //             onSelect: (selectedCurrency) {
+                                  //               final selected = currencyList.firstWhere(
+                                  //                 (e) =>
+                                  //                     e.currencyValue == selectedCurrency,
+                                  //                 orElse: () => currencyList.first,
+                                  //               );
+                                  //               notifier.updateOpeningBalanceField(
+                                  //                   'currency', selected.currencyId);
+                                  //               ref
+                                  //                   .read(openingBalanceProvider.notifier)
+                                  //                   .state = selected.currencyValue!;
+                                  //               debugPrint(
+                                  //                   '✅ Selected Currency: ${selected.currencyValue}, ID: ${selected.currencyId}');
+                                  //             },
+                                  //           ),
+                                  //         );
+                                  //       }
+                                  //     },
+                                  //   ),
+                                  //   label: 'Opening Amount',
+                                  //   controller: openingAmount,
+                                  //   errorText: customer.errors['currencyId'],
+                                  //   keyboardType: TextInputType.number,
+                                  //   onChanged: (val) {
+                                  //     final parsed = double.tryParse(val);
+                                  //     if (parsed != null) {
+                                  //       notifier.updateOpeningBalanceField('amount', val);
+                                  //       debugPrint('✅ Updated Opening Amount: $val');
+                                  //     }
+                                  //   },
+                                  // ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 15),
+                          CustomExpansionTile(
+                            title: 'Billing Address',
+                            isExpanded: isBillingExpanded,
+                            onToggle: () => ref
+                                .read(
+                                    vendorBillingTileExpandedProvider.notifier)
+                                .state = !isBillingExpanded,
+                            height: 0,
+                            child: ReusableColumn(
+                              children: [
+                                PayzoBottomsheetNavigator(
+                                  onUnselect: () {
+                                    notifier.clearBillingCountry();
+                                    showPayzoSnackBar(
+                                        context: context,
+                                        ref: ref,
+                                        message: 'Billing Country cleared',
+                                        type: PayzoSnackType.success);
+                                  },
+                                  required: true,
+                                  title: 'Country',
+                                  errorText:
+                                      vendorState.errors['billing_country'],
+                                  trailing: state.billingAddress['country']!
+                                              .isEmpty ||
+                                          state.billingAddress['country'] == ''
+                                      ? 'Tap to Select'
+                                      : '${state.billingAddress['country']}',
+                                  isPayzoColor: true,
+                                  onTap: () async {
+                                    await ref
+                                        .read(focusUtilsProvider)
+                                        .unfocusAndDelay();
 
-                              showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                backgroundColor: Colors.transparent,
-                                builder: (_) => data.when(
-                                    data: (data) => ReusableCountryBottomSheet(
-                                          title: 'Countries',
-                                          items: data.response
-                                                  ?.map((e) =>
-                                                      e.countryName ?? '')
-                                                  .toList() ??
-                                              [],
-                                          onSelect: (selectedCountry) {
-                                            final selected = data.response
-                                                ?.firstWhere((element) =>
-                                                    element.countryName ==
-                                                    selectedCountry);
-                                            if (selected != null) {
-                                              notifier.updateBillingAddress(
-                                                  'country',
-                                                  selected.countryName ?? '');
-                                              ref
-                                                      .read(countryCodeProvider
-                                                          .notifier)
-                                                      .state =
-                                                  selected.ccid?.toString() ??
-                                                      '';
-                                            }
+                                    showModalBottomSheet(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      backgroundColor: Colors.transparent,
+                                      builder: (_) => data.when(
+                                          data: (data) =>
+                                              ReusableCountryBottomSheet(
+                                                title: 'Countries',
+                                                items: data.response
+                                                        ?.map((e) =>
+                                                            e.countryName ?? '')
+                                                        .toList() ??
+                                                    [],
+                                                onSelect: (selectedCountry) {
+                                                  final selected = data.response
+                                                      ?.firstWhere((element) =>
+                                                          element.countryName ==
+                                                          selectedCountry);
+                                                  if (selected != null) {
+                                                    notifier.updateBillingAddress(
+                                                        'country',
+                                                        selected.countryName ??
+                                                            '');
+                                                    ref
+                                                        .read(
+                                                            countryCodeProvider
+                                                                .notifier)
+                                                        .state = selected.ccid
+                                                            ?.toString() ??
+                                                        '';
+                                                  }
+                                                },
+                                              ),
+                                          error: (err, _) {
+                                            print(_);
+                                            print('error is $err');
+                                            return SizedBox();
                                           },
-                                        ),
-                                    error: (err, _) {
-                                      print(_);
-                                      print('error is $err');
-                                      return SizedBox();
-                                    },
-                                    loading: () => ReusableSizedBox(
-                                        width: 10,
-                                        height: 10,
-                                        child: CircularProgressIndicator())),
-                              );
-                            },
-                          ),
-                          PayzoBottomsheetNavigator(
-                            required: true,
-                            title: 'State',
-                            errorText: vendorState.errors['billing_state'],
-                            trailing: state.billingAddress['state']!.isEmpty ||
-                                    state.billingAddress['state'] == ''
-                                ? 'Tap to Select'
-                                : '${state.billingAddress['state']}',
-                            isPayzoColor: true,
-                            onUnselect: () {
-                              notifier.clearBillingState();
-                              showPayzoSnackBar(
-                                  context: context,
-                                  ref: ref,
-                                  message: 'Billing state cleared',
-                                  type: PayzoSnackType.success);
-                            },
-                            onTap: () async {
-                              await ref
-                                  .read(focusUtilsProvider)
-                                  .unfocusAndDelay();
+                                          loading: () => ReusableSizedBox(
+                                              width: 10,
+                                              height: 10,
+                                              child:
+                                                  CircularProgressIndicator())),
+                                    );
+                                  },
+                                ),
+                                PayzoBottomsheetNavigator(
+                                  required: true,
+                                  title: 'State',
+                                  errorText:
+                                      vendorState.errors['billing_state'],
+                                  trailing: state.billingAddress['state']!
+                                              .isEmpty ||
+                                          state.billingAddress['state'] == ''
+                                      ? 'Tap to Select'
+                                      : '${state.billingAddress['state']}',
+                                  isPayzoColor: true,
+                                  onUnselect: () {
+                                    notifier.clearBillingState();
+                                    showPayzoSnackBar(
+                                        context: context,
+                                        ref: ref,
+                                        message: 'Billing state cleared',
+                                        type: PayzoSnackType.success);
+                                  },
+                                  onTap: () async {
+                                    await ref
+                                        .read(focusUtilsProvider)
+                                        .unfocusAndDelay();
 
-                              showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                backgroundColor: Colors.transparent,
-                                builder: (_) => stateData.when(
-                                    data: (data) => ReusableCountryBottomSheet(
-                                          title: 'State',
-                                          items: data.response
-                                                  ?.map((e) => e.rName ?? '')
-                                                  .toList() ??
-                                              [],
-                                          onSelect: (selectedCountry) {
-                                            notifier.updateBillingAddress(
-                                                'state', selectedCountry);
+                                    showModalBottomSheet(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      backgroundColor: Colors.transparent,
+                                      builder: (_) => stateData.when(
+                                          data: (data) =>
+                                              ReusableCountryBottomSheet(
+                                                title: 'State',
+                                                items: data.response
+                                                        ?.map((e) =>
+                                                            e.rName ?? '')
+                                                        .toList() ??
+                                                    [],
+                                                onSelect: (selectedCountry) {
+                                                  notifier.updateBillingAddress(
+                                                      'state', selectedCountry);
+                                                },
+                                              ),
+                                          error: (err, _) {
+                                            print(_);
+                                            print('error is $err');
+                                            return SizedBox();
                                           },
-                                        ),
-                                    error: (err, _) {
-                                      print(_);
-                                      print('error is $err');
-                                      return SizedBox();
-                                    },
-                                    loading: () => ReusableSizedBox(
-                                        width: 10,
-                                        height: 10,
-                                        child: CircularProgressIndicator())),
-                              );
-                            },
-                          ),
-                          ReusableColumn(
-                            children: billingControllers.entries
-                                .map((entry) => PayzoInputField(
-                                    label: billingAddressLabels[entry.key] ??
-                                        entry.key,
-                                    keyboardType: entry.key == 'building' ||
-                                            entry.key == 'zip'
-                                        ? TextInputType.numberWithOptions()
-                                        : TextInputType.text,
-                                    inputFormatters: entry.key == 'building' ||
-                                            entry.key == 'zip'
-                                        ? PayzoInputFormatters.onlyFiveDigits
-                                        : entry.key == 'street'
-                                            ? PayzoInputFormatters.street
-                                            : PayzoInputFormatters.city,
-                                    controller: entry.value,
-                                    required: entry.key == 'city' ||
-                                        entry.key == 'cityArabic',
-                                    errorText: vendorState
-                                        .errors['billing_${entry.key}'],
-                                    onChanged: (value) {
-                                      notifier.updateBillingAddress(
-                                          entry.key, value);
-
-                                      // ✅ Also update shipping if sameAsBilling toggle is ON
-                                      if (ref
-                                          .read(sameAsBillingToggleProvider)) {
-                                        if (shippingControllers
-                                            .containsKey(entry.key)) {
-                                          shippingControllers[entry.key]?.text =
-                                              value;
-                                        }
-                                        notifier.updateShippingAddress(
-                                            entry.key, value);
-                                      }
-                                    }))
-                                .toList(),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 15),
-                    FormContainer(
-                      height: 2,
-                      child: ReusablePadding(
-                        padding: const EdgeInsets.only(
-                            left: 15, right: 15, top: 18, bottom: 18),
-                        child: CustomToggleTile(
-                          title: 'Use Billing Address as Shipping Address',
-                          value: sameAsBilling,
-                          onChanged: (value) {
-                            ref
-                                .read(sameAsBillingToggleProvider.notifier)
-                                .state = value;
-
-                            final notifier =
-                                ref.read(updateVendorFormProvider.notifier);
-                            notifier.updateSameAddressFlag(value);
-
-                            if (value) {
-                              // ✅ Copy billing text controllers to shipping
-                              billingControllers
-                                  .forEach((key, billingController) {
-                                if (shippingControllers.containsKey(key)) {
-                                  shippingControllers[key]!.text =
-                                      billingController.text;
-                                }
-                              });
-
-                              // ✅ Also copy country and state to shipping address state
-                              final billing = ref
-                                  .read(updateVendorFormProvider)
-                                  .billingAddress;
-                              notifier.state = notifier.state.copyWith(
-                                shippingAddress: Map.from(billing),
-                              );
-                            } else {
-                              // 🧹 Clear all shipping fields (including country/state)
-                              shippingControllers.forEach((key, controller) {
-                                controller.clear();
-                              });
-
-                              notifier.state = notifier.state.copyWith(
-                                shippingAddress: {
-                                  'country': '',
-                                  'state': '',
-                                  'building': '',
-                                  'streetAddress': '',
-                                  'streetAddressArabic': '',
-                                  'city': '',
-                                  'zip': '',
-                                },
-                              );
-                            }
-                          },
-                          divider: false,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 15),
-                    CustomExpansionTile(
-                      title: 'Shipping Address',
-                      isExpanded: isShippingExpanded,
-                      onToggle: () => ref
-                          .read(vendorShippingTileExpandedProvider.notifier)
-                          .state = !isShippingExpanded,
-                      height: 0,
-                      child: Column(
-                        children: [
-                          PayzoBottomsheetNavigator(
-                            onUnselect: () {
-                              notifier.clearShippingCountry();
-                              showPayzoSnackBar(
-                                  context: context,
-                                  ref: ref,
-                                  message: 'Shipping country cleared',
-                                  type: PayzoSnackType.success);
-                            },
-                            enabled: sameAddress == true ? false : true,
-                            errorText: vendorState.errors['shipping_country'],
-                            required: true,
-                            title: 'Country',
-                            trailing:
-                                state.shippingAddress['country']!.isEmpty ||
-                                        state.shippingAddress['country'] == ''
-                                    ? 'Tap to Select'
-                                    : '${state.shippingAddress['country']}',
-                            isPayzoColor: true,
-                            onTap: () async {
-                              await ref
-                                  .read(focusUtilsProvider)
-                                  .unfocusAndDelay();
-
-                              showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                backgroundColor: Colors.transparent,
-                                builder: (_) => data.when(
-                                    data: (data) => ReusableCountryBottomSheet(
-                                          title: 'Countries',
-                                          items: data.response
-                                                  ?.map((e) =>
-                                                      e.countryName ?? '')
-                                                  .toList() ??
-                                              [],
-                                          onSelect: (selectedCountry) {
-                                            final selected = data.response
-                                                ?.firstWhere((element) =>
-                                                    element.countryName ==
-                                                    selectedCountry);
-                                            if (selected != null) {
-                                              notifier.updateShippingAddress(
-                                                  'country',
-                                                  selected.countryName ?? '');
-                                              ref
-                                                      .read(countryCodeProvider
-                                                          .notifier)
-                                                      .state =
-                                                  selected.ccid?.toString() ??
-                                                      '';
-                                            }
-                                          },
-                                        ),
-                                    error: (err, _) {
-                                      print(_);
-                                      print('error is $err');
-                                      return SizedBox();
-                                    },
-                                    loading: () => ReusableSizedBox(
-                                        width: 10,
-                                        height: 10,
-                                        child: CircularProgressIndicator())),
-                              );
-                            },
-                          ),
-                          PayzoBottomsheetNavigator(
-                            onUnselect: () {
-                              notifier.clearShippingState();
-                              showPayzoSnackBar(
-                                  context: context,
-                                  ref: ref,
-                                  message: 'Shipping state cleared',
-                                  type: PayzoSnackType.success);
-                            },
-                            enabled: sameAddress == true ? false : true,
-                            required: true,
-                            title: 'State',
-                            errorText: vendorState.errors['shipping_state'],
-                            trailing: state.shippingAddress['state']!.isEmpty ||
-                                    state.shippingAddress['state'] == ''
-                                ? 'Tap to Select'
-                                : '${state.shippingAddress['state']}',
-                            isPayzoColor: true,
-                            onTap: () async {
-                              await ref
-                                  .read(focusUtilsProvider)
-                                  .unfocusAndDelay();
-
-                              showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                backgroundColor: Colors.transparent,
-                                builder: (_) => stateData.when(
-                                    data: (data) => ReusableCountryBottomSheet(
-                                          title: 'State',
-                                          items: data.response
-                                                  ?.map((e) => e.rName ?? '')
-                                                  .toList() ??
-                                              [],
-                                          onSelect: (selectedCountry) {
-                                            notifier.updateShippingAddress(
-                                                'state', selectedCountry);
-                                          },
-                                        ),
-                                    error: (err, _) {
-                                      print(_);
-                                      print('error is $err');
-                                      return SizedBox();
-                                    },
-                                    loading: () => ReusableSizedBox(
-                                        width: 10,
-                                        height: 10,
-                                        child: CircularProgressIndicator())),
-                              );
-                            },
-                          ),
-                          Column(
-                            children: shippingControllers.entries
-                                .map((entry) => PayzoInputField(
-                                      enabled:
-                                          sameAddress == true ? false : true,
-                                      keyboardType: entry.key == 'building' ||
-                                              entry.key == 'zip'
-                                          ? TextInputType.numberWithOptions()
-                                          : TextInputType.text,
-                                      inputFormatters: entry.key ==
-                                                  'streetAddressArabic' ||
-                                              entry.key == 'cityArabic'
-                                          ? PayzoInputFormatters.onlyArabic
-                                          : entry.key == 'building' ||
+                                          loading: () => ReusableSizedBox(
+                                              width: 10,
+                                              height: 10,
+                                              child:
+                                                  CircularProgressIndicator())),
+                                    );
+                                  },
+                                ),
+                                ReusableColumn(
+                                  children: billingControllers.entries
+                                      .map((entry) => PayzoInputField(
+                                          label:
+                                              billingAddressLabels[entry.key] ??
+                                                  entry.key,
+                                          keyboardType:
+                                              entry.key == 'building' ||
+                                                      entry.key == 'zip'
+                                                  ? TextInputType
+                                                      .numberWithOptions()
+                                                  : TextInputType.text,
+                                          inputFormatters: entry.key ==
+                                                      'building' ||
                                                   entry.key == 'zip'
                                               ? PayzoInputFormatters
                                                   .onlyFiveDigits
                                               : entry.key == 'street'
                                                   ? PayzoInputFormatters.street
                                                   : PayzoInputFormatters.city,
-                                      label: shippingAddressLabels[entry.key] ??
-                                          entry.key,
-                                      controller: entry.value,
-                                      required: entry.key == 'city' ||
-                                          entry.key == 'cityArabic',
-                                      errorText: vendorState
-                                          .errors['shipping_${entry.key}'],
-                                      // ✅ Match key pattern
-                                      onChanged: (value) =>
-                                          notifier.updateShippingAddress(
-                                              entry.key, value),
-                                    ))
-                                .toList(),
+                                          controller: entry.value,
+                                          required: entry.key == 'city' ||
+                                              entry.key == 'cityArabic',
+                                          errorText: vendorState
+                                              .errors['billing_${entry.key}'],
+                                          onChanged: (value) {
+                                            notifier.updateBillingAddress(
+                                                entry.key, value);
+
+                                            // ✅ Also update shipping if sameAsBilling toggle is ON
+                                            if (ref.read(
+                                                sameAsBillingToggleProvider)) {
+                                              if (shippingControllers
+                                                  .containsKey(entry.key)) {
+                                                shippingControllers[entry.key]
+                                                    ?.text = value;
+                                              }
+                                              notifier.updateShippingAddress(
+                                                  entry.key, value);
+                                            }
+                                          }))
+                                      .toList(),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(height: 15),
+                          FormContainer(
+                            height: 2,
+                            child: ReusablePadding(
+                              padding: const EdgeInsets.only(
+                                  left: 15, right: 15, top: 18, bottom: 18),
+                              child: CustomToggleTile(
+                                title:
+                                    'Use Billing Address as Shipping Address',
+                                value: sameAsBilling,
+                                onChanged: (value) {
+                                  ref
+                                      .read(
+                                          sameAsBillingToggleProvider.notifier)
+                                      .state = value;
+
+                                  final notifier = ref
+                                      .read(updateVendorFormProvider.notifier);
+                                  notifier.updateSameAddressFlag(value);
+
+                                  if (value) {
+                                    // ✅ Copy billing text controllers to shipping
+                                    billingControllers
+                                        .forEach((key, billingController) {
+                                      if (shippingControllers
+                                          .containsKey(key)) {
+                                        shippingControllers[key]!.text =
+                                            billingController.text;
+                                      }
+                                    });
+
+                                    // ✅ Also copy country and state to shipping address state
+                                    final billing = ref
+                                        .read(updateVendorFormProvider)
+                                        .billingAddress;
+                                    notifier.state = notifier.state.copyWith(
+                                      shippingAddress: Map.from(billing),
+                                    );
+                                  } else {
+                                    // 🧹 Clear all shipping fields (including country/state)
+                                    shippingControllers
+                                        .forEach((key, controller) {
+                                      controller.clear();
+                                    });
+
+                                    notifier.state = notifier.state.copyWith(
+                                      shippingAddress: {
+                                        'country': '',
+                                        'state': '',
+                                        'building': '',
+                                        'streetAddress': '',
+                                        'streetAddressArabic': '',
+                                        'city': '',
+                                        'zip': '',
+                                      },
+                                    );
+                                  }
+                                },
+                                divider: false,
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 15),
+                          CustomExpansionTile(
+                            title: 'Shipping Address',
+                            isExpanded: isShippingExpanded,
+                            onToggle: () => ref
+                                .read(
+                                    vendorShippingTileExpandedProvider.notifier)
+                                .state = !isShippingExpanded,
+                            height: 0,
+                            child: Column(
+                              children: [
+                                PayzoBottomsheetNavigator(
+                                  onUnselect: () {
+                                    notifier.clearShippingCountry();
+                                    showPayzoSnackBar(
+                                        context: context,
+                                        ref: ref,
+                                        message: 'Shipping country cleared',
+                                        type: PayzoSnackType.success);
+                                  },
+                                  enabled: sameAddress == true ? false : true,
+                                  errorText:
+                                      vendorState.errors['shipping_country'],
+                                  required: true,
+                                  title: 'Country',
+                                  trailing: state.shippingAddress['country']!
+                                              .isEmpty ||
+                                          state.shippingAddress['country'] == ''
+                                      ? 'Tap to Select'
+                                      : '${state.shippingAddress['country']}',
+                                  isPayzoColor: true,
+                                  onTap: () async {
+                                    await ref
+                                        .read(focusUtilsProvider)
+                                        .unfocusAndDelay();
+
+                                    showModalBottomSheet(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      backgroundColor: Colors.transparent,
+                                      builder: (_) => data.when(
+                                          data: (data) =>
+                                              ReusableCountryBottomSheet(
+                                                title: 'Countries',
+                                                items: data.response
+                                                        ?.map((e) =>
+                                                            e.countryName ?? '')
+                                                        .toList() ??
+                                                    [],
+                                                onSelect: (selectedCountry) {
+                                                  final selected = data.response
+                                                      ?.firstWhere((element) =>
+                                                          element.countryName ==
+                                                          selectedCountry);
+                                                  if (selected != null) {
+                                                    notifier.updateShippingAddress(
+                                                        'country',
+                                                        selected.countryName ??
+                                                            '');
+                                                    ref
+                                                        .read(
+                                                            countryCodeProvider
+                                                                .notifier)
+                                                        .state = selected.ccid
+                                                            ?.toString() ??
+                                                        '';
+                                                  }
+                                                },
+                                              ),
+                                          error: (err, _) {
+                                            print(_);
+                                            print('error is $err');
+                                            return SizedBox();
+                                          },
+                                          loading: () => ReusableSizedBox(
+                                              width: 10,
+                                              height: 10,
+                                              child:
+                                                  CircularProgressIndicator())),
+                                    );
+                                  },
+                                ),
+                                PayzoBottomsheetNavigator(
+                                  onUnselect: () {
+                                    notifier.clearShippingState();
+                                    showPayzoSnackBar(
+                                        context: context,
+                                        ref: ref,
+                                        message: 'Shipping state cleared',
+                                        type: PayzoSnackType.success);
+                                  },
+                                  enabled: sameAddress == true ? false : true,
+                                  required: true,
+                                  title: 'State',
+                                  errorText:
+                                      vendorState.errors['shipping_state'],
+                                  trailing: state.shippingAddress['state']!
+                                              .isEmpty ||
+                                          state.shippingAddress['state'] == ''
+                                      ? 'Tap to Select'
+                                      : '${state.shippingAddress['state']}',
+                                  isPayzoColor: true,
+                                  onTap: () async {
+                                    await ref
+                                        .read(focusUtilsProvider)
+                                        .unfocusAndDelay();
+
+                                    showModalBottomSheet(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      backgroundColor: Colors.transparent,
+                                      builder: (_) => stateData.when(
+                                          data: (data) =>
+                                              ReusableCountryBottomSheet(
+                                                title: 'State',
+                                                items: data.response
+                                                        ?.map((e) =>
+                                                            e.rName ?? '')
+                                                        .toList() ??
+                                                    [],
+                                                onSelect: (selectedCountry) {
+                                                  notifier
+                                                      .updateShippingAddress(
+                                                          'state',
+                                                          selectedCountry);
+                                                },
+                                              ),
+                                          error: (err, _) {
+                                            print(_);
+                                            print('error is $err');
+                                            return SizedBox();
+                                          },
+                                          loading: () => ReusableSizedBox(
+                                              width: 10,
+                                              height: 10,
+                                              child:
+                                                  CircularProgressIndicator())),
+                                    );
+                                  },
+                                ),
+                                Column(
+                                  children: shippingControllers.entries
+                                      .map((entry) => PayzoInputField(
+                                            enabled: sameAddress == true
+                                                ? false
+                                                : true,
+                                            keyboardType:
+                                                entry.key == 'building' ||
+                                                        entry.key == 'zip'
+                                                    ? TextInputType
+                                                        .numberWithOptions()
+                                                    : TextInputType.text,
+                                            inputFormatters: entry.key ==
+                                                        'streetAddressArabic' ||
+                                                    entry.key == 'cityArabic'
+                                                ? PayzoInputFormatters
+                                                    .onlyArabic
+                                                : entry.key == 'building' ||
+                                                        entry.key == 'zip'
+                                                    ? PayzoInputFormatters
+                                                        .onlyFiveDigits
+                                                    : entry.key == 'street'
+                                                        ? PayzoInputFormatters
+                                                            .street
+                                                        : PayzoInputFormatters
+                                                            .city,
+                                            label: shippingAddressLabels[
+                                                    entry.key] ??
+                                                entry.key,
+                                            controller: entry.value,
+                                            required: entry.key == 'city' ||
+                                                entry.key == 'cityArabic',
+                                            errorText: vendorState.errors[
+                                                'shipping_${entry.key}'],
+                                            // ✅ Match key pattern
+                                            onChanged: (value) =>
+                                                notifier.updateShippingAddress(
+                                                    entry.key, value),
+                                          ))
+                                      .toList(),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
                     ),
-                  ],
-                ),
-              ),
               bottomNavigationBar: Consumer(builder: (context, ref, child) {
                 final isEditMode = ref.watch(updateVendorEditModeProvider);
 

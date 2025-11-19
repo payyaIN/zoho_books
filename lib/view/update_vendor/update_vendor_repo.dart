@@ -24,12 +24,12 @@ class UpdateVendorRepository {
     final mobileCode = ref.read(countryPhoneMobileProvider);
 
     // ✅ Get original displayName to avoid "already exists" error
-    final originalDisplayName =
-        ref.read(updateVendorOriginalDisplayNameProvider);
+    // final originalDisplayName =
+    //     ref.read(updateVendorOriginalDisplayNameProvider);
 
     debugPrint("🔍 Update Vendor State: ${state.toJson()}");
     debugPrint("🔍 Party ID: $partyId");
-    debugPrint("🔍 Original DisplayName: $originalDisplayName");
+    // debugPrint("🔍 Original DisplayName: $originalDisplayName");
     debugPrint("🔍 Current DisplayName: ${state.displayName}");
 
     final vendorBody = {
@@ -47,7 +47,7 @@ class UpdateVendorRepository {
       "companyName": state.companyName,
       "companyNameArabic": state.companyNameArabic,
       // ✅ CRITICAL FIX: Use original displayName to prevent "already exists" error
-      "displayName": originalDisplayName ?? state.displayName,
+      "displayName": state.displayName,
       "emailAddress": state.email,
       "phoneCode": countryPhone,
       "phone": int.tryParse(state.workPhone) ?? 0,
