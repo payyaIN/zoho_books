@@ -5,7 +5,7 @@ import 'package:payzo_books/data/repository/add_bills/get_vendor_list_repository
 import 'package:payzo_books/data/repository/add_invoice/get_customer_list_repo.dart';
 import 'package:payzo_books/data/repository/add_invoice/get_tax_list_repo.dart';
 import 'package:payzo_books/data/repository/add_product/get_all_account_list_repository.dart';
-import 'package:payzo_books/data/other_providers/price_currency_proider.dart';
+import 'package:payzo_books/data/repository/add_bills/get_price_currency_repository.dart';
 import 'package:payzo_books/data/repository/add_bills/get_all_bills_repository.dart';
 import 'package:payzo_books/view/expenses/expense_edit_screen.dart';
 import 'package:payzo_books/view/expenses/repo/expense_details_repo.dart';
@@ -30,14 +30,11 @@ class _UpdateExpenseScreenState extends ConsumerState<UpdateExpenseScreen> {
   @override
   void initState() {
     super.initState();
-    // Call all necessary APIs when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadAllRequiredData();
     });
   }
 
-  /// Load all required data before showing edit screen
-  /// Based on the API flow documented in expense_detail_page_api_called_before_and_after_edit_function.txt
   Future<void> _loadAllRequiredData() async {
     try {
       setState(() {
@@ -47,30 +44,30 @@ class _UpdateExpenseScreenState extends ConsumerState<UpdateExpenseScreen> {
 
       print('🔄 Loading all required data for expense edit...');
 
-      // Load all APIs in parallel for better performance
+      // Load all APIs in parallel
       await Future.wait([
-        // 1. Get Branch List
+        // 1. Branch List
         ref.read(fetchBranchListProvider.future),
 
-        // 2. Get Expense Account List
+        // 2. Expense Account List
         ref.read(getChartOfAccountsProvider.future),
 
-        // 3. Get All Accounts (includes Paid Through accounts)
+        // 3. All Accounts (for Paid Through)
         ref.read(fetchAccountListProvider.future),
 
-        // 4. Get Customer List
+        // 4. Customer List - CORRECT provider name
         ref.read(getCustomerListProvider.future),
 
-        // 5. Get Vendor List
+        // 5. Vendor List - CORRECT provider name
         ref.read(getVendorListProvider.future),
 
-        // 6. Get Tax List
+        // 6. Tax List
         ref.read(fetchAllTaxesProvider.future),
 
-        // 7. Get Currency List
-        ref.read(getPriceCurrencyProvider.future),
+        // 7. Currency List - CORRECT provider name
+        ref.read(fetchPriceCurrencyProvider.future),
 
-        // 8. Get Expense Details (this will be used to populate the form)
+        // 8. Expense Details
         ref.read(getExpenseDetailsProvider(widget.expenseId).future),
       ]);
 
@@ -85,22 +82,11 @@ class _UpdateExpenseScreenState extends ConsumerState<UpdateExpenseScreen> {
         _isLoadingData = false;
         _errorMessage = 'Error loading data: $e';
       });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error loading data: $e'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 5),
-          ),
-        );
-      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // If still loading initial data, show loading screen
     if (_isLoadingData) {
       return Scaffold(
         appBar: AppBar(
@@ -113,22 +99,13 @@ class _UpdateExpenseScreenState extends ConsumerState<UpdateExpenseScreen> {
             children: [
               CircularProgressIndicator(),
               SizedBox(height: 16),
-              Text(
-                'Loading expense data...',
-                style: TextStyle(fontSize: 16),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'Please wait...',
-                style: TextStyle(fontSize: 14, color: Colors.grey),
-              ),
+              Text('Loading expense data...'),
             ],
           ),
         ),
       );
     }
 
-    // If there was an error loading initial data
     if (_errorMessage != null) {
       return Scaffold(
         appBar: AppBar(
@@ -136,54 +113,23 @@ class _UpdateExpenseScreenState extends ConsumerState<UpdateExpenseScreen> {
           backgroundColor: const Color(0xFF1976D2),
         ),
         body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.error_outline,
-                  color: Colors.red,
-                  size: 64,
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  _errorMessage!,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 16),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        _loadAllRequiredData();
-                      },
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Retry'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1976D2),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      icon: const Icon(Icons.arrow_back),
-                      label: const Text('Go Back'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, color: Colors.red, size: 64),
+              const SizedBox(height: 16),
+              Text(_errorMessage!),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _loadAllRequiredData,
+                child: const Text('Retry'),
+              ),
+            ],
           ),
         ),
       );
     }
 
-    // Watch expense details
     final expenseDetailsAsync =
         ref.watch(getExpenseDetailsProvider(widget.expenseId));
 
@@ -191,103 +137,39 @@ class _UpdateExpenseScreenState extends ConsumerState<UpdateExpenseScreen> {
       appBar: AppBar(
         title: const Text('Update Expense'),
         backgroundColor: const Color(0xFF1976D2),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
       ),
       body: expenseDetailsAsync.when(
         data: (expenseDetails) {
+          // Check if response exists
           if (expenseDetails.response == null) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.info_outline,
-                    color: Colors.orange,
-                    size: 64,
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'No expense details found',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Go Back'),
-                  ),
-                ],
-              ),
+            return const Center(
+              child: Text('No expense details found'),
             );
           }
 
-          // Use ExpenseEditScreen to show the edit form
+          // Use ExpenseEditScreen - NO expenseData parameter needed
           return ExpenseEditScreen(
             expenseId: widget.expenseId,
-            expenseData: expenseDetails.response!,
           );
         },
         loading: () => const Center(
+          child: CircularProgressIndicator(),
+        ),
+        error: (error, stack) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text('Loading expense details...'),
+              const Icon(Icons.error_outline, color: Colors.red, size: 64),
+              const SizedBox(height: 16),
+              Text('Error: $error'),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () {
+                  ref.invalidate(getExpenseDetailsProvider(widget.expenseId));
+                },
+                child: const Text('Retry'),
+              ),
             ],
-          ),
-        ),
-        error: (error, stack) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.error_outline,
-                  color: Colors.red,
-                  size: 64,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Error loading expense: $error',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 16),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        // Invalidate and refetch
-                        ref.invalidate(
-                            getExpenseDetailsProvider(widget.expenseId));
-                      },
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Retry'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1976D2),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      icon: const Icon(Icons.arrow_back),
-                      label: const Text('Go Back'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
           ),
         ),
       ),

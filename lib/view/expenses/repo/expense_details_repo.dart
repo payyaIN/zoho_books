@@ -12,10 +12,11 @@ class GetExpenseDetailsRepository {
 
       final result = await _apiService.getApi(
         url:
-        "http://81.208.173.149/pb-accounting-service/api/expense/view?expenseId=$expenseId",
+            "http://81.208.173.149/pb-accounting-service/api/expense/view?expenseId=$expenseId",
         fromJson: (json) {
-          print('Expense detail API response received for expenseId $expenseId');
-          return  ExpenseDetailModel.fromJson(json);
+          print(
+              'Expense detail API response received for expenseId $expenseId');
+          return ExpenseDetailModel.fromJson(json);
         },
       );
 
@@ -38,7 +39,7 @@ final getExpenseDetailsData = Provider<GetExpenseDetailsRepository>((ref) {
 });
 
 final getExpenseDetailsProvider =
-FutureProvider.family<ExpenseDetailModel, int>((ref, expenseId) async {
+    FutureProvider.family<ExpenseDetailModel, int>((ref, expenseId) async {
   print('getExpenseDetailsProvider called for expenseId: $expenseId');
   final repository = ref.read(getExpenseDetailsData);
   final result = await repository.fetchExpenseDetailsData(expenseId);

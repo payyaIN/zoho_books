@@ -27,8 +27,17 @@ class _ExpenseDetailHeaderDataState
     final effectiveExpenseId = widget.expenseId ?? 1;
     final expenseDetailsAsync =
         ref.watch(getExpenseDetailsProvider(effectiveExpenseId));
+    // return expenseDetailsAsync.when(
+    //   data: (expenseDetail) {
+    //     final data = expenseDetail.response!;
     return expenseDetailsAsync.when(
       data: (expenseDetail) {
+        // Add null check
+        if (expenseDetail.response == null) {
+          return const Center(
+            child: Text('No data available'),
+          );
+        }
         final data = expenseDetail.response!;
         return headerTextAndWidgets(
           headerText1:
