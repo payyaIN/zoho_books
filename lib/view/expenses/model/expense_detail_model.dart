@@ -43,35 +43,35 @@ class ExpenseDetailModel {
 
 // ✅ THIS CLASS WAS ALREADY THERE
 class ExpenseResponse {
-  ExpenseResponse({
-    this.date,
-    this.tax,
-    this.branch,
-    this.transactionId,
-    this.reference,
-    this.exemptionReason,
-    this.expenseAmount,
-    this.vendor,
-    this.expenseAccount,
-    this.files,
-    this.currency,
-    this.paidThrough,
-    this.customer,
-    this.status,
-    // ID fields
-    this.branchId,
-    this.currencyId,
-    this.expenseAccountId,
-    this.paidThroughAccountId,
-    this.paidThroughAccount,
-    this.vendorId,
-    this.customerId,
-    this.customerName,
-    this.taxId,
-    this.taxName,
-    this.expenseDescription,
-    this.expenseInfo,
-  });
+  ExpenseResponse(
+      {this.date,
+      this.tax,
+      this.branch,
+      this.transactionId,
+      this.reference,
+      this.exemptionReason,
+      this.expenseAmount,
+      this.vendor,
+      this.expenseAccount,
+      this.files,
+      this.currency,
+      this.paidThrough,
+      this.customer,
+      this.status,
+      // ID fields
+      this.branchId,
+      this.currencyId,
+      this.expenseAccountId,
+      this.paidThroughAccountId,
+      this.paidThroughAccount,
+      this.vendorId,
+      this.customerId,
+      this.customerName,
+      this.taxId,
+      this.taxName,
+      this.expenseDescription,
+      this.expenseInfo,
+      this.isClaimable});
 
   String? date;
   String? tax;
@@ -101,6 +101,7 @@ class ExpenseResponse {
   String? taxName;
   String? expenseDescription;
   String? expenseInfo;
+  bool? isClaimable;
 
   factory ExpenseResponse.empty() {
     return ExpenseResponse(
@@ -130,6 +131,7 @@ class ExpenseResponse {
       taxName: null,
       expenseDescription: null,
       expenseInfo: null,
+      isClaimable: false,
     );
   }
 
@@ -161,6 +163,7 @@ class ExpenseResponse {
       taxName: json['taxName'] as String?,
       expenseDescription: json['expenseDescription'] as String?,
       expenseInfo: json['expenseInfo'] as String?,
+      isClaimable: json['isClaimable'] as bool?,
     );
   }
 
@@ -191,6 +194,7 @@ class ExpenseResponse {
     String? taxName,
     String? expenseDescription,
     String? expenseInfo,
+    bool? isClaimable,
   }) {
     return ExpenseResponse(
       date: date ?? this.date,
@@ -219,6 +223,7 @@ class ExpenseResponse {
       taxName: taxName ?? this.taxName,
       expenseDescription: expenseDescription ?? this.expenseDescription,
       expenseInfo: expenseInfo ?? this.expenseInfo,
+      isClaimable: isClaimable ?? this.isClaimable,
     );
   }
 
@@ -250,6 +255,7 @@ class ExpenseResponse {
       'taxName': taxName,
       'expenseDescription': expenseDescription,
       'expenseInfo': expenseInfo,
+      'isClaimable': isClaimable,
     };
   }
 }

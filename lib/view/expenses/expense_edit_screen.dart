@@ -1,224 +1,3 @@
-// import 'package:flutter/material.dart';
-// import 'package:flutter_riverpod/flutter_riverpod.dart';
-// import 'package:payzo_books/import_data.dart';
-// import 'package:payzo_books/view/add/add_expense/widgets/add_expense_form.dart';
-// import 'package:payzo_books/view/expenses/controller/edit_expense_controller.dart';
-// import 'package:payzo_books/view/expenses/provider/edit_expense_provider.dart';
-// import 'package:payzo_books/view/expenses/repo/expense_details_repo.dart';
-
-// class ExpenseEditScreen extends ConsumerStatefulWidget {
-//   final int expenseId;
-
-//   const ExpenseEditScreen({
-//     Key? key,
-//     required this.expenseId,
-//   }) : super(key: key);
-
-//   @override
-//   ConsumerState<ExpenseEditScreen> createState() => _ExpenseEditScreenState();
-// }
-
-// class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
-//   bool _isDataLoaded = false;
-
-//   @override
-//   void initState() {
-//     super.initState();
-//     // Load expense data after widget is built
-//     WidgetsBinding.instance.addPostFrameCallback((_) {
-//       _loadExpenseData();
-//     });
-//   }
-
-//   Future<void> _loadExpenseData() async {
-//     if (_isDataLoaded) return;
-
-//     try {
-//       // Fetch expense details
-//       final expenseDetails =
-//           await ref.read(getExpenseDetailsProvider(widget.expenseId).future);
-
-//       if (expenseDetails.response != null) {
-//         final data = expenseDetails.response!;
-
-//         // Set edit mode
-//         ref.read(editExpenseModeProvider.notifier).state = true;
-//         ref.read(editExpenseIdProvider.notifier).state = widget.expenseId;
-
-//         // Populate text controllers
-//         if (data.expenseAmount != null) {
-//           ref.read(amountControllerProvider).text =
-//               data.expenseAmount.toString();
-//         }
-//         if (data.reference != null) {
-//           ref.read(referenceControllerProvider).text = data.reference!;
-//         }
-//         if (data.expenseDescription != null) {
-//           ref.read(notesControllerProvider).text = data.expenseDescription!;
-//         }
-
-//         // Set date
-//         if (data.date != null) {
-//           try {
-//             ref.read(dateProvider.notifier).state = DateTime.parse(data.date!);
-//           } catch (e) {
-//             print('Error parsing date: $e');
-//           }
-//         }
-
-//         // Set branch
-//         if (data.branchId != null) {
-//           ref.read(branchIdProvider.notifier).state = data.branchId;
-//           ref.read(branchProvider.notifier).state = data.branch ?? '';
-//         }
-
-//         // Set currency
-//         if (data.currencyId != null) {
-//           ref.read(expenseCurrencyIdProvider.notifier).state = data.currencyId;
-//           ref.read(expenseCurrencyProvider.notifier).state =
-//               data.currency ?? '';
-//         }
-
-//         // Set expense account
-//         if (data.expenseAccountId != null) {
-//           ref.read(expenseAccountIdProvider.notifier).state =
-//               data.expenseAccountId;
-//           ref.read(expenseAccountProvider.notifier).state =
-//               data.expenseAccount ?? '';
-//         }
-
-//         // Set paid through account
-//         if (data.paidThroughAccountId != null) {
-//           ref.read(paidThroughIdProvider.notifier).state =
-//               data.paidThroughAccountId;
-//           ref.read(paidThroughProvider.notifier).state =
-//               data.paidThroughAccount ?? '';
-//         }
-
-//         // Set vendor
-//         if (data.vendorId != null) {
-//           ref.read(vendorIdProvider.notifier).state = data.vendorId;
-//           ref.read(vendorProvider.notifier).state = data.vendor ?? '';
-//         }
-
-//         // Set customer
-//         if (data.customerId != null) {
-//           ref.read(customerIdProvider.notifier).state = data.customerId;
-//           ref.read(customerProvider.notifier).state = data.customerName ?? '';
-//         }
-
-//         // Set tax
-//         if (data.taxId != null) {
-//           ref.read(taxIdProvider.notifier).state = data.taxId;
-//           ref.read(taxProvider.notifier).state = data.taxName ?? '';
-//         }
-
-//         // Mark as loaded
-//         setState(() {
-//           _isDataLoaded = true;
-//         });
-//       }
-//     } catch (e) {
-//       print('Error loading expense data: $e');
-//       if (mounted) {
-//         ScaffoldMessenger.of(context).showSnackBar(
-//           SnackBar(
-//             content: Text('Error loading expense data: $e'),
-//             backgroundColor: Colors.red,
-//           ),
-//         );
-//       }
-//     }
-//   }
-
-//   @override
-//   void dispose() {
-//     // Clear edit mode when leaving
-//     ref.read(editExpenseModeProvider.notifier).state = false;
-//     ref.read(editExpenseIdProvider.notifier).state = null;
-//     super.dispose();
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return ScalingFactor(
-//       child: PopScope(
-//         onPopInvokedWithResult: (didPop, result) {
-//           if (didPop) {
-//             // Clear edit mode
-//             ref.read(editExpenseModeProvider.notifier).state = false;
-//             ref.read(editExpenseIdProvider.notifier).state = null;
-//           }
-//         },
-//         child: Scaffold(
-//           appBar: reusableAppBar(
-//             title: 'Edit Expense',
-//             showBackButton: true,
-//             context: context,
-//             onBackPressed: () {
-//               Navigator.of(context).pop();
-//             },
-//           ),
-//           body: _isDataLoaded
-//               ? SingleChildScrollView(
-//                   child: Column(
-//                     children: [
-//                       // Reuse the same form from Add Expense
-//                       const AddExpenseForm(),
-//                       const SizedBox(height: 20),
-//                       // Update button
-//                       Padding(
-//                         padding: const EdgeInsets.all(16.0),
-//                         child: SizedBox(
-//                           width: double.infinity,
-//                           child: ElevatedButton(
-//                             onPressed: () async {
-//                               final controller = ref
-//                                   .read(editExpenseControllerProvider.notifier);
-//                               await controller.updateExpense(
-//                                 context,
-//                                 ref,
-//                                 widget.expenseId,
-//                               );
-//                             },
-//                             style: ElevatedButton.styleFrom(
-//                               backgroundColor: AppColors.appMainColor,
-//                               padding: const EdgeInsets.symmetric(vertical: 16),
-//                               shape: RoundedRectangleBorder(
-//                                 borderRadius: BorderRadius.circular(8),
-//                               ),
-//                             ),
-//                             child: ref.watch(editExpenseControllerProvider)
-//                                 ? const CircularProgressIndicator(
-//                                     color: Colors.white,
-//                                   )
-//                                 : const Text(
-//                                     'Update Expense',
-//                                     style: TextStyle(
-//                                       fontSize: 16,
-//                                       fontWeight: FontWeight.bold,
-//                                       color: Colors.white,
-//                                     ),
-//                                   ),
-//                           ),
-//                         ),
-//                       ),
-//                     ],
-//                   ),
-//                 )
-//               : const Center(
-//                   child: CircularProgressIndicator(
-//                     color: AppColors.appMainColor,
-//                   ),
-//                 ),
-//         ),
-//       ),
-//     );
-//   }
-// }
-
-// REPLACE: lib/view/expenses/expense_edit_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -282,6 +61,13 @@ class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
       }
       if (data.expenseDescription != null) {
         ref.read(notesControllerProvider).text = data.expenseDescription!;
+      }
+      if (data.expenseInfo != null) {
+        ref.read(expenseInfoControllerProvider).text = data.expenseInfo!;
+      }
+      if (data.exemptionReason != null) {
+        ref.read(expensesExemptionReasonControllerProvider).text =
+            data.exemptionReason!;
       }
 
       // Set date - handle multiple formats
@@ -353,6 +139,15 @@ class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
         ref.read(taxProvider.notifier).state = data.taxName ?? '';
       }
 
+      final isClaimable = data.isClaimable ?? false;
+      print('➡️ Setting Claimable: $isClaimable');
+
+      ref
+          .read(productTypeProvider.notifier)
+          .updateField('isClaimable', isClaimable);
+      final radioValue = isClaimable ? 'Claimable' : 'Non-claimable';
+      ref.read(productTypeProvider.notifier).updateRadio('type', radioValue);
+
       print('✅ All expense data loaded successfully');
 
       if (mounted) {
@@ -388,6 +183,7 @@ class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
       final notes = ref.read(notesControllerProvider).text.trim();
       final exemptionReason =
           ref.read(expensesExemptionReasonControllerProvider).text.trim();
+      final expenseInfo = ref.read(expenseInfoControllerProvider).text.trim();
 
       // Get selections
       final branchId = ref.read(branchIdProvider);
@@ -399,6 +195,7 @@ class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
       final taxId = ref.read(taxIdProvider);
       final customerId = ref.read(customerIdProvider);
       final files = ref.read(expenseAttachmentProvider);
+      final isClaimable = ref.read(productTypeProvider).isClaimable;
 
       // Validate required fields
       if (branchId == null ||
@@ -432,6 +229,7 @@ class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
         'vendorId': vendorId,
         'vendorAccount': null,
         'exemptionReason': exemptionReason.isNotEmpty ? exemptionReason : null,
+        'expenseInfo': expenseInfo.isNotEmpty ? expenseInfo : null,
         'tax': {
           'taxId': taxId,
           'taxType': ref.read(showExemptionReasonProvider)
@@ -445,6 +243,7 @@ class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
           'markUpby': null,
           'projectId': 1,
         },
+        'isClaimable': isClaimable,
       };
 
       print('📦 Update payload: $payload');
@@ -506,6 +305,17 @@ class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // IMPORTANT: Watch these autoDispose providers to keep them alive
+    // while this screen is active. This prevents them from being disposed
+    // when _isLoading is true (and AddExpenseForm is not yet built),
+    // which would cause the data we just loaded to be lost.
+    ref.watch(amountControllerProvider);
+    ref.watch(referenceControllerProvider);
+    ref.watch(notesControllerProvider);
+    ref.watch(expenseInfoControllerProvider);
+    ref.watch(expensesExemptionReasonControllerProvider);
+    ref.watch(productTypeProvider).type;
+
     return ScalingFactor(
       child: Scaffold(
         appBar: reusableAppBar(
