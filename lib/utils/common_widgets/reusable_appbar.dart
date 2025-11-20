@@ -28,15 +28,21 @@ AppBar reusableAppBar({
       centerTitle: true,
     );
 
-AppBar reusableAppBarWithSuffixWidget(
-        {required String title,
-        required BuildContext context,
-        String? suffixText,
-        VoidCallback? onSuffixTap,
-        required bool showTitle,
-        required bool showBackButton,
-        bool? isSuffixText,
-        Widget? widget}) =>
+AppBar reusableAppBarWithSuffixWidget({
+  required String title,
+  required BuildContext context,
+  String? suffixText,
+  String? importText,
+  String? exportText,
+  VoidCallback? onSuffixTap,
+  VoidCallback? onImportTap,
+  VoidCallback? onExportTap,
+  required bool showTitle,
+  required bool showBackButton,
+  bool? isSuffixText,
+  bool? isImportExportNeeded,
+  Widget? widget,
+}) =>
     AppBar(
       title: showTitle == true
           ? ReusableText(
@@ -74,7 +80,67 @@ AppBar reusableAppBarWithSuffixWidget(
                   )
                 : widget,
           ),
-        )
+        ),
+        isImportExportNeeded == true
+            ? Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: PopupMenuButton<String>(
+                  onSelected: (String result) {
+                    if (result == 'option1') {
+                      print('Option 1 selected!');
+                    } else if (result == 'option2') {
+                      print('Option 2 selected!');
+                    }
+                  },
+                  itemBuilder: (BuildContext context) =>
+                      <PopupMenuEntry<String>>[
+                    PopupMenuItem<String>(
+                      value: importText,
+                      child: GestureDetector(
+                        onTap: onImportTap,
+                        child: Row(
+                          children: [
+                            Text(
+                              importText!,
+                              style: TextStyle(
+                                color: AppColors.appMainColor,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Icon(Icons.download_rounded,
+                                color: AppColors.appMainColor, size: 20),
+                          ],
+                        ),
+                      ),
+                    ),
+                    PopupMenuItem<String>(
+                      value: exportText,
+                      child: GestureDetector(
+                        onTap: onExportTap,
+                        child: Row(
+                          children: [
+                            Text(
+                              exportText!,
+                              style: TextStyle(
+                                color: AppColors.appMainColor,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Icon(Icons.upload_rounded,
+                                color: AppColors.appMainColor, size: 20),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                  child: const Icon(Icons.more_vert),
+                ),
+              )
+            : const SizedBox(),
       ],
       backgroundColor: AppColors.appWhiteColor,
       centerTitle: true,
