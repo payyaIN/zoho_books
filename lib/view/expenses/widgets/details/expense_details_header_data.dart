@@ -1,13 +1,9 @@
 import 'package:payzo_books/import_data.dart';
 import 'package:payzo_books/utils/common_widgets/reusable_snackbar.dart';
-import 'package:payzo_books/view/expenses/expene_export_screen.dart';
 import 'package:payzo_books/view/expenses/expense_edit_screen.dart';
-import 'package:payzo_books/view/expenses/expense_import_screen.dart';
 import 'package:payzo_books/view/expenses/provider/expense_pagination_provider.dart';
 import 'package:payzo_books/view/expenses/repo/expense_details_repo.dart';
 import 'package:payzo_books/view/expenses/repo/expense_update_delete_repository.dart';
-import 'package:payzo_books/view/expenses/update_expense/update_expense.dart';
-import 'package:payzo_books/view/expenses/widgets/details/download_expense_pdf.dart';
 import 'package:payzo_books/view/expenses/widgets/details/expense_detail_error_widget.dart';
 import 'package:payzo_books/view/notification_details/components/other_widgts.dart';
 
@@ -22,11 +18,26 @@ class ExpenseDetailHeaderData extends ConsumerStatefulWidget {
 
 class _ExpenseDetailHeaderDataState
     extends ConsumerState<ExpenseDetailHeaderData> {
+  bool _isMounted = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _isMounted = true;
+  }
+
+  @override
+  void dispose() {
+    _isMounted = false;
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final effectiveExpenseId = widget.expenseId ?? 1;
     final expenseDetailsAsync =
         ref.watch(getExpenseDetailsProvider(effectiveExpenseId));
+
     return expenseDetailsAsync.when(
       data: (expenseDetail) {
         final data = expenseDetail.response!;
@@ -34,15 +45,11 @@ class _ExpenseDetailHeaderDataState
           headerText1:
               formatCurrency(data.expenseAmount!.toDouble(), data.currency!),
           headerText2: data.vendor ?? '',
-          // title1: AppText.importExpense,
-          // title2: AppText.exportExcelExpense,
           title1: AppText.editExpense,
           title2: AppText.deleteExpense,
           title3: '',
           title4: '',
           title5: '',
-          // img1: AppImages.importExpense,
-          // img2: AppImages.exportExpense,
           img1: AppImages.editWhite,
           img2: AppImages.delete,
           img3: '',
@@ -54,60 +61,39 @@ class _ExpenseDetailHeaderDataState
           isOnTap4Needed: false,
           isOnTap5Needed: false,
 
+          // ✅ DIRECT navigation to ExpenseEditScreen - NO wrapper
           onTap1: () async {
-            // Navigate to UpdateExpenseScreen which will handle all API calls
+            print('🔘 Edit button tapped - navigating to ExpenseEditScreen');
+            if (!_isMounted || !mounted) return;
+
             await Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => UpdateExpenseScreen(
+                builder: (context) => ExpenseEditScreen(
                   expenseId: widget.expenseId!,
                 ),
               ),
             );
 
-            // After returning from update screen, refresh the expense details
+            if (!_isMounted || !mounted) return;
             ref.invalidate(getExpenseDetailsProvider(widget.expenseId!));
-
-            // Also refresh the expense list
-            ref.read(expensesPaginationStateProvider.notifier).fetchExpenses();
           },
-          // onTap2: () async {
-          //   final confirmed = await showDialog<bool>(
-          //     context: context,
-          //     builder: (context) => AlertDialog(
-          //       title: const Text('Confirm Delete'),
-          //       content:
-          //           const Text('Are you sure you want to delete this expense?'),
-          //       actions: [
-          //         TextButton(
-          //           onPressed: () => Navigator.pop(context, false),
-          //           child: const Text('Cancel'),
-          //         ),
-          //         ElevatedButton(
-          //           onPressed: () => Navigator.pop(context, true),
-          //           child: const Text('Delete'),
-          //         ),
-          //       ],
-          //     ),
-          //   );
 
-          //   if (confirmed == true) {
-          //     final repository =
-          //         ref.read(expenseUpdateDeleteRepositoryProvider);
-          //     final response =
-          //         await repository.deleteExpense(effectiveExpenseId);
-          //     if (response['status'] == true) {
-          //       Navigator.pop(context);
-          //     }
-          //   }
-          // },
           onTap2: () async {
+            if (!_isMounted || !mounted) return;
+
             final confirmed = await showDialog<bool>(
               context: context,
               builder: (context) => AlertDialog(
-                title: const Text('Delete Expense'),
+                title: const Row(
+                  children: [
+                    Icon(Icons.warning, color: Colors.red),
+                    SizedBox(width: 8),
+                    Text('Confirm Delete'),
+                  ],
+                ),
                 content: const Text(
-                  'Are you sure you want to delete this expense? This action cannot be undone.',
+                  'Are you sure you want to delete this expense?',
                 ),
                 actions: [
                   TextButton(
@@ -125,9 +111,10 @@ class _ExpenseDetailHeaderDataState
               ),
             );
 
-            if (confirmed == true && context.mounted) {
+            if (!_isMounted || !mounted) return;
+
+            if (confirmed == true) {
               try {
-                // Show loading
                 showDialog(
                   context: context,
                   barrierDismissible: false,
@@ -138,17 +125,13 @@ class _ExpenseDetailHeaderDataState
                   ),
                 );
 
-                // Delete expense
                 final repository =
                     ref.read(expenseUpdateDeleteRepositoryProvider);
                 await repository.deleteExpense(effectiveExpenseId);
 
-                // Close loading dialog
-                if (context.mounted) {
-                  Navigator.of(context).pop();
-                }
+                if (!_isMounted || !mounted) return;
+                Navigator.of(context).pop();
 
-                // Show success message
                 showPayzoSnackBar(
                   context: context,
                   ref: ref,
@@ -156,26 +139,20 @@ class _ExpenseDetailHeaderDataState
                   type: PayzoSnackType.success,
                 );
 
-                // Refresh expense list
                 await ref
                     .read(expensesPaginationStateProvider.notifier)
                     .fetchExpenses();
 
-                // Navigate back
-                if (context.mounted) {
-                  Navigator.of(context).pop();
-                }
+                if (!_isMounted || !mounted) return;
+                Navigator.of(context).pop();
               } catch (e) {
-                // Close loading dialog if still open
-                if (context.mounted) {
-                  Navigator.of(context).pop();
-                }
+                if (!_isMounted || !mounted) return;
+                Navigator.of(context).pop();
 
-                // Show error message
                 showPayzoSnackBar(
                   context: context,
                   ref: ref,
-                  message: "Failed to delete expense: $e",
+                  message: "Failed to delete: $e",
                   type: PayzoSnackType.error,
                 );
               }
@@ -192,11 +169,20 @@ class _ExpenseDetailHeaderDataState
           color: AppColors.appMainColor,
         ),
       ),
-      error: (e, stackTrace) => expenseErrorWidget(
-        error: e.toString(),
-        onRetry: () =>
-            ref.refresh(getExpenseDetailsProvider(effectiveExpenseId)),
-      ),
+      error: (e, stackTrace) {
+        if (!_isMounted || !mounted) {
+          return const SizedBox.shrink();
+        }
+
+        return expenseErrorWidget(
+          error: e.toString(),
+          onRetry: () {
+            if (_isMounted && mounted) {
+              ref.refresh(getExpenseDetailsProvider(effectiveExpenseId));
+            }
+          },
+        );
+      },
     );
   }
 }

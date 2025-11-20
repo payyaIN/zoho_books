@@ -1,8 +1,4 @@
-import 'dart:convert';
-import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:payzo_books/import_data.dart';
 import 'package:payzo_books/view/expenses/model/expense_export_expense_response.dart';
 import 'package:payzo_books/view/expenses/repo/expense_import_export_repository.dart';
@@ -51,13 +47,6 @@ class ExpenseExportController extends StateNotifier<ExpenseExportState> {
         filter: filter,
       );
 
-      if (response.response?.excelData != null) {
-        await _saveFile(
-          base64Data: response.response!.excelData!,
-          fileName: response.response!.excelFileName ?? '$fileName.xlsx',
-        );
-      }
-
       state = state.copyWith(
         isLoading: false,
         exportResponse: response,
@@ -94,13 +83,6 @@ class ExpenseExportController extends StateNotifier<ExpenseExportState> {
         filter: filter,
       );
 
-      if (response.response?.excelData != null) {
-        await _saveFile(
-          base64Data: response.response!.excelData!,
-          fileName: response.response!.excelFileName ?? '$fileName.xlsx',
-        );
-      }
-
       state = state.copyWith(
         isLoading: false,
         exportResponse: response,
@@ -112,50 +94,6 @@ class ExpenseExportController extends StateNotifier<ExpenseExportState> {
         errorMessage: 'Export failed: $e',
       );
       return null;
-    }
-  }
-
-  Future<void> _saveFile({
-    required String base64Data,
-    required String fileName,
-  }) async {
-    try {
-      // Request storage permission
-      // For Android 13+ (SDK 33+), MANAGE_EXTERNAL_STORAGE or specific media permissions might be needed,
-      // but for Downloads, standard storage permission or just writing to app-specific storage might suffice depending on scope.
-      // We'll try standard storage permission first.
-      var status = await Permission.storage.status;
-      if (!status.isGranted) {
-        status = await Permission.storage.request();
-      }
-
-      // Get downloads directory
-      Directory? directory;
-      if (Platform.isAndroid) {
-        directory = Directory('/storage/emulated/0/Download');
-        // Fallback if direct path doesn't work or isn't accessible
-        if (!await directory.exists()) {
-          directory = await getExternalStorageDirectory();
-        }
-      } else {
-        directory = await getDownloadsDirectory();
-      }
-
-      if (directory != null) {
-        final String filePath = '${directory.path}/$fileName';
-        final File file = File(filePath);
-        final List<int> bytes = base64Decode(base64Data);
-        await file.writeAsBytes(bytes);
-        print('File saved to: $filePath');
-        
-        // Optional: Open the file
-        // OpenFile.open(filePath);
-      } else {
-        throw Exception('Could not access downloads directory');
-      }
-    } catch (e) {
-      print('Error saving file: $e');
-      throw Exception('Error saving file: $e');
     }
   }
 

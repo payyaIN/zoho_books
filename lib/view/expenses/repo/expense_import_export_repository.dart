@@ -96,29 +96,36 @@ class ExpenseImportExportRepository {
     Map<String, dynamic>? filter,
   }) async {
     try {
-      // Build query parameters
-      String url =
-          "http://81.208.173.149/pb-accounting-service/api/bulkExpenseImport/export";
-
-      Map<String, dynamic> queryParams = {
-        'fileName': fileName,
-        'isPasswordProtected': isPasswordProtected.toString(),
+      final payload = {
+        "fileName": fileName,
+        "isPasswordProtected": isPasswordProtected,
+        "password": password ?? "",
+        "filter": filter ??
+            {
+              "sortingCriteria": {},
+              "requestCriteria": {
+                "reference": "",
+                "paidThroughAccountId": null,
+                "expenseAccount": null,
+                "branch": null,
+                "expenseAmountMin": 0,
+                "expenseAmountMax": "",
+                "expenseFromDate": "",
+                "expenseToDate": ""
+              }
+            }
       };
 
-      if (password != null && password.isNotEmpty) {
-        queryParams['password'] = password;
-      }
-
-      // Add query parameters to URL
-      final uri = Uri.parse(url).replace(queryParameters: queryParams);
-
-      final result = await _apiService.getApi(
-        url: uri.toString(),
+      final result = await _apiService.postApi(
+        url:
+            "http://81.208.173.149/pb-accounting-service/api/expense/exportExpenseAsXlsFile",
+        body: payload,
         fromJson: (json) => ExportExpenseResponse.fromJson(json),
       );
+
       return result;
     } catch (e) {
-      print('Error exporting expenses as XLS: $e');
+      print('Error exporting expenses: $e');
       rethrow;
     }
   }
