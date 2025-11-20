@@ -17,7 +17,7 @@ class _ExpenseDetailExpenseDataState
   Widget build(BuildContext context) {
     final effectiveExpenseId = widget.expenseId ?? 1;
     final expenseDetailsAsync =
-    ref.watch(getExpenseDetailsProvider(effectiveExpenseId));
+        ref.watch(getExpenseDetailsProvider(effectiveExpenseId));
 
     return expenseDetailsAsync.when(
       data: (expenseDetail) {

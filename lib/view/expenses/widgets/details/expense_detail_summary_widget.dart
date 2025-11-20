@@ -22,12 +22,7 @@ class _ExpenseDetailSummaryDataState
 
     return expenseDetailsAsync.when(
       data: (expenseDetail) {
-        // final data = expenseDetail.response;
-        // Add null check
-        if (expenseDetail.response == null) {
-          return const Center(child: Text('No data available'));
-        }
-        final data = expenseDetail.response!;
+        final data = expenseDetail.response;
         final currency = data?.currency ?? '';
         final amount = data?.expenseAmount ?? 0;
 

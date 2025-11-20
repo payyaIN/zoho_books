@@ -7,6 +7,7 @@ class AppText {
   static const String forgtPaswrd = 'Forget password ?';
   static const String noAccountText = 'Don’t have an account ?';
   static const String signUp = 'Signup';
+  static const String importExpenses = 'Import Expenses';
   static const String email = 'Email';
   static const String password = 'Password';
   static const String notifications = 'Notifications';

@@ -432,6 +432,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:payzo_books/import_data.dart';
 import 'package:payzo_books/view/add/add_expense/widgets/add_expense_form.dart';
 import 'package:payzo_books/view/expenses/controller/edit_expense_controller.dart';
@@ -472,6 +473,7 @@ class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
 
       if (expenseDetails.response != null) {
         final data = expenseDetails.response!;
+        print('📝 Loading expense data for edit: ${data.toJson()}');
 
         // Set edit mode
         ref.read(editExpenseModeProvider.notifier).state = true;
@@ -492,9 +494,22 @@ class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
         // Set date
         if (data.date != null) {
           try {
+            // Try parsing ISO 8601 first
             ref.read(dateProvider.notifier).state = DateTime.parse(data.date!);
           } catch (e) {
-            print('Error parsing date: $e');
+            try {
+              // Try parsing dd-MM-yyyy
+              ref.read(dateProvider.notifier).state =
+                  DateFormat('dd-MM-yyyy').parse(data.date!);
+            } catch (e2) {
+               try {
+                  // Try parsing yyyy-MM-dd
+                  ref.read(dateProvider.notifier).state =
+                      DateFormat('yyyy-MM-dd').parse(data.date!);
+               } catch(e3) {
+                  print('Error parsing date: $e');
+               }
+            }
           }
         }
 
@@ -565,9 +580,8 @@ class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
 
   @override
   void dispose() {
-    // Clear edit mode when leaving
-    ref.read(editExpenseModeProvider.notifier).state = false;
-    ref.read(editExpenseIdProvider.notifier).state = null;
+    // Clear edit mode when leaving - REMOVED unsafe ref usage
+    // State cleanup is handled in PopScope or deactivate if needed
     super.dispose();
   }
 

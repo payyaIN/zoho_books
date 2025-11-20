@@ -56,10 +56,12 @@ class _UpdateExpenseScreenState extends ConsumerState<UpdateExpenseScreen> {
         ref.read(fetchAccountListProvider.future),
 
         // 4. Customer List - CORRECT provider name
-        ref.read(getCustomerListProvider.future),
+        // ref.read(getCustomerListProvider.future),
+        ref.read(fetchCustomerListProvider.future),
 
         // 5. Vendor List - CORRECT provider name
-        ref.read(getVendorListProvider.future),
+        // ref.read(getVendorListProvider.future),
+        ref.read(getVendorList.future),
 
         // 6. Tax List
         ref.read(fetchAllTaxesProvider.future),
@@ -140,7 +142,6 @@ class _UpdateExpenseScreenState extends ConsumerState<UpdateExpenseScreen> {
       ),
       body: expenseDetailsAsync.when(
         data: (expenseDetails) {
-          // Check if response exists
           if (expenseDetails.response == null) {
             return const Center(
               child: Text('No expense details found'),

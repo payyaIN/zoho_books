@@ -19,13 +19,7 @@ class _ExpenseDetailInvoiceInfoState
     final expenseDetailsAsync = ref.watch(getExpenseDetailsProvider(id));
 
     return expenseDetailsAsync.when(
-      // data: (expenseDetail) {
-      //   final data = expenseDetail.response!;
       data: (expenseDetail) {
-        // Add null check
-        if (expenseDetail.response == null) {
-          return const Center(child: Text('No data available'));
-        }
         final data = expenseDetail.response!;
         return invoiceAndBillInformationWidget(
           isBill: false,

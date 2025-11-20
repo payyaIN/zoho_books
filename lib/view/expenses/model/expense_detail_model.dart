@@ -1,3 +1,47 @@
+class ExpenseDetailModel {
+  final bool? error;
+  final String? message;
+  final ExpenseResponse? response; // ← This is the response data
+  final bool? status;
+
+  ExpenseDetailModel({
+    this.error,
+    this.message,
+    this.response,
+    this.status,
+  });
+
+  factory ExpenseDetailModel.fromJson(Map<String, dynamic> json) {
+    return ExpenseDetailModel(
+      error: json['error'] as bool?,
+      message: json['message'] as String?,
+      response: json['response'] != null
+          ? ExpenseResponse.fromJson(json['response'] as Map<String, dynamic>)
+          : null,
+      status: json['status'] as bool?,
+    );
+  }
+
+  factory ExpenseDetailModel.empty() {
+    return ExpenseDetailModel(
+      error: true,
+      message: 'No data',
+      response: ExpenseResponse.empty(),
+      status: false,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'error': error,
+      'message': message,
+      'response': response?.toJson(),
+      'status': status,
+    };
+  }
+}
+
+// ✅ THIS CLASS WAS ALREADY THERE
 class ExpenseResponse {
   ExpenseResponse({
     this.date,
@@ -14,7 +58,7 @@ class ExpenseResponse {
     this.paidThrough,
     this.customer,
     this.status,
-    // New ID fields
+    // ID fields
     this.branchId,
     this.currencyId,
     this.expenseAccountId,
@@ -44,7 +88,7 @@ class ExpenseResponse {
   String? customer;
   String? status;
 
-  // New ID fields
+  // ID fields
   int? branchId;
   int? currencyId;
   int? expenseAccountId;
@@ -89,35 +133,35 @@ class ExpenseResponse {
     );
   }
 
-  ExpenseResponse.fromJson(Map<String, dynamic> json) {
-    date = json['date'];
-    tax = json['tax'];
-    branch = json['branch'];
-    transactionId = json['transactionId'];
-    reference = json['reference'];
-    exemptionReason = json['exemptionReason'];
-    expenseAmount = json['expenseAmount'];
-    vendor = json['vendor'];
-    expenseAccount = json['expenseAccount'];
-    files = json['files'];
-    currency = json['currency'];
-    paidThrough = json['paidThrough'];
-    customer = json['customer'];
-    status = json['status'];
-
-    // Parse new ID fields
-    branchId = json['branchId'];
-    currencyId = json['currencyId'];
-    expenseAccountId = json['expenseAccountId'];
-    paidThroughAccountId = json['paidThroughAccountId'];
-    paidThroughAccount = json['paidThroughAccount'];
-    vendorId = json['vendorId'];
-    customerId = json['customerId'];
-    customerName = json['customerName'];
-    taxId = json['taxId'];
-    taxName = json['taxName'];
-    expenseDescription = json['expenseDescription'];
-    expenseInfo = json['expenseInfo'];
+  factory ExpenseResponse.fromJson(Map<String, dynamic> json) {
+    return ExpenseResponse(
+      date: json['date'] as String?,
+      tax: json['tax'] as String?,
+      branch: json['branch'] as String?,
+      transactionId: json['transactionId'] as num?,
+      reference: json['reference'],
+      exemptionReason: json['exemptionReason'],
+      expenseAmount: json['expenseAmount'] as num?,
+      vendor: json['vendor'] as String?,
+      expenseAccount: json['expenseAccount'] as String?,
+      files: json['files'] as List<dynamic>?,
+      currency: json['currency'] as String?,
+      paidThrough: json['paidThrough'] as String?,
+      customer: json['customer'] as String?,
+      status: json['status'] as String?,
+      branchId: json['branchId'] as int?,
+      currencyId: json['currencyId'] as int?,
+      expenseAccountId: json['expenseAccountId'] as int?,
+      paidThroughAccountId: json['paidThroughAccountId'] as int?,
+      paidThroughAccount: json['paidThroughAccount'] as String?,
+      vendorId: json['vendorId'] as int?,
+      customerId: json['customerId'] as int?,
+      customerName: json['customerName'] as String?,
+      taxId: json['taxId'] as int?,
+      taxName: json['taxName'] as String?,
+      expenseDescription: json['expenseDescription'] as String?,
+      expenseInfo: json['expenseInfo'] as String?,
+    );
   }
 
   ExpenseResponse copyWith({
@@ -147,64 +191,65 @@ class ExpenseResponse {
     String? taxName,
     String? expenseDescription,
     String? expenseInfo,
-  }) =>
-      ExpenseResponse(
-        date: date ?? this.date,
-        tax: tax ?? this.tax,
-        branch: branch ?? this.branch,
-        transactionId: transactionId ?? this.transactionId,
-        reference: reference ?? this.reference,
-        exemptionReason: exemptionReason ?? this.exemptionReason,
-        expenseAmount: expenseAmount ?? this.expenseAmount,
-        vendor: vendor ?? this.vendor,
-        expenseAccount: expenseAccount ?? this.expenseAccount,
-        files: files ?? this.files,
-        currency: currency ?? this.currency,
-        paidThrough: paidThrough ?? this.paidThrough,
-        customer: customer ?? this.customer,
-        status: status ?? this.status,
-        branchId: branchId ?? this.branchId,
-        currencyId: currencyId ?? this.currencyId,
-        expenseAccountId: expenseAccountId ?? this.expenseAccountId,
-        paidThroughAccountId: paidThroughAccountId ?? this.paidThroughAccountId,
-        paidThroughAccount: paidThroughAccount ?? this.paidThroughAccount,
-        vendorId: vendorId ?? this.vendorId,
-        customerId: customerId ?? this.customerId,
-        customerName: customerName ?? this.customerName,
-        taxId: taxId ?? this.taxId,
-        taxName: taxName ?? this.taxName,
-        expenseDescription: expenseDescription ?? this.expenseDescription,
-        expenseInfo: expenseInfo ?? this.expenseInfo,
-      );
+  }) {
+    return ExpenseResponse(
+      date: date ?? this.date,
+      tax: tax ?? this.tax,
+      branch: branch ?? this.branch,
+      transactionId: transactionId ?? this.transactionId,
+      reference: reference ?? this.reference,
+      exemptionReason: exemptionReason ?? this.exemptionReason,
+      expenseAmount: expenseAmount ?? this.expenseAmount,
+      vendor: vendor ?? this.vendor,
+      expenseAccount: expenseAccount ?? this.expenseAccount,
+      files: files ?? this.files,
+      currency: currency ?? this.currency,
+      paidThrough: paidThrough ?? this.paidThrough,
+      customer: customer ?? this.customer,
+      status: status ?? this.status,
+      branchId: branchId ?? this.branchId,
+      currencyId: currencyId ?? this.currencyId,
+      expenseAccountId: expenseAccountId ?? this.expenseAccountId,
+      paidThroughAccountId: paidThroughAccountId ?? this.paidThroughAccountId,
+      paidThroughAccount: paidThroughAccount ?? this.paidThroughAccount,
+      vendorId: vendorId ?? this.vendorId,
+      customerId: customerId ?? this.customerId,
+      customerName: customerName ?? this.customerName,
+      taxId: taxId ?? this.taxId,
+      taxName: taxName ?? this.taxName,
+      expenseDescription: expenseDescription ?? this.expenseDescription,
+      expenseInfo: expenseInfo ?? this.expenseInfo,
+    );
+  }
 
   Map<String, dynamic> toJson() {
-    final map = <String, dynamic>{};
-    map['date'] = date;
-    map['tax'] = tax;
-    map['branch'] = branch;
-    map['transactionId'] = transactionId;
-    map['reference'] = reference;
-    map['exemptionReason'] = exemptionReason;
-    map['expenseAmount'] = expenseAmount;
-    map['vendor'] = vendor;
-    map['expenseAccount'] = expenseAccount;
-    map['files'] = files;
-    map['currency'] = currency;
-    map['paidThrough'] = paidThrough;
-    map['customer'] = customer;
-    map['status'] = status;
-    map['branchId'] = branchId;
-    map['currencyId'] = currencyId;
-    map['expenseAccountId'] = expenseAccountId;
-    map['paidThroughAccountId'] = paidThroughAccountId;
-    map['paidThroughAccount'] = paidThroughAccount;
-    map['vendorId'] = vendorId;
-    map['customerId'] = customerId;
-    map['customerName'] = customerName;
-    map['taxId'] = taxId;
-    map['taxName'] = taxName;
-    map['expenseDescription'] = expenseDescription;
-    map['expenseInfo'] = expenseInfo;
-    return map;
+    return {
+      'date': date,
+      'tax': tax,
+      'branch': branch,
+      'transactionId': transactionId,
+      'reference': reference,
+      'exemptionReason': exemptionReason,
+      'expenseAmount': expenseAmount,
+      'vendor': vendor,
+      'expenseAccount': expenseAccount,
+      'files': files,
+      'currency': currency,
+      'paidThrough': paidThrough,
+      'customer': customer,
+      'status': status,
+      'branchId': branchId,
+      'currencyId': currencyId,
+      'expenseAccountId': expenseAccountId,
+      'paidThroughAccountId': paidThroughAccountId,
+      'paidThroughAccount': paidThroughAccount,
+      'vendorId': vendorId,
+      'customerId': customerId,
+      'customerName': customerName,
+      'taxId': taxId,
+      'taxName': taxName,
+      'expenseDescription': expenseDescription,
+      'expenseInfo': expenseInfo,
+    };
   }
 }
