@@ -6,6 +6,7 @@ import 'package:payzo_books/view/expenses/expense_import_screen.dart';
 import 'package:payzo_books/view/expenses/provider/expense_pagination_provider.dart';
 import 'package:payzo_books/view/expenses/repo/expense_details_repo.dart';
 import 'package:payzo_books/view/expenses/repo/expense_update_delete_repository.dart';
+import 'package:payzo_books/view/expenses/update_expense/update_expense.dart';
 import 'package:payzo_books/view/expenses/widgets/details/download_expense_pdf.dart';
 import 'package:payzo_books/view/expenses/widgets/details/expense_detail_error_widget.dart';
 import 'package:payzo_books/view/notification_details/components/other_widgts.dart';
@@ -53,17 +54,22 @@ class _ExpenseDetailHeaderDataState
           isOnTap4Needed: false,
           isOnTap5Needed: false,
 
-          onTap1: () {
-            // print("Message icon tapped, initiating expense PDF download...");
-            // downloadExpensePdf(ref, context, data.transactionId?.toInt() ?? 0);
-            Navigator.push(
+          onTap1: () async {
+            // Navigate to UpdateExpenseScreen which will handle all API calls
+            await Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ExpenseEditScreen(
-                  expenseId: effectiveExpenseId,
+                builder: (context) => UpdateExpenseScreen(
+                  expenseId: widget.expenseId,
                 ),
               ),
             );
+
+            // After returning from update screen, refresh the expense details
+            ref.invalidate(getExpenseDetailsProvider(widget.expenseId));
+
+            // Also refresh the expense list
+            ref.read(expensesPaginationStateProvider.notifier).fetchExpenses();
           },
           // onTap2: () async {
           //   final confirmed = await showDialog<bool>(

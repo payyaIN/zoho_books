@@ -1,198 +1,97 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payzo_books/data/repository/add_bills/get_branch_list_repository.dart';
-import 'package:payzo_books/data/repository/add_bills/get_price_currency_repository.dart';
 import 'package:payzo_books/data/repository/add_bills/get_vendor_list_repository.dart';
 import 'package:payzo_books/data/repository/add_invoice/get_customer_list_repo.dart';
+import 'package:payzo_books/data/repository/add_invoice/get_tax_list_repo.dart';
 import 'package:payzo_books/data/repository/add_product/get_all_account_list_repository.dart';
-import 'package:payzo_books/import_data.dart';
-import 'package:payzo_books/view/expenses/provider/edit_expense_provider.dart';
-import 'package:payzo_books/view/expenses/update_expense/expense_document_picker.dart';
-import 'package:payzo_books/view/expenses/update_expense/update_expense_total_shower.dart';
-import '../../../data/repository/add_invoice/get_tax_list_repo.dart';
+import 'package:payzo_books/data/other_providers/price_currency_proider.dart';
+import 'package:payzo_books/data/repository/add_bills/get_all_bills_repository.dart';
+import 'package:payzo_books/view/expenses/expense_edit_screen.dart';
+import 'package:payzo_books/view/expenses/repo/expense_details_repo.dart';
 
-class UpdateExpensePage extends ConsumerStatefulWidget {
-  const UpdateExpensePage({super.key});
+class UpdateExpenseScreen extends ConsumerStatefulWidget {
+  final int expenseId;
+
+  const UpdateExpenseScreen({
+    Key? key,
+    required this.expenseId,
+  }) : super(key: key);
 
   @override
-  ConsumerState<UpdateExpensePage> createState() => _AddExpenseState();
+  ConsumerState<UpdateExpenseScreen> createState() =>
+      _UpdateExpenseScreenState();
 }
 
-class _AddExpenseState extends ConsumerState<UpdateExpensePage> {
-  bool _isDataLoaded = false;
+class _UpdateExpenseScreenState extends ConsumerState<UpdateExpenseScreen> {
+  bool _isLoadingData = true;
+  String? _errorMessage;
+
   @override
   void initState() {
     super.initState();
-
-    Future.microtask(() async {
-      ref.read(fetchBranchListProvider);
-      ref.read(getVendorList);
-      ref.read(fetchAllTaxesProvider);
-      ref.read(fetchPriceCurrencyProvider);
-      ref.read(getChartOfAccountsProvider);
-      ref.read(fetchCustomerListProvider);
-      //
-      // // === 📌 Branch
-      // final branchData = await ref.read(fetchBranchListProvider.future);
-      // if (branchData.data?.isNotEmpty == true) {
-      //   final branch = branchData.data!.first;
-      //   ref.read(branchProvider.notifier).state = branch.namePrimary ?? '';
-      //   ref.read(branchIdProvider.notifier).state = branch.branchId;
-      // }
-
-      // === 💱 Currency
-      final currencyData = await ref.read(fetchPriceCurrencyProvider.future);
-      if (currencyData.isNotEmpty) {
-        final currency = currencyData.first;
-        ref.read(expenseCurrencyProvider.notifier).state =
-            currency.currencyValue ?? 'SAR';
-        ref.read(expenseCurrencyIdProvider.notifier).state =
-            currency.currencyId?.toInt();
-      }
-
-      // // === 🧾 Tax
-      // final taxData = await ref.read(fetchAllTaxesProvider.future);
-      // if (taxData.defaultTax.isNotEmpty) {
-      //   final tax = taxData.defaultTax.first;
-      //   ref.read(taxProvider.notifier).state = tax.taxName ?? '';
-      //   ref.read(taxIdProvider.notifier).state = tax.taxId;
-      //   ref.read(showExemptionReasonProvider.notifier).state = tax.taxType == 'non-taxable';
-      //   ref.read(taxJsonProvider.notifier).state = {
-      //     "taxId": tax.taxId,
-      //     "taxType": tax.taxType,
-      //   };
-      // }
-
-      // // === 💼 Expense Account + 💳 Paid Through
-      // final accounts = await ref.read(getChartOfAccountsProvider.future);
-      // if (accounts.response.length >= 2) {
-      //   final expense = accounts.response[0];
-      //   final paidThrough = accounts.response[1];
-      //
-      //   ref.read(expenseAccountProvider.notifier).state = expense.label ?? '';
-      //   ref.read(expenseAccountIdProvider.notifier).state = expense.value;
-      //
-      //   ref.read(paidThroughProvider.notifier).state = paidThrough.label ?? '';
-      //   ref.read(paidThroughIdProvider.notifier).state = paidThrough.value;
-      // }
-
-      // // === 🏢 Vendor
-      // final vendorData = await ref.read(getVendorList.future);
-      // final vendor = vendorData.response?.response?.first;
-      // if (vendor != null) {
-      //   ref.read(vendorProvider.notifier).state = vendor.displayName ?? '';
-      //   ref.read(vendorIdProvider.notifier).state = vendor.partyId;
-      // }
-      //
-      // // === 👤 Customer
-      // final customers = await ref.read(fetchCustomerListProvider.future);
-      // if (customers.isNotEmpty) {
-      //   final customer = customers.first;
-      //   ref.read(customerProvider.notifier).state = customer.displayName ?? '';
-      //   ref.read(customerIdProvider.notifier).state = customer.partyId;
-      // }
-
-      // === 📅 Date
-      ref.read(dateProvider.notifier).state = DateTime.now();
-    });
+    // Call all necessary APIs when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadExpenseData();
+      _loadAllRequiredData();
     });
   }
 
-  Future<void> _loadExpenseData() async {
-    if (_isDataLoaded) return;
-
+  /// Load all required data before showing edit screen
+  /// Based on the API flow documented in expense_detail_page_api_called_before_and_after_edit_function.txt
+  Future<void> _loadAllRequiredData() async {
     try {
-      // Fetch expense details
-      final expenseDetails =
-          await ref.read(getExpenseDetailsProvider(widget.expenseId).future);
+      setState(() {
+        _isLoadingData = true;
+        _errorMessage = null;
+      });
 
-      if (expenseDetails.response != null) {
-        final data = expenseDetails.response!;
+      print('🔄 Loading all required data for expense edit...');
 
-        // Set edit mode
-        ref.read(editExpenseModeProvider.notifier).state = true;
-        ref.read(editExpenseIdProvider.notifier).state = widget.expenseId;
+      // Load all APIs in parallel for better performance
+      await Future.wait([
+        // 1. Get Branch List
+        ref.read(fetchBranchListProvider.future),
 
-        // Populate text controllers
-        if (data.expenseAmount != null) {
-          ref.read(amountControllerProvider).text =
-              data.expenseAmount.toString();
-        }
-        if (data.reference != null) {
-          ref.read(referenceControllerProvider).text = data.reference!;
-        }
-        if (data.expenseDescription != null) {
-          ref.read(notesControllerProvider).text = data.expenseDescription!;
-        }
+        // 2. Get Expense Account List
+        ref.read(getChartOfAccountsProvider.future),
 
-        // Set date
-        if (data.date != null) {
-          try {
-            ref.read(dateProvider.notifier).state = DateTime.parse(data.date!);
-          } catch (e) {
-            print('Error parsing date: $e');
-          }
-        }
+        // 3. Get All Accounts (includes Paid Through accounts)
+        ref.read(fetchAccountListProvider.future),
 
-        // Set branch
-        if (data.branchId != null) {
-          ref.read(branchIdProvider.notifier).state = data.branchId;
-          ref.read(branchProvider.notifier).state = data.branch ?? '';
-        }
+        // 4. Get Customer List
+        ref.read(getCustomerListProvider.future),
 
-        // Set currency
-        if (data.currencyId != null) {
-          ref.read(expenseCurrencyIdProvider.notifier).state = data.currencyId;
-          ref.read(expenseCurrencyProvider.notifier).state =
-              data.currency ?? '';
-        }
+        // 5. Get Vendor List
+        ref.read(getVendorListProvider.future),
 
-        // Set expense account
-        if (data.expenseAccountId != null) {
-          ref.read(expenseAccountIdProvider.notifier).state =
-              data.expenseAccountId;
-          ref.read(expenseAccountProvider.notifier).state =
-              data.expenseAccount ?? '';
-        }
+        // 6. Get Tax List
+        ref.read(fetchAllTaxesProvider.future),
 
-        // Set paid through account
-        if (data.paidThroughAccountId != null) {
-          ref.read(paidThroughIdProvider.notifier).state =
-              data.paidThroughAccountId;
-          ref.read(paidThroughProvider.notifier).state =
-              data.paidThroughAccount ?? '';
-        }
+        // 7. Get Currency List
+        ref.read(getPriceCurrencyProvider.future),
 
-        // Set vendor
-        if (data.vendorId != null) {
-          ref.read(vendorIdProvider.notifier).state = data.vendorId;
-          ref.read(vendorProvider.notifier).state = data.vendor ?? '';
-        }
+        // 8. Get Expense Details (this will be used to populate the form)
+        ref.read(getExpenseDetailsProvider(widget.expenseId).future),
+      ]);
 
-        // Set customer
-        if (data.customerId != null) {
-          ref.read(customerIdProvider.notifier).state = data.customerId;
-          ref.read(customerProvider.notifier).state = data.customerName ?? '';
-        }
+      print('✅ All required data loaded successfully');
 
-        // Set tax
-        if (data.taxId != null) {
-          ref.read(taxIdProvider.notifier).state = data.taxId;
-          ref.read(taxProvider.notifier).state = data.taxName ?? '';
-        }
-
-        // Mark as loaded
-        setState(() {
-          _isDataLoaded = true;
-        });
-      }
+      setState(() {
+        _isLoadingData = false;
+      });
     } catch (e) {
-      print('Error loading expense data: $e');
+      print('❌ Error loading required data: $e');
+      setState(() {
+        _isLoadingData = false;
+        _errorMessage = 'Error loading data: $e';
+      });
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error loading expense data: $e'),
+            content: Text('Error loading data: $e'),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
           ),
         );
       }
@@ -200,39 +99,197 @@ class _AddExpenseState extends ConsumerState<UpdateExpensePage> {
   }
 
   @override
-  void dispose() {
-    // Clear edit mode when leaving
-    ref.read(editExpenseModeProvider.notifier).state = false;
-    ref.read(editExpenseIdProvider.notifier).state = null;
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return ScalingFactor(
-      child: Scaffold(
-        appBar: reusableAppBar(
-          title: 'Edit Expenses',
-          showBackButton: true,
-          context: context,
+    // If still loading initial data, show loading screen
+    if (_isLoadingData) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Update Expense'),
+          backgroundColor: const Color(0xFF1976D2),
         ),
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 22),
-            child: ReusableColumn(
+        body: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text(
+                'Loading expense data...',
+                style: TextStyle(fontSize: 16),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Please wait...',
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // If there was an error loading initial data
+    if (_errorMessage != null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Update Expense'),
+          backgroundColor: const Color(0xFF1976D2),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const ReusableSizedBox(height: 15),
-                const AddExpenseForm(),
-                const ReusableSizedBox(height: 15),
-                const ExpenseDocumentPicker(),
-                const ReusableSizedBox(height: 15),
-                const AddExpenseTotalShower(),
-                const ReusableSizedBox(height: 15),
+                const Icon(
+                  Icons.error_outline,
+                  color: Colors.red,
+                  size: 64,
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  _errorMessage!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        _loadAllRequiredData();
+                      },
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Retry'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1976D2),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      icon: const Icon(Icons.arrow_back),
+                      label: const Text('Go Back'),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
         ),
-        bottomNavigationBar: const AddExpenseSubmitButton(),
+      );
+    }
+
+    // Watch expense details
+    final expenseDetailsAsync =
+        ref.watch(getExpenseDetailsProvider(widget.expenseId));
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Update Expense'),
+        backgroundColor: const Color(0xFF1976D2),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+      ),
+      body: expenseDetailsAsync.when(
+        data: (expenseDetails) {
+          if (expenseDetails.response == null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.info_outline,
+                    color: Colors.orange,
+                    size: 64,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'No expense details found',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Go Back'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          // Use ExpenseEditScreen to show the edit form
+          return ExpenseEditScreen(
+            expenseId: widget.expenseId,
+            expenseData: expenseDetails.response!,
+          );
+        },
+        loading: () => const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Loading expense details...'),
+            ],
+          ),
+        ),
+        error: (error, stack) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  color: Colors.red,
+                  size: 64,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Error loading expense: $error',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        // Invalidate and refetch
+                        ref.invalidate(
+                            getExpenseDetailsProvider(widget.expenseId));
+                      },
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Retry'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1976D2),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      icon: const Icon(Icons.arrow_back),
+                      label: const Text('Go Back'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

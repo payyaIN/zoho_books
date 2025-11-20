@@ -1,59 +1,3 @@
-class ExpenseDetailModel {
-  ExpenseDetailModel({
-    this.error,
-    this.message,
-    this.response,
-    this.status,
-  });
-
-  bool? error;
-  String? message;
-  ExpenseResponse? response;
-  bool? status;
-
-  factory ExpenseDetailModel.empty() {
-    return ExpenseDetailModel(
-      error: true,
-      message: "Empty",
-      response: ExpenseResponse.empty(),
-      status: false,
-    );
-  }
-
-  ExpenseDetailModel.fromJson(Map<String, dynamic> json) {
-    error = json['error'];
-    message = json['message'];
-    response = json['response'] != null
-        ? ExpenseResponse.fromJson(json['response'])
-        : null;
-    status = json['status'];
-  }
-
-  ExpenseDetailModel copyWith({
-    bool? error,
-    String? message,
-    ExpenseResponse? response,
-    bool? status,
-  }) =>
-      ExpenseDetailModel(
-        error: error ?? this.error,
-        message: message ?? this.message,
-        response: response ?? this.response,
-        status: status ?? this.status,
-      );
-
-  Map<String, dynamic> toJson() {
-    final map = <String, dynamic>{};
-    map['error'] = error;
-    map['message'] = message;
-    if (response != null) {
-      map['response'] = response?.toJson();
-    }
-    map['status'] = status;
-    return map;
-  }
-}
-
 class ExpenseResponse {
   ExpenseResponse({
     this.date,
@@ -70,6 +14,19 @@ class ExpenseResponse {
     this.paidThrough,
     this.customer,
     this.status,
+    // New ID fields
+    this.branchId,
+    this.currencyId,
+    this.expenseAccountId,
+    this.paidThroughAccountId,
+    this.paidThroughAccount,
+    this.vendorId,
+    this.customerId,
+    this.customerName,
+    this.taxId,
+    this.taxName,
+    this.expenseDescription,
+    this.expenseInfo,
   });
 
   String? date;
@@ -87,6 +44,20 @@ class ExpenseResponse {
   String? customer;
   String? status;
 
+  // New ID fields
+  int? branchId;
+  int? currencyId;
+  int? expenseAccountId;
+  int? paidThroughAccountId;
+  String? paidThroughAccount;
+  int? vendorId;
+  int? customerId;
+  String? customerName;
+  int? taxId;
+  String? taxName;
+  String? expenseDescription;
+  String? expenseInfo;
+
   factory ExpenseResponse.empty() {
     return ExpenseResponse(
       date: '',
@@ -103,6 +74,18 @@ class ExpenseResponse {
       paidThrough: '',
       customer: '',
       status: '',
+      branchId: null,
+      currencyId: null,
+      expenseAccountId: null,
+      paidThroughAccountId: null,
+      paidThroughAccount: null,
+      vendorId: null,
+      customerId: null,
+      customerName: null,
+      taxId: null,
+      taxName: null,
+      expenseDescription: null,
+      expenseInfo: null,
     );
   }
 
@@ -121,6 +104,20 @@ class ExpenseResponse {
     paidThrough = json['paidThrough'];
     customer = json['customer'];
     status = json['status'];
+
+    // Parse new ID fields
+    branchId = json['branchId'];
+    currencyId = json['currencyId'];
+    expenseAccountId = json['expenseAccountId'];
+    paidThroughAccountId = json['paidThroughAccountId'];
+    paidThroughAccount = json['paidThroughAccount'];
+    vendorId = json['vendorId'];
+    customerId = json['customerId'];
+    customerName = json['customerName'];
+    taxId = json['taxId'];
+    taxName = json['taxName'];
+    expenseDescription = json['expenseDescription'];
+    expenseInfo = json['expenseInfo'];
   }
 
   ExpenseResponse copyWith({
@@ -138,6 +135,18 @@ class ExpenseResponse {
     String? paidThrough,
     String? customer,
     String? status,
+    int? branchId,
+    int? currencyId,
+    int? expenseAccountId,
+    int? paidThroughAccountId,
+    String? paidThroughAccount,
+    int? vendorId,
+    int? customerId,
+    String? customerName,
+    int? taxId,
+    String? taxName,
+    String? expenseDescription,
+    String? expenseInfo,
   }) =>
       ExpenseResponse(
         date: date ?? this.date,
@@ -154,6 +163,18 @@ class ExpenseResponse {
         paidThrough: paidThrough ?? this.paidThrough,
         customer: customer ?? this.customer,
         status: status ?? this.status,
+        branchId: branchId ?? this.branchId,
+        currencyId: currencyId ?? this.currencyId,
+        expenseAccountId: expenseAccountId ?? this.expenseAccountId,
+        paidThroughAccountId: paidThroughAccountId ?? this.paidThroughAccountId,
+        paidThroughAccount: paidThroughAccount ?? this.paidThroughAccount,
+        vendorId: vendorId ?? this.vendorId,
+        customerId: customerId ?? this.customerId,
+        customerName: customerName ?? this.customerName,
+        taxId: taxId ?? this.taxId,
+        taxName: taxName ?? this.taxName,
+        expenseDescription: expenseDescription ?? this.expenseDescription,
+        expenseInfo: expenseInfo ?? this.expenseInfo,
       );
 
   Map<String, dynamic> toJson() {
@@ -172,6 +193,18 @@ class ExpenseResponse {
     map['paidThrough'] = paidThrough;
     map['customer'] = customer;
     map['status'] = status;
+    map['branchId'] = branchId;
+    map['currencyId'] = currencyId;
+    map['expenseAccountId'] = expenseAccountId;
+    map['paidThroughAccountId'] = paidThroughAccountId;
+    map['paidThroughAccount'] = paidThroughAccount;
+    map['vendorId'] = vendorId;
+    map['customerId'] = customerId;
+    map['customerName'] = customerName;
+    map['taxId'] = taxId;
+    map['taxName'] = taxName;
+    map['expenseDescription'] = expenseDescription;
+    map['expenseInfo'] = expenseInfo;
     return map;
   }
 }

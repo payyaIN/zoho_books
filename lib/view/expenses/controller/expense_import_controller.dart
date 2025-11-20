@@ -14,6 +14,8 @@ class ExpenseImportState {
   final ValidateFileResponse? validationResult;
   final bool isLoading;
   final String? errorMessage;
+  final Map<String, String>? fieldMappings; // NEW
+  final List<Map<String, dynamic>>? previewData; // NEW
 
   ExpenseImportState({
     this.currentStep = ImportStep.downloadSample,
@@ -21,6 +23,8 @@ class ExpenseImportState {
     this.validationResult,
     this.isLoading = false,
     this.errorMessage,
+    this.fieldMappings, // NEW
+    this.previewData, // NEW
   });
 
   ExpenseImportState copyWith({
@@ -29,6 +33,8 @@ class ExpenseImportState {
     ValidateFileResponse? validationResult,
     bool? isLoading,
     String? errorMessage,
+    Map<String, String>? fieldMappings, // NEW
+    List<Map<String, dynamic>>? previewData, // NEW
   }) {
     return ExpenseImportState(
       currentStep: currentStep ?? this.currentStep,
@@ -36,6 +42,8 @@ class ExpenseImportState {
       validationResult: validationResult ?? this.validationResult,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage,
+      fieldMappings: fieldMappings ?? this.fieldMappings, // NEW
+      previewData: previewData ?? this.previewData, // NEW
     );
   }
 }
@@ -65,6 +73,8 @@ class ExpenseImportController extends StateNotifier<ExpenseImportState> {
     }
   }
 
+  /// Preview data before import
+
   /// Set selected file
   void setSelectedFile(File file) {
     state = state.copyWith(
@@ -73,6 +83,97 @@ class ExpenseImportController extends StateNotifier<ExpenseImportState> {
     );
   }
 
+  Future<bool> previewData() async {
+    if (state.selectedFile == null) {
+      state = state.copyWith(
+        errorMessage: 'No file selected for preview',
+      );
+      return false;
+    }
+
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      // Generate field mappings
+      final fieldMappings = <String, String>{
+        'Branch': 'Column A',
+        'Date': 'Column B',
+        'Expense Account': 'Column C',
+        'Currency': 'Column D',
+        'Amount': 'Column E',
+        'Paid Through': 'Column F',
+        'Vendor': 'Column G',
+        'Tax': 'Column H',
+        'Tax Exemption': 'Column I',
+        'Reference': 'Column J',
+        'Customer': 'Column K',
+        'Notes': 'Column L',
+        'Expense Info': 'Column M',
+      };
+
+      // Create mock preview data
+      // In a real implementation, this would parse the Excel file
+      final mockPreviewData = <Map<String, dynamic>>[
+        {
+          'branch': 'Main Branch',
+          'date': '2025-11-20',
+          'expenseAccount': 'Office Supplies',
+          'currency': 'AED',
+          'amount': '100.00',
+          'paidThrough': 'Cash in Hand',
+          'vendor': 'Vendor A',
+          'tax': 'VAT 5%',
+          'reference': 'REF001',
+          'customer': 'Customer A',
+          'notes': 'Test expense',
+          'expenseInfo': 'Info 1',
+        },
+        {
+          'branch': 'Main Branch',
+          'date': '2025-11-21',
+          'expenseAccount': 'Utilities',
+          'currency': 'AED',
+          'amount': '200.00',
+          'paidThrough': 'Petty Cash',
+          'vendor': 'Vendor B',
+          'tax': 'VAT 5%',
+          'reference': 'REF002',
+          'customer': 'Customer B',
+          'notes': 'Another test expense',
+          'expenseInfo': 'Info 2',
+        },
+        {
+          'branch': 'Branch 2',
+          'date': '2025-11-22',
+          'expenseAccount': 'Rent Expense',
+          'currency': 'AED',
+          'amount': '500.00',
+          'paidThrough': 'Bank Account',
+          'vendor': 'Vendor C',
+          'tax': 'VAT 5%',
+          'reference': 'REF003',
+          'customer': 'Customer C',
+          'notes': 'Monthly rent',
+          'expenseInfo': 'Info 3',
+        },
+      ];
+
+      state = state.copyWith(
+        isLoading: false,
+        fieldMappings: fieldMappings,
+        previewData: mockPreviewData,
+      );
+
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: 'Preview failed: $e',
+      );
+      return false;
+    }
+  }
+
+// UPDATE the validateFile method to set fieldMappings:
   /// Validate the selected file
   Future<bool> validateFile() async {
     if (state.selectedFile == null) {
@@ -107,6 +208,23 @@ class ExpenseImportController extends StateNotifier<ExpenseImportState> {
         "expenseInfo": 12,
       };
 
+      // Generate field mappings for display
+      final fieldMappings = <String, String>{
+        'Branch': 'Column A (Index 0)',
+        'Date': 'Column B (Index 1)',
+        'Expense Account': 'Column C (Index 2)',
+        'Currency': 'Column D (Index 3)',
+        'Amount': 'Column E (Index 4)',
+        'Paid Through': 'Column F (Index 5)',
+        'Vendor': 'Column G (Index 6)',
+        'Tax': 'Column H (Index 7)',
+        'Tax Exemption': 'Column I (Index 8)',
+        'Reference': 'Column J (Index 9)',
+        'Customer': 'Column K (Index 10)',
+        'Notes': 'Column L (Index 11)',
+        'Expense Info': 'Column M (Index 12)',
+      };
+
       final response = await repository.validateFile(
         file: state.selectedFile!,
         config: config,
@@ -117,6 +235,7 @@ class ExpenseImportController extends StateNotifier<ExpenseImportState> {
         isLoading: false,
         validationResult: response,
         currentStep: ImportStep.review,
+        fieldMappings: fieldMappings, // Set field mappings
       );
 
       return response.status == true && response.error == false;
