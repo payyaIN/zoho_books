@@ -1,5 +1,9 @@
 import 'package:payzo_books/import_data.dart';
+import 'package:payzo_books/view/expenses/expene_export_screen.dart';
+import 'package:payzo_books/view/expenses/expense_edit_screen.dart';
+import 'package:payzo_books/view/expenses/expense_import_screen.dart';
 import 'package:payzo_books/view/expenses/repo/expense_details_repo.dart';
+import 'package:payzo_books/view/expenses/repo/expense_update_delete_repository.dart';
 import 'package:payzo_books/view/expenses/widgets/details/download_expense_pdf.dart';
 import 'package:payzo_books/view/expenses/widgets/details/expense_detail_error_widget.dart';
 import 'package:payzo_books/view/notification_details/components/other_widgts.dart';
@@ -42,13 +46,61 @@ class _ExpenseDetailHeaderDataState
           isOnTap3Needed: true,
           isOnTap4Needed: true,
           isOnTap5Needed: false,
-          onTap1: () {},
-          onTap2: () {},
-          onTap3: () {
-            print("Message icon tapped, initiating expense PDF download...");
-            // downloadExpensePdf(ref, context, data.transactionId?.toInt() ?? 0);
+          onTap1: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => const ExpenseImportScreen()),
+            );
           },
-          onTap4: () {},
+          onTap2: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => const ExpenseExportScreen()),
+            );
+          },
+          onTap3: () {
+            // print("Message icon tapped, initiating expense PDF download...");
+            // downloadExpensePdf(ref, context, data.transactionId?.toInt() ?? 0);
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    ExpenseEditScreen(expenseId: effectiveExpenseId),
+              ),
+            );
+          },
+          onTap4: () async {
+            final confirmed = await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Confirm Delete'),
+                content:
+                    const Text('Are you sure you want to delete this expense?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: const Text('Cancel'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: const Text('Delete'),
+                  ),
+                ],
+              ),
+            );
+
+            if (confirmed == true) {
+              final repository =
+                  ref.read(expenseUpdateDeleteRepositoryProvider);
+              final response =
+                  await repository.deleteExpense(effectiveExpenseId);
+              if (response['status'] == true) {
+                Navigator.pop(context);
+              }
+            }
+          },
           onTap5: () {},
         );
       },

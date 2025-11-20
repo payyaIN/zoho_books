@@ -123,7 +123,33 @@ class _VendorDetailsPageState extends ConsumerState<VendorDetailPage> {
                         onTap2: () =>
                             urlLauncher.sendEmail(vendor.emailAddress),
                         onTap3: () => urlLauncher.sendSms(validPhoneNumber),
+                        // onTap4: () {
+                        //   ref
+                        //       .read(updateVendorEditModeProvider.notifier)
+                        //       .state = true;
+                        //   ref
+                        //       .read(updateVendorEditPartyIdProvider.notifier)
+                        //       .state = vendor.partyId;
+                        //   ref.read(vendorEditDataProvider.notifier).state =
+                        //       vendor;
+
+                        //   Navigator.push(
+                        //     context,
+                        //     MaterialPageRoute(
+                        //       builder: (context) => UpdateVendorScreen(
+                        //         partyId: vendor.partyId,
+                        //       ),
+                        //     ),
+                        //   );
+                        // },
                         onTap4: () {
+                          // ✅ ADD MORE DEBUG LOGGING
+                          print('🟢 Edit button clicked');
+                          print('🟢 vendor.partyId = ${vendor.partyId}');
+                          print(
+                              '🟢 vendor type = ${vendor.partyId.runtimeType}');
+
+                          // Set edit mode and party ID
                           ref
                               .read(updateVendorEditModeProvider.notifier)
                               .state = true;
@@ -132,6 +158,11 @@ class _VendorDetailsPageState extends ConsumerState<VendorDetailPage> {
                               .state = vendor.partyId;
                           ref.read(vendorEditDataProvider.notifier).state =
                               vendor;
+
+                          // ✅ VERIFY IT WAS SET
+                          final setPartyId =
+                              ref.read(updateVendorEditPartyIdProvider);
+                          print('🟢 Provider after setting = $setPartyId');
 
                           Navigator.push(
                             context,

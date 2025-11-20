@@ -50,7 +50,9 @@ class GetPriceCurrencyRepository {
   Future<List<GetPriceCurrency>> fetchPriceCurrencies() async {
     try {
       return await _apiService.getListApi(
-        url: 'api/rfq/getPriceCurrency',
+        // url: 'api/rfq/getPriceCurrency',
+        url:
+            'http://81.208.173.149/pb-settings-service/api/settings/currencies/getPriceCurrencyList',
         fromJson: (json) => GetPriceCurrency.fromJson(json),
       );
     } catch (e) {

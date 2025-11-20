@@ -56,7 +56,8 @@ class UpdateVendorRepository {
       "openingBalance": {
         "branch": state.openingBalance['branch'],
         "currency": state.openingBalance['currency'],
-        "amount": state.openingBalance['amount']?.toString() ?? "0",
+        // "amount": state.openingBalance['amount']?.toString() ?? "0",
+        "amount": state.openingBalance['amount'] ?? 0,
       },
       "vatNumber": state.vatNumber,
       "crNum": state.crNum,

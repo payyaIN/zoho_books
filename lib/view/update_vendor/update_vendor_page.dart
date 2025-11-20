@@ -84,6 +84,10 @@ class _UpdateVendorScreenState extends ConsumerState<UpdateVendorScreen> {
   @override
   void initState() {
     super.initState();
+    print(
+        '🟢 UpdateVendorScreen initState - widget.partyId: ${widget.partyId}');
+    print(
+        '🟢 UpdateVendorScreen initState - provider partyId: ${ref.read(updateVendorEditPartyIdProvider)}');
 
     // Initialize controllers
     vendorControllers = {
