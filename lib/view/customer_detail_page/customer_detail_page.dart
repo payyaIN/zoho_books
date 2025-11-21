@@ -75,103 +75,233 @@ class CustomerDetailPage extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       headerTextAndWidgets(
-                          headerText1: customer.companyName,
-                          headerText2: customer.emailAddress,
-                          title1: AppText.call,
-                          title2: AppText.mail,
-                          title3: AppText.msg,
-                          title4: AppText.editCustomer,
-                          title5: AppText.delete,
-                          img1: AppImages.call,
-                          img2: AppImages.mail,
-                          img3: AppImages.msg,
-                          img4: AppImages.editWhite,
-                          img5: AppImages.delete,
-                          isOnTap1Needed: true,
-                          isOnTap2Needed: true,
-                          isOnTap3Needed: true,
-                          isOnTap4Needed: true,
-                          isOnTap5Needed: true,
-                          onTap1: () => urlLauncher.makePhoneCall(
-                              customer.phone?.toString() ??
-                                  customer.mobile?.toString() ??
-                                  AppText.vendorContact),
-                          onTap2: () =>
-                              urlLauncher.sendEmail(customer.emailAddress),
-                          onTap3: () => urlLauncher.sendSms(
-                              customer.phone?.toString() ??
-                                  customer.mobile?.toString() ??
-                                  AppText.vendorContact),
-                          onTap4: () async {
-                            // Edit Customer
-                            final viewPartyData = await ref.read(viewPartyProvider(effectivePartyId).future);
-                            
-                            if (context.mounted) {
-                              final result = await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => UpdateCustomerScreen(
-                                    partyId: effectivePartyId,
-                                    existingCustomerData: viewPartyData,
-                                  ),
+                        headerText1: customer.companyName,
+                        headerText2: customer.emailAddress,
+                        title1: AppText.call,
+                        title2: AppText.mail,
+                        title3: AppText.msg,
+                        title4: AppText.editCustomer,
+                        title5: AppText.delete,
+                        img1: AppImages.call,
+                        img2: AppImages.mail,
+                        img3: AppImages.msg,
+                        img4: AppImages.editWhite,
+                        img5: AppImages.delete,
+                        isOnTap1Needed: true,
+                        isOnTap2Needed: true,
+                        isOnTap3Needed: true,
+                        isOnTap4Needed: true,
+                        isOnTap5Needed: true,
+                        onTap1: () => urlLauncher.makePhoneCall(
+                            customer.phone?.toString() ??
+                                customer.mobile?.toString() ??
+                                AppText.vendorContact),
+                        onTap2: () =>
+                            urlLauncher.sendEmail(customer.emailAddress),
+                        onTap3: () => urlLauncher.sendSms(
+                            customer.phone?.toString() ??
+                                customer.mobile?.toString() ??
+                                AppText.vendorContact),
+                        onTap4: () async {
+                          // Edit Customer
+                          final viewPartyData = await ref
+                              .read(viewPartyProvider(effectivePartyId).future);
+
+                          if (context.mounted) {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => UpdateCustomerScreen(
+                                  partyId: effectivePartyId,
+                                  existingCustomerData: viewPartyData,
                                 ),
-                              );
-                              
-                              if (result == true) {
-                                // Refresh details
-                                ref.refresh(getCustomerDetailsProvider(effectivePartyId));
-                                ref.refresh(viewPartyProvider(effectivePartyId));
-                              }
+                              ),
+                            );
+
+                            if (result == true) {
+                              // Refresh details
+                              ref.refresh(
+                                  getCustomerDetailsProvider(effectivePartyId));
+                              ref.refresh(viewPartyProvider(effectivePartyId));
                             }
-                          },
-                          onTap5: () {
-                            // Delete Customer
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text("Delete Customer"),
-                                content: const Text("Are you sure you want to delete this customer?"),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: const Text("Cancel"),
-                                  ),
-                                  TextButton(
-                                    onPressed: () async {
-                                      Navigator.pop(context); // Close dialog
-                                      
-                                      try {
-                                        final response = await ref
-                                            .read(deleteCustomerRepoProvider)
-                                            .deleteCustomer(partyId: effectivePartyId);
-                                            
+                          }
+                        },
+                        // onTap5: () {
+                        //   // Delete Customer
+                        //   showDialog(
+                        //     context: context,
+                        //     builder: (context) => AlertDialog(
+                        //       title: const Text("Delete Customer"),
+                        //       content: const Text("Are you sure you want to delete this customer?"),
+                        //       actions: [
+                        //         TextButton(
+                        //           onPressed: () => Navigator.pop(context),
+                        //           child: const Text("Cancel"),
+                        //         ),
+                        //         TextButton(
+                        //           onPressed: () async {
+                        //             Navigator.pop(context); // Close dialog
+
+                        //             try {
+                        //               final response = await ref
+                        //                   .read(deleteCustomerRepoProvider)
+                        //                   .deleteCustomer(partyId: effectivePartyId);
+
+                        //               if (context.mounted) {
+                        //                 if (response.error == false || response.error == null) {
+                        //                   ScaffoldMessenger.of(context).showSnackBar(
+                        //                     const SnackBar(content: Text("Customer deleted successfully")),
+                        //                   );
+                        //                   ref.invalidate(getCustomerDataWithPagination);
+                        //                   Navigator.pop(context); // Go back to list
+                        //                 } else {
+                        //                   ScaffoldMessenger.of(context).showSnackBar(
+                        //                     SnackBar(content: Text(response.errorMsg ?? "Failed to delete customer")),
+                        //                   );
+                        //                 }
+                        //               }
+                        //             } catch (e) {
+                        //               if (context.mounted) {
+                        //                 ScaffoldMessenger.of(context).showSnackBar(
+                        //                   SnackBar(content: Text("Error: $e")),
+                        //                 );
+                        //               }
+                        //             }
+                        //           },
+                        //           child: const Text("Delete", style: TextStyle(color: Colors.red)),
+                        //         ),
+                        //       ],
+                        //     ),
+                        //   );
+                        // }
+                        onTap5: () {
+                          // Delete Customer - IMPROVED VERSION
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text("Delete Customer"),
+                              content: const Text(
+                                  "Are you sure you want to delete this customer? This action cannot be undone."),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text("Cancel"),
+                                ),
+                                TextButton(
+                                  onPressed: () async {
+                                    // ✅ Step 1: Close confirmation dialog FIRST
+                                    Navigator.pop(context);
+
+                                    // ✅ Step 2: Show progress indicator
+                                    if (!context.mounted) return;
+                                    showDialog(
+                                      context: context,
+                                      barrierDismissible: false,
+                                      builder: (_) => const Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    );
+
+                                    try {
+                                      // ✅ Step 3: Call delete API
+                                      final response = await ref
+                                          .read(deleteCustomerRepoProvider)
+                                          .deleteCustomer(
+                                              partyId: effectivePartyId);
+
+                                      // ✅ Step 4: Close progress indicator
+                                      if (context.mounted) {
+                                        Navigator.pop(
+                                            context); // Close progress dialog
+                                      }
+
+                                      // ✅ Step 5: Handle response
+                                      if (response.error == false ||
+                                          response.error == null) {
+                                        debugPrint(
+                                            "✅ Customer deleted successfully");
+
+                                        // ✅ Step 6: Invalidate ALL customer data providers
+                                        // This ensures the customer list refreshes automatically
+                                        ref.invalidate(
+                                            getCustomerDataWithPagination);
+                                        ref.invalidate(getAllCustomersData);
+                                        ref.invalidate(getCustomerData);
+
+                                        // Optional: Also invalidate specific customer provider
+                                        ref.invalidate(
+                                            getCustomerDetailsProvider(
+                                                effectivePartyId));
+                                        ref.invalidate(viewPartyProvider(
+                                            effectivePartyId));
+
+                                        // ✅ Step 7: Show success message
                                         if (context.mounted) {
-                                          if (response.error == false || response.error == null) {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              const SnackBar(content: Text("Customer deleted successfully")),
-                                            );
-                                            ref.invalidate(getCustomerDataWithPagination);
-                                            Navigator.pop(context); // Go back to list
-                                          } else {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(content: Text(response.errorMsg ?? "Failed to delete customer")),
-                                            );
-                                          }
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                  "Customer deleted successfully"),
+                                              duration: Duration(seconds: 2),
+                                              backgroundColor: Colors.green,
+                                            ),
+                                          );
+
+                                          // ✅ Step 8: Navigate back to customer list immediately
+                                          Navigator.pop(context);
                                         }
-                                      } catch (e) {
+                                      } else {
+                                        // ✅ Handle API error
+                                        debugPrint(
+                                            "❌ Delete failed: ${response.errorMsg}");
                                         if (context.mounted) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(content: Text("Error: $e")),
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content: Text(response.errorMsg ??
+                                                  "Failed to delete customer"),
+                                              backgroundColor: Colors.red,
+                                              duration:
+                                                  const Duration(seconds: 3),
+                                            ),
                                           );
                                         }
                                       }
-                                    },
-                                    child: const Text("Delete", style: TextStyle(color: Colors.red)),
+                                    } catch (e, stackTrace) {
+                                      // ✅ Handle exception
+                                      debugPrint(
+                                          "❌ Exception during delete: $e");
+                                      debugPrint("📌 Stacktrace: $stackTrace");
+
+                                      // Close progress indicator if still showing
+                                      if (context.mounted) {
+                                        Navigator.pop(context);
+                                      }
+
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                                "Error deleting customer: ${e.toString()}"),
+                                            backgroundColor: Colors.red,
+                                            duration:
+                                                const Duration(seconds: 3),
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  },
+                                  child: const Text(
+                                    "Delete",
+                                    style: TextStyle(color: Colors.red),
                                   ),
-                                ],
-                              ),
-                            );
-                          }),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
                       GapSpace.height35,
                       financialCard(
                         state: stateValue,
