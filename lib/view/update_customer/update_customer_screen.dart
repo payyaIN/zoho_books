@@ -1,4 +1,3 @@
-// add_customer.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payzo_books/data/models/add_customer/add_customer_model.dart';
@@ -21,6 +20,8 @@ import '../../../data/repository/add_vendor/get_state_list_repository.dart'
 import '../../../data/repository/add_vendor/get_state_list_repository.dart'
     as state_repo;
 import '../../../utils/common_widgets/reusable_snackbar.dart';
+import '../../../data/repository/update_customer/update_customer_repository.dart';
+import '../../../data/models/view_party/view_party_model.dart' as view_model;
 
 // label providers so selected names appear in UI immediately
 final billingCountryLabelProvider = StateProvider<String>((ref) => '');
@@ -31,7 +32,10 @@ final shippingStateLabelProvider = StateProvider<String>((ref) => '');
 final customerSameAsBillingToggleProvider = StateProvider<bool>((ref) => false);
 
 class UpdateCustomerScreen extends ConsumerStatefulWidget {
-  const UpdateCustomerScreen({super.key});
+  final int? partyId;
+  final view_model.ViewPartyModel? existingCustomerData;
+
+  const UpdateCustomerScreen({super.key, this.partyId, this.existingCustomerData});
 
   @override
   ConsumerState<UpdateCustomerScreen> createState() =>
@@ -47,23 +51,7 @@ class _UpdateCustomerScreenState extends ConsumerState<UpdateCustomerScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
-      ref.read(getCountryList);
-      ref.read(getStateList);
-      ref.read(fetchBranchListProvider);
-      ref.read(fetchPriceCurrencyProvider);
-      // ✅ Correct way to set default value
-      ref.read(customerFormProvider.notifier).state =
-          ref.read(customerFormProvider.notifier).state.copyWith(
-                governmentEntity: false,
-              );
-      // ✅ Correct way to set default value
-      ref.read(customerFormProvider.notifier).state =
-          ref.read(customerFormProvider.notifier).state.copyWith(
-                taxedOrganization: false,
-              );
-    });
-
+    
     customerTypeController = {
       "firstName": TextEditingController(),
       "secondName": TextEditingController(),
@@ -85,8 +73,6 @@ class _UpdateCustomerScreenState extends ConsumerState<UpdateCustomerScreen> {
       "remark": TextEditingController(),
     };
 
-    // openingAmountController = TextEditingController();
-
     billController = {
       "building": TextEditingController(),
       "street": TextEditingController(),
@@ -104,6 +90,140 @@ class _UpdateCustomerScreenState extends ConsumerState<UpdateCustomerScreen> {
       "cityArabic": TextEditingController(),
       "zip": TextEditingController(),
     };
+
+    Future.microtask(() {
+      ref.read(getCountryList);
+      ref.read(getStateList);
+      ref.read(fetchBranchListProvider);
+      ref.read(fetchPriceCurrencyProvider);
+      
+      if (widget.existingCustomerData != null) {
+        _populateExistingData();
+      } else {
+        // Default values for new customer (if reused)
+         ref.read(customerFormProvider.notifier).state =
+          ref.read(customerFormProvider.notifier).state.copyWith(
+                governmentEntity: false,
+                taxedOrganization: false,
+              );
+      }
+    });
+  }
+
+  void _populateExistingData() {
+    final data = widget.existingCustomerData!.response;
+    final notifier = ref.read(customerFormProvider.notifier);
+
+    // Populate Text Controllers
+    customerTypeController['companyName']?.text = data.companyName ?? '';
+    customerTypeController['companyNameArabic']?.text = data.companyNameArabic ?? '';
+    customerTypeController['email']?.text = data.emailAddress ?? '';
+    customerTypeController['mobile']?.text = data.mobile?.toString() ?? '';
+    customerTypeController['workPhone']?.text = data.phone?.toString() ?? '';
+    customerTypeController['vatNumber']?.text = data.vatNumber ?? '';
+    customerTypeController['crNum']?.text = data.crNum ?? '';
+    customerTypeController['remark']?.text = data.remark?.remark ?? '';
+
+    // Primary Contact
+    customerTypeController['firstName']?.text = data.primaryContact?.firstName ?? '';
+    customerTypeController['secondName']?.text = data.primaryContact?.lastName ?? '';
+    customerTypeController['firstNameArabic']?.text = data.primaryContactArabic?.firstNameArabic ?? '';
+    customerTypeController['secondNameArabic']?.text = data.primaryContactArabic?.lastNameArabic ?? '';
+
+    // Contact Persons (taking first one if available for display in simple fields, logic might vary)
+    if (data.contactPersons != null && data.contactPersons!.isNotEmpty) {
+      final cp = data.contactPersons!.first;
+      customerTypeController['contact_firstName']?.text = cp.firstName ?? '';
+      customerTypeController['contact_lastName']?.text = cp.lastName ?? '';
+      customerTypeController['contact_mobile']?.text = cp.mobileNo ?? '';
+    }
+
+    // Billing Address
+    if (data.billingAddress != null) {
+      billController['building']?.text = data.billingAddress!.buildingNumber ?? '';
+      billController['street']?.text = data.billingAddress!.streetAddress ?? ''; // Mapping streetAddress to street
+      billController['streetArabic']?.text = data.billingAddress!.streetAddressArabic ?? '';
+      billController['city']?.text = data.billingAddress!.city ?? '';
+      billController['cityArabic']?.text = data.billingAddress!.cityArabic ?? '';
+      billController['zip']?.text = data.billingAddress!.zipCode ?? '';
+      
+      if (data.billingAddress!.countryRegion != null) {
+         notifier.updateBillingAddress('country', data.billingAddress!.countryRegion);
+      }
+       if (data.billingAddress!.state != null) {
+         notifier.updateBillingAddress('state', data.billingAddress!.state);
+      }
+    }
+
+    // Shipping Address
+    if (data.shippingAddress != null) {
+      shippingController['building']?.text = data.shippingAddress!.buildingNumber ?? '';
+      shippingController['street']?.text = data.shippingAddress!.streetAddress ?? '';
+      shippingController['streetArabic']?.text = data.shippingAddress!.streetAddressArabic ?? '';
+      shippingController['city']?.text = data.shippingAddress!.city ?? '';
+      shippingController['cityArabic']?.text = data.shippingAddress!.cityArabic ?? '';
+      shippingController['zip']?.text = data.shippingAddress!.zipCode ?? '';
+      
+       if (data.shippingAddress!.countryRegion != null) {
+         notifier.updateShippingAddress('country', data.shippingAddress!.countryRegion);
+      }
+       if (data.shippingAddress!.state != null) {
+         notifier.updateShippingAddress('state', data.shippingAddress!.state);
+      }
+    }
+
+    // Update Form State
+    notifier.state = notifier.state.copyWith(
+      companyName: data.companyName,
+      companyNameArabic: data.companyNameArabic,
+      emailAddress: data.emailAddress,
+      mobile: data.mobile?.toString(),
+      phone: data.phone?.toString(),
+      vatNumber: data.vatNumber,
+      crNum: data.crNum,
+      remark: Remark(remark: data.remark?.remark),
+      primaryContact: PrimaryContact(firstName: data.primaryContact?.firstName, lastName: data.primaryContact?.lastName),
+      primaryContactArabic: PrimaryContactArabic(firstNameArabic: data.primaryContactArabic?.firstNameArabic, lastNameArabic: data.primaryContactArabic?.lastNameArabic),
+      customerType: data.customerType, // Ensure case matches (e.g. BUSINESS)
+      partyType: data.partyType,
+      governmentEntity: data.governmentEntity ?? false,
+      taxedOrganization: data.taxedOrganization ?? false,
+      sameAddressFlag: data.sameAddressFlag ?? false,
+      
+      billingAddress: BillingAddress(
+        addressId: data.billingAddress?.addressId,
+        buildingNumber: data.billingAddress?.buildingNumber,
+        streetAddress: data.billingAddress?.streetAddress,
+        streetAddressArabic: data.billingAddress?.streetAddressArabic,
+        city: data.billingAddress?.city,
+        cityArabic: data.billingAddress?.cityArabic,
+        zipCode: data.billingAddress?.zipCode,
+        countryRegion: data.billingAddress?.countryRegion,
+        state: data.billingAddress?.state,
+      ),
+      shippingAddress: ShippingAddress(
+        addressId: data.shippingAddress?.addressId,
+        buildingNumber: data.shippingAddress?.buildingNumber,
+        streetAddress: data.shippingAddress?.streetAddress,
+        streetAddressArabic: data.shippingAddress?.streetAddressArabic,
+        city: data.shippingAddress?.city,
+        cityArabic: data.shippingAddress?.cityArabic,
+        zipCode: data.shippingAddress?.zipCode,
+        countryRegion: data.shippingAddress?.countryRegion,
+        state: data.shippingAddress?.state,
+      ),
+    );
+
+    // Handle Same Address Flag
+    if (data.sameAddressFlag == true) {
+      ref.read(customerSameAsBillingToggleProvider.notifier).state = true;
+    }
+    
+    // Opening Balance
+    if (data.openingBalance != null) {
+        notifier.updateField('openingAmount', data.openingBalance!.amount.toString());
+        ref.read(openingAmountProvider.notifier).state = data.openingBalance!.amount.toString();
+    }
   }
 
   @override
@@ -179,7 +299,7 @@ class _UpdateCustomerScreenState extends ConsumerState<UpdateCustomerScreen> {
         },
         child: Scaffold(
           appBar: reusableAppBar(
-            title: 'Add Customer',
+            title: widget.partyId != null ? 'Edit Customer' : 'Add Customer',
             context: context,
             showBackButton: true,
           ),
@@ -321,7 +441,7 @@ class _UpdateCustomerScreenState extends ConsumerState<UpdateCustomerScreen> {
           bottomNavigationBar: PayzoFormSubmitTwoButtons(
             safeArea: true,
             cancelText: 'Clear',
-            saveText: 'Save',
+            saveText: widget.partyId != null ? 'Update' : 'Save',
             cancelOnPressed: () {
               final notifier = ref.read(customerFormProvider.notifier);
               for (final controller in billController.values) {
@@ -354,9 +474,16 @@ class _UpdateCustomerScreenState extends ConsumerState<UpdateCustomerScreen> {
               if (isValid) {
                 showPayzoProgress(context: context);
                 try {
-                  final response = await ref
-                      .read(registerCustomerRepoProvider)
-                      .registerCustomer();
+                  dynamic response;
+                  if (widget.partyId != null) {
+                     response = await ref
+                        .read(updateCustomerRepoProvider)
+                        .updateCustomer(partyId: widget.partyId!);
+                  } else {
+                     response = await ref
+                        .read(registerCustomerRepoProvider)
+                        .registerCustomer();
+                  }
 
                   debugPrint("✅ API Response: ${response.toJson()}");
 
@@ -367,7 +494,7 @@ class _UpdateCustomerScreenState extends ConsumerState<UpdateCustomerScreen> {
                       context: context,
                       builder: (_) => AlertDialog(
                         title: const Text("Success"),
-                        content: Text("Customer registered successfully."),
+                        content: Text(widget.partyId != null ? "Customer updated successfully." : "Customer registered successfully."),
                         actions: [
                           TextButton(
                             onPressed: () {
@@ -375,12 +502,17 @@ class _UpdateCustomerScreenState extends ConsumerState<UpdateCustomerScreen> {
                               Navigator.pop(context);
                               ref.invalidate(getCustomerDataWithPagination);
                               // await Future.delayed(Duration(milliseconds: 50));
-                              ref.read(bottomNavBarProvider.notifier).state =
-                                  4; // set to Vendor/Product index
-                              Navigator.pushNamedAndRemoveUntil(context,
-                                  RouteNames.homeScreen, (route) => false);
-                              Navigator.pushNamed(
-                                  context, RouteNames.customerScreen);
+                              if (widget.partyId != null) {
+                                 // If update, just pop back
+                                 Navigator.pop(context, true); // return true to indicate update
+                              } else {
+                                ref.read(bottomNavBarProvider.notifier).state =
+                                    4; // set to Vendor/Product index
+                                Navigator.pushNamedAndRemoveUntil(context,
+                                    RouteNames.homeScreen, (route) => false);
+                                Navigator.pushNamed(
+                                    context, RouteNames.customerScreen);
+                              }
                             },
                             child: const Text("OK"),
                           ),

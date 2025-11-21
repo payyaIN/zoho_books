@@ -3,7 +3,8 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/services.dart';
-import 'package:payzo_books/data/repository/add_bills/generate_bill_repository.dart' hide generateBillProvider;
+import 'package:payzo_books/data/repository/add_bills/generate_bill_repository.dart'
+    hide generateBillProvider;
 import 'package:payzo_books/data/repository/add_bills/get_all_bills_repository.dart';
 import 'package:payzo_books/data/repository/add_bills/get_branch_list_repository.dart';
 import 'package:payzo_books/data/repository/add_bills/get_item_repository.dart';
@@ -53,7 +54,8 @@ class _AddBillsState extends ConsumerState<AddBills> {
 
   void _addControllersForNewItem() {
     itemControllers.add(_createControllersForItem());
-    setState(() {}); // trigger rebuild so new controllers are passed to item widget
+    setState(
+        () {}); // trigger rebuild so new controllers are passed to item widget
   }
 
   void _disposeControllersForItemAt(int index) {
@@ -92,8 +94,10 @@ class _AddBillsState extends ConsumerState<AddBills> {
         }
 
         // Ensure controllers count matches items count
-        if (itemControllers.length < ref.read(addBillFormProvider).itemDetails.length) {
-          final missing = ref.read(addBillFormProvider).itemDetails.length - itemControllers.length;
+        if (itemControllers.length <
+            ref.read(addBillFormProvider).itemDetails.length) {
+          final missing = ref.read(addBillFormProvider).itemDetails.length -
+              itemControllers.length;
           for (var i = 0; i < missing; i++) {
             _addControllersForNewItem();
           }
@@ -102,7 +106,9 @@ class _AddBillsState extends ConsumerState<AddBills> {
         // initialize first line amount if null
         if (ref.watch(addBillFormProvider).itemDetails.isNotEmpty &&
             ref.watch(addBillFormProvider).itemDetails[0].amount == null) {
-          ref.read(addBillFormProvider.notifier).updateItemField(0, 'amount', 0.00);
+          ref
+              .read(addBillFormProvider.notifier)
+              .updateItemField(0, 'amount', 0.00);
         }
 
         // 🔄 Fetch all required data (kick off providers)
@@ -150,9 +156,10 @@ class _AddBillsState extends ConsumerState<AddBills> {
 
     // set sensible defaults: shipping method name and currency value
     try {
-      final shippingMethods = await ref.read(fetchShippingMethodsProvider.future);
+      final shippingMethods =
+          await ref.read(fetchShippingMethodsProvider.future);
       final landFreight = shippingMethods.firstWhere(
-            (method) => method.shpmName == "Land Freight",
+        (method) => method.shpmName == "Land Freight",
         orElse: () => shippingMethods.first,
       );
       // IMPORTANT: notifier.updateField expects 'shippingMethod' string; notifier should handle it.
@@ -165,7 +172,7 @@ class _AddBillsState extends ConsumerState<AddBills> {
     try {
       final currencyList = await ref.read(fetchPriceCurrencyProvider.future);
       final sarCurrency = currencyList.firstWhere(
-            (currency) => currency.currencyValue == "SAR",
+        (currency) => currency.currencyValue == "SAR",
         orElse: () => currencyList.first,
       );
       // notifier.updateField expects 'currency' string; mapper will look up id from this value.
@@ -214,12 +221,13 @@ class _AddBillsState extends ConsumerState<AddBills> {
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: state.itemDetails.length,
                   itemBuilder: (context, index) {
-                    final controllersForThisItem = index < itemControllers.length
-                        ? itemControllers[index]
-                        : (() {
-                      _addControllersForNewItem();
-                      return itemControllers[index];
-                    })();
+                    final controllersForThisItem =
+                        index < itemControllers.length
+                            ? itemControllers[index]
+                            : (() {
+                                _addControllersForNewItem();
+                                return itemControllers[index];
+                              })();
 
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 15),
@@ -243,7 +251,9 @@ class _AddBillsState extends ConsumerState<AddBills> {
                       onTap: () async {
                         await ref.read(focusUtilsProvider).unfocusAndDelay();
 
-                        final isValid = ref.read(addBillFormProvider.notifier).validateLastItemFields();
+                        final isValid = ref
+                            .read(addBillFormProvider.notifier)
+                            .validateLastItemFields();
 
                         if (isValid) {
                           // 1) Add form model item
@@ -257,7 +267,8 @@ class _AddBillsState extends ConsumerState<AddBills> {
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('Finish filling out the current item to add a new one.'),
+                              content: Text(
+                                  'Finish filling out the current item to add a new one.'),
                               duration: Duration(seconds: 2),
                             ),
                           );
@@ -276,23 +287,37 @@ class _AddBillsState extends ConsumerState<AddBills> {
                         ReusableRow(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: <Widget>[
-                            SvgPictureWidget(image: 'assets/pin.svg', height: 24, width: 24),
+                            SvgPictureWidget(
+                                image: 'assets/pin.svg', height: 24, width: 24),
                             const ReusableSizedBox(width: 10),
                             Expanded(
                               child: PayzoBottomsheetNavigator(
                                 title: 'Attachments',
                                 divider: false,
-                                trailing: state.attachment?.path.split('/').last ?? 'Tap to Select',
+                                trailing:
+                                    state.attachment?.path.split('/').last ??
+                                        'Tap to Select',
                                 onTap: () async {
-                                  await ref.read(focusUtilsProvider).unfocusAndDelay();
-                                  final result = await FilePicker.platform.pickFiles(
+                                  await ref
+                                      .read(focusUtilsProvider)
+                                      .unfocusAndDelay();
+                                  final result =
+                                      await FilePicker.platform.pickFiles(
                                     type: FileType.custom,
-                                    allowedExtensions: ['pdf', 'jpg', 'png', 'jpeg'],
+                                    allowedExtensions: [
+                                      'pdf',
+                                      'jpg',
+                                      'png',
+                                      'jpeg'
+                                    ],
                                   );
-                                  if (result != null && result.files.single.path != null) {
-                                    final pickedFile = File(result.files.single.path!);
+                                  if (result != null &&
+                                      result.files.single.path != null) {
+                                    final pickedFile =
+                                        File(result.files.single.path!);
                                     // notifier must accept File? for 'attachment'
-                                    notifier.updateField('attachment', pickedFile);
+                                    notifier.updateField(
+                                        'attachment', pickedFile);
                                   } else {
                                     debugPrint('❌ No file selected');
                                   }
@@ -307,11 +332,13 @@ class _AddBillsState extends ConsumerState<AddBills> {
                             padding: const EdgeInsets.only(left: 34.0),
                             child: ReusableRow(
                               children: [
-                                const Icon(Icons.insert_drive_file_outlined, color: AppColors.appMainColor, size: 20),
+                                const Icon(Icons.insert_drive_file_outlined,
+                                    color: AppColors.appMainColor, size: 20),
                                 const ReusableSizedBox(width: 8),
                                 Expanded(
                                   child: ReusableText(
-                                    text: state.attachment!.path.split('/').last,
+                                    text:
+                                        state.attachment!.path.split('/').last,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     fontSize: 14,
@@ -324,14 +351,16 @@ class _AddBillsState extends ConsumerState<AddBills> {
                                     try {
                                       notifier.updateField('attachment', null);
                                     } catch (e) {
-                                      debugPrint('Failed to clear attachment via updateField: $e');
+                                      debugPrint(
+                                          'Failed to clear attachment via updateField: $e');
                                       // fallback: clear entire form safely if needed
                                       notifier.clearForm();
                                     }
                                   },
                                   child: const Padding(
                                     padding: EdgeInsets.all(4.0),
-                                    child: Icon(Icons.cancel_outlined, color: Colors.redAccent, size: 20),
+                                    child: Icon(Icons.cancel_outlined,
+                                        color: Colors.redAccent, size: 20),
                                   ),
                                 )
                               ],
@@ -366,14 +395,17 @@ class _AddBillsState extends ConsumerState<AddBills> {
               if (currentState.errors.isEmpty) {
                 showPayzoProgress(context: context);
                 try {
-                  final response = await ref.read(generateBillProvider(file).future);
+                  final response =
+                      await ref.read(generateBillProvider(file).future);
                   Navigator.pop(context); // remove progress
 
                   // success dialog as before...
                   // <keep your existing success dialog code here>
                 } catch (e, st) {
                   // Ensure progress dialog removed
-                  try { Navigator.pop(context); } catch (_) {}
+                  try {
+                    Navigator.pop(context);
+                  } catch (_) {}
 
                   // Print to debug logs (ADB logcat viewable)
                   debugPrint('🚨 Submit failed: $e');
@@ -419,10 +451,10 @@ class _AddBillsState extends ConsumerState<AddBills> {
                   //   ),
                   // );
                 }
-
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Please fill in all required fields')),
+                  const SnackBar(
+                      content: Text('Please fill in all required fields')),
                 );
               }
             },

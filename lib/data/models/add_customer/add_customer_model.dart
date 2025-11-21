@@ -259,6 +259,7 @@ class ContactPersons {
 
 class ShippingAddress {
   ShippingAddress({
+    this.addressId,
     this.countryRegion,
     this.buildingNumber,
     this.streetName,
@@ -271,6 +272,7 @@ class ShippingAddress {
   });
 
   ShippingAddress.fromJson(dynamic json) {
+    addressId = json['addressId'];
     countryRegion = json['countryRegion'];
     buildingNumber = json['buildingNumber'];
     streetName = json['streetName'];
@@ -282,6 +284,7 @@ class ShippingAddress {
     zipCode = json['zipCode'];
   }
 
+  int? addressId;
   String? countryRegion;
   String? buildingNumber;
   dynamic streetName;
@@ -293,6 +296,7 @@ class ShippingAddress {
   String? zipCode;
 
   ShippingAddress copyWith({
+    int? addressId,
     String? countryRegion,
     String? buildingNumber,
     dynamic streetName,
@@ -304,6 +308,7 @@ class ShippingAddress {
     String? zipCode,
   }) =>
       ShippingAddress(
+        addressId: addressId ?? this.addressId,
         countryRegion: countryRegion ?? this.countryRegion,
         buildingNumber: buildingNumber ?? this.buildingNumber,
         streetName: streetName ?? this.streetName,
@@ -317,6 +322,7 @@ class ShippingAddress {
 
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{};
+    if (addressId != null) map['addressId'] = addressId;
     map['countryRegion'] = countryRegion;
     map['buildingNumber'] = buildingNumber;
     map['streetName'] = streetName;
@@ -332,6 +338,7 @@ class ShippingAddress {
 
 class BillingAddress {
   BillingAddress({
+    this.addressId,
     this.countryRegion,
     this.buildingNumber,
     this.streetName,
@@ -344,6 +351,7 @@ class BillingAddress {
   });
 
   BillingAddress.fromJson(dynamic json) {
+    addressId = json['addressId'];
     countryRegion = json['countryRegion'];
     buildingNumber = json['buildingNumber'];
     streetName = json['streetName'];
@@ -355,6 +363,7 @@ class BillingAddress {
     zipCode = json['zipCode'];
   }
 
+  int? addressId;
   String? countryRegion;
   String? buildingNumber;
   dynamic streetName;
@@ -366,6 +375,7 @@ class BillingAddress {
   String? zipCode;
 
   BillingAddress copyWith({
+    int? addressId,
     String? countryRegion,
     String? buildingNumber,
     dynamic streetName,
@@ -377,6 +387,7 @@ class BillingAddress {
     String? zipCode,
   }) =>
       BillingAddress(
+        addressId: addressId ?? this.addressId,
         countryRegion: countryRegion ?? this.countryRegion,
         buildingNumber: buildingNumber ?? this.buildingNumber,
         streetName: streetName ?? this.streetName,
@@ -390,6 +401,7 @@ class BillingAddress {
 
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{};
+    if (addressId != null) map['addressId'] = addressId;
     map['countryRegion'] = countryRegion;
     map['buildingNumber'] = buildingNumber;
     map['streetName'] = streetName;

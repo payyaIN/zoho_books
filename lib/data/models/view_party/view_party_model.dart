@@ -55,6 +55,9 @@ class ViewPartyResponseData {
   final bool sameAddressFlag;
   final String? vatNumber;
   final String? crNum;
+  final bool? governmentEntity;
+  final bool? taxedOrganization;
+  final OpeningBalance? openingBalance;
 
   ViewPartyResponseData({
     required this.mobileCode,
@@ -79,6 +82,9 @@ class ViewPartyResponseData {
     required this.sameAddressFlag,
     this.vatNumber,
     this.crNum,
+    this.governmentEntity,
+    this.taxedOrganization,
+    this.openingBalance,
   });
 
   factory ViewPartyResponseData.fromMap(Map<String, dynamic> json) {
@@ -110,6 +116,11 @@ class ViewPartyResponseData {
       sameAddressFlag: json["sameAddressFlag"] ?? false,
       vatNumber: json["vatNumber"],
       crNum: json["crNum"],
+      governmentEntity: json["governmentEntity"],
+      taxedOrganization: json["taxedOrganization"],
+      openingBalance: json["openingBalance"] != null
+          ? OpeningBalance.fromMap(json["openingBalance"])
+          : null,
     );
   }
 }
@@ -249,6 +260,26 @@ class Address {
       streetName: json["streetName"],
       streetAddress: json["streetAddress"],
       streetAddressArabic: json["streetAddressArabic"],
+    );
+  }
+}
+
+class OpeningBalance {
+  final String? branch;
+  final String? currency;
+  final double? amount;
+
+  OpeningBalance({
+    this.branch,
+    this.currency,
+    this.amount,
+  });
+
+  factory OpeningBalance.fromMap(Map<String, dynamic> json) {
+    return OpeningBalance(
+      branch: json["branch"],
+      currency: json["currency"],
+      amount: json["amount"] != null ? (json["amount"] as num).toDouble() : null,
     );
   }
 }

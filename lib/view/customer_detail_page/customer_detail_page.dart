@@ -6,6 +6,9 @@ import 'package:payzo_books/data/repository/view_party/view_party_api.dart';
 import 'package:payzo_books/import_data.dart';
 import 'package:payzo_books/view/customer_detail_page/components/customer_detail_content.dart';
 import 'package:payzo_books/view/customer_detail_page/provider/country_list_provider.dart';
+import 'package:payzo_books/view/update_customer/update_customer_screen.dart';
+import 'package:payzo_books/data/repository/delete_customer/delete_customer_repository.dart';
+import 'package:payzo_books/data/repository/customer_list_page/customer_listing_api.dart';
 
 class CustomerDetailPage extends ConsumerWidget {
   final int? partyId;
@@ -99,8 +102,76 @@ class CustomerDetailPage extends ConsumerWidget {
                               customer.phone?.toString() ??
                                   customer.mobile?.toString() ??
                                   AppText.vendorContact),
-                          onTap4: () {},
-                          onTap5: () {}),
+                          onTap4: () async {
+                            // Edit Customer
+                            final viewPartyData = await ref.read(viewPartyProvider(effectivePartyId).future);
+                            
+                            if (context.mounted) {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => UpdateCustomerScreen(
+                                    partyId: effectivePartyId,
+                                    existingCustomerData: viewPartyData,
+                                  ),
+                                ),
+                              );
+                              
+                              if (result == true) {
+                                // Refresh details
+                                ref.refresh(getCustomerDetailsProvider(effectivePartyId));
+                                ref.refresh(viewPartyProvider(effectivePartyId));
+                              }
+                            }
+                          },
+                          onTap5: () {
+                            // Delete Customer
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text("Delete Customer"),
+                                content: const Text("Are you sure you want to delete this customer?"),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text("Cancel"),
+                                  ),
+                                  TextButton(
+                                    onPressed: () async {
+                                      Navigator.pop(context); // Close dialog
+                                      
+                                      try {
+                                        final response = await ref
+                                            .read(deleteCustomerRepoProvider)
+                                            .deleteCustomer(partyId: effectivePartyId);
+                                            
+                                        if (context.mounted) {
+                                          if (response.error == false || response.error == null) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(content: Text("Customer deleted successfully")),
+                                            );
+                                            ref.invalidate(getCustomerDataWithPagination);
+                                            Navigator.pop(context); // Go back to list
+                                          } else {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text(response.errorMsg ?? "Failed to delete customer")),
+                                            );
+                                          }
+                                        }
+                                      } catch (e) {
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text("Error: $e")),
+                                          );
+                                        }
+                                      }
+                                    },
+                                    child: const Text("Delete", style: TextStyle(color: Colors.red)),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
                       GapSpace.height35,
                       financialCard(
                         state: stateValue,

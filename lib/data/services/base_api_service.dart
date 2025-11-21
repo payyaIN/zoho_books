@@ -583,6 +583,250 @@ class BaseApiService {
           'POST Multipart with Blob JSON API call failed with status code: ${response.statusCode}');
     }
   }
+
+  /// POST Multipart with Blob JSON (generic)
+  Future<T> postMultipartWithJson<T>({
+    required String url,
+    required Map<String, dynamic> jsonData,
+    required String jsonFieldName,
+    File? file,
+    required T Function(Map<String, dynamic>) fromJson,
+    bool retryingAfterLogin = false,
+  }) async {
+    final sharedPrefs = ref.read(sharedPreferencesProvider);
+    if (sharedPrefs == null)
+      throw Exception('SharedPreferences not initialized');
+
+    final token =
+        SharedPreferencesHelper.getString(SharedPreferenceKey.accessToken);
+
+    final uri = Uri.parse(url);
+    final request = http.MultipartRequest('POST', uri);
+
+    request.headers.addAll({
+      'Authorization': 'Bearer ${token ?? ''}',
+      'TransactionId': 'djadajadjafjdbfsjkdb',
+      'company-id': '1',
+    });
+
+    // Add JSON data as blob
+    request.files.add(
+      http.MultipartFile.fromString(
+        jsonFieldName,
+        jsonEncode(jsonData),
+        contentType: http_parser.MediaType('application', 'json'),
+        filename: 'blob',
+      ),
+    );
+
+    // Add file if provided
+    if (file != null && await file.exists()) {
+      final ext = file.path.split('.').last.toLowerCase();
+      final contentType = ext == 'pdf'
+          ? http_parser.MediaType('application', 'pdf')
+          : http_parser.MediaType('image', 'jpeg');
+
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'file',
+          file.path,
+          contentType: contentType,
+        ),
+      );
+    }
+
+    print('📤 POST Multipart Request Headers: ${request.headers}');
+    print('📤 POST Multipart JSON Data: ${jsonEncode(jsonData)}');
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+
+    print('📥 Response Status Code: ${response.statusCode}');
+    print('📥 Response Body: ${response.body}');
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return fromJson(jsonDecode(response.body));
+    } else if (response.statusCode == 401 && !retryingAfterLogin) {
+      final name =
+          SharedPreferencesHelper.getString(SharedPreferenceKey.loginEmail);
+      final password =
+          SharedPreferencesHelper.getString(SharedPreferenceKey.loginPassword);
+
+      if (name != null && password != null) {
+        await ref.read(loginNotifierProvider.notifier).login(
+              name,
+              password,
+              null,
+              skipNavigation: true,
+            );
+
+        final newAccessToken =
+            SharedPreferencesHelper.getString(SharedPreferenceKey.accessToken);
+        if (newAccessToken != null && newAccessToken.isNotEmpty) {
+          return postMultipartWithJson(
+            url: url,
+            jsonData: jsonData,
+            jsonFieldName: jsonFieldName,
+            file: file,
+            fromJson: fromJson,
+            retryingAfterLogin: true,
+          );
+        }
+      }
+
+      throw Exception('Unauthorized. Login failed.');
+    } else {
+      throw Exception(
+          'POST Multipart API call failed with status code: ${response.statusCode}');
+    }
+  }
+
+  /// PUT Multipart with Blob JSON (for edit bill)
+  Future<T> putMultipartWithJson<T>({
+    required String url,
+    required Map<String, dynamic> jsonData,
+    required String jsonFieldName,
+    File? file,
+    required T Function(Map<String, dynamic>) fromJson,
+    bool retryingAfterLogin = false,
+  }) async {
+    final sharedPrefs = ref.read(sharedPreferencesProvider);
+    if (sharedPrefs == null)
+      throw Exception('SharedPreferences not initialized');
+
+    final token =
+        SharedPreferencesHelper.getString(SharedPreferenceKey.accessToken);
+
+    final uri = Uri.parse(url);
+    final request = http.MultipartRequest('PUT', uri);
+
+    request.headers.addAll({
+      'Authorization': 'Bearer ${token ?? ''}',
+      'TransactionId': 'djadajadjafjdbfsjkdb',
+      'company-id': '1',
+    });
+
+    // Add JSON data as blob
+    request.files.add(
+      http.MultipartFile.fromString(
+        jsonFieldName,
+        jsonEncode(jsonData),
+        contentType: http_parser.MediaType('application', 'json'),
+        filename: 'blob',
+      ),
+    );
+
+    // Add file if provided
+    if (file != null && await file.exists()) {
+      final ext = file.path.split('.').last.toLowerCase();
+      final contentType = ext == 'pdf'
+          ? http_parser.MediaType('application', 'pdf')
+          : http_parser.MediaType('image', 'jpeg');
+
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'file',
+          file.path,
+          contentType: contentType,
+        ),
+      );
+    }
+
+    print('📤 PUT Multipart Request Headers: ${request.headers}');
+    print('📤 PUT Multipart JSON Data: ${jsonEncode(jsonData)}');
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+
+    print('📥 Response Status Code: ${response.statusCode}');
+    print('📥 Response Body: ${response.body}');
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return fromJson(jsonDecode(response.body));
+    } else if (response.statusCode == 401 && !retryingAfterLogin) {
+      final name =
+          SharedPreferencesHelper.getString(SharedPreferenceKey.loginEmail);
+      final password =
+          SharedPreferencesHelper.getString(SharedPreferenceKey.loginPassword);
+
+      if (name != null && password != null) {
+        await ref.read(loginNotifierProvider.notifier).login(
+              name,
+              password,
+              null,
+              skipNavigation: true,
+            );
+
+        final newAccessToken =
+            SharedPreferencesHelper.getString(SharedPreferenceKey.accessToken);
+        if (newAccessToken != null && newAccessToken.isNotEmpty) {
+          return putMultipartWithJson(
+            url: url,
+            jsonData: jsonData,
+            jsonFieldName: jsonFieldName,
+            file: file,
+            fromJson: fromJson,
+            retryingAfterLogin: true,
+          );
+        }
+      }
+
+      throw Exception('Unauthorized. Login failed.');
+    } else {
+      throw Exception(
+          'PUT Multipart API call failed with status code: ${response.statusCode}');
+    }
+  }
+
+  /// PATCH API
+  Future<T> patchApi<T>({
+    required String url,
+    required Map<String, dynamic> body,
+    required T Function(Map<String, dynamic>) fromJson,
+    bool retryingAfterLogin = false,
+  }) async {
+    final headers = await _getHeaders();
+    print('PATCH API Request Headers: $headers');
+
+    final response = await http.patch(Uri.parse(url),
+        headers: headers, body: jsonEncode(body));
+
+    print('Response Status Code: ${response.statusCode}');
+    print('Response Body: ${response.body}');
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return fromJson(jsonDecode(response.body));
+    } else if (response.statusCode == 401 && !retryingAfterLogin) {
+      final name =
+          SharedPreferencesHelper.getString(SharedPreferenceKey.loginEmail);
+      final password =
+          SharedPreferencesHelper.getString(SharedPreferenceKey.loginPassword);
+
+      if (name != null && password != null) {
+        await ref.read(loginNotifierProvider.notifier).login(
+              name,
+              password,
+              null,
+              skipNavigation: true,
+            );
+
+        final newAccessToken =
+            SharedPreferencesHelper.getString(SharedPreferenceKey.accessToken);
+        if (newAccessToken != null && newAccessToken.isNotEmpty) {
+          return patchApi(
+            url: url,
+            body: body,
+            fromJson: fromJson,
+            retryingAfterLogin: true,
+          );
+        }
+      }
+      throw Exception('Unauthorized. Login failed.');
+    } else {
+      throw Exception(
+          'PATCH API call failed with status code: ${response.statusCode}');
+    }
+  }
 }
 
 final apiServiceProvider = Provider<BaseApiService>((ref) {
